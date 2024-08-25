@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Salvatore Abello&#39;s Blog</title>
+    <link>https://salvatore-abello.github.io/posts/</link>
+    <description>Recent content in Posts on Salvatore Abello&#39;s Blog</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 25 Aug 2024 22:29:02 +0200</lastBuildDate>
+    <atom:link href="https://salvatore-abello.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>My Post</title>
+      <link>https://salvatore-abello.github.io/posts/test/</link>
+      <pubDate>Sun, 25 Aug 2024 22:29:02 +0200</pubDate>
+      <guid>https://salvatore-abello.github.io/posts/test/</guid>
+      <description>Hello World! This is my first post!&#xA;help(*open(&amp;#34;/flag&amp;#34;)) </description>
+    </item>
+  </channel>
+</rss>
