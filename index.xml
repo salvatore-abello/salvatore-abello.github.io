@@ -2,17 +2,45 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Salvatore Abello&#39;s Blog</title>
-    <link>https://salvatore-abello.github.io/</link>
+    <link>http://localhost:1313/</link>
     <description>Recent content on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 25 Aug 2024 22:29:02 +0200</lastBuildDate>
-    <atom:link href="https://salvatore-abello.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 25 Aug 2024 23:38:20 +0200</lastBuildDate>
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>PySysMagic - L3ak CTF 2024</title>
+      <link>http://localhost:1313/posts/pysysmagic/</link>
+      <pubDate>Sun, 25 Aug 2024 23:38:20 +0200</pubDate>
+      <guid>http://localhost:1313/posts/pysysmagic/</guid>
+      <description>I partecipated to the first edition of L3ak CTF with FoocHackz. I solved this challenge, it wasn&amp;rsquo;t hard but writing a working exploit took me at least one/two hours.&#xA;Index Index Overview Source A bit of Py-Magic Obligatory Pyjail Building payloads from docs Solve Flag Considerations Source Overview As the title of the challenge suggests, it&amp;rsquo;s a pyjail. To be more precise, two challenges from two different CTFs were merged together</description>
+    </item>
+    <item>
+      <title>Test</title>
+      <link>http://localhost:1313/projects/test/</link>
+      <pubDate>Sun, 25 Aug 2024 23:33:36 +0200</pubDate>
+      <guid>http://localhost:1313/projects/test/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>CVE-2024-XXXXX</title>
+      <link>http://localhost:1313/cve/test/</link>
+      <pubDate>Sun, 25 Aug 2024 23:33:28 +0200</pubDate>
+      <guid>http://localhost:1313/cve/test/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Whoami</title>
+      <link>http://localhost:1313/whoami/</link>
+      <pubDate>Sun, 25 Aug 2024 23:13:05 +0200</pubDate>
+      <guid>http://localhost:1313/whoami/</guid>
+      <description>Manu sacrorum ibi permanet virus Cape sua Lorem markdownum inde quisquis, tantae communis increvisse adhuc, fixa viso tuta iniqui et. Rore mater fassaque: cum post de membra: magnumque si dura ulterius et colla, et. Pectora usum contra, silices quod dilapsa quoque, Troiana super salici deterrere et. Prius mitia caelestibus sumit, imago nepotis, vinctae? Suos non aenum magnanimi pariter; sua, natus, mors vellera gaudet ait Hippomene Typhoea quarum, illos nodosaque!&#xA;Et parvo mundo arbore propositique nobis in Quod sed Marte fataliter flamine populi Multa esse armos abeunt Videre Laomedonta orantem Tamen et retro Hanc mihi iners prima sibi inmittitur fumificisque Sacris odium Phaethontis misit descenderat magnos vires, ille coniugium Exigit, spumis nares; nisi!</description>
+    </item>
     <item>
       <title>My Post</title>
-      <link>https://salvatore-abello.github.io/posts/test/</link>
+      <link>http://localhost:1313/posts/test/</link>
       <pubDate>Sun, 25 Aug 2024 22:29:02 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/test/</guid>
+      <guid>http://localhost:1313/posts/test/</guid>
       <description>Hello World! This is my first post!&#xA;help(*open(&amp;#34;/flag&amp;#34;)) </description>
     </item>
   </channel>

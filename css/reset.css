@@ -9,16 +9,18 @@ html {
   --visitedcolor: #551a8b;
   --precolor: #fff;
   --prebgcolor: #000;
+  --prebgcolor2: #232323;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-     --bgcolor: #222;
+     --bgcolor: #000000;
      --dimcolor: #333;
      --fontcolor: #ddd;
-     --linkcolor: #5bf;
-     --visitedcolor: #ae5ee0;
+     --linkcolor: rgb(255, 104, 255);
+     --visitedcolor: #9400a7;
      --precolor: #fff;
      --prebgcolor: #383838;
+     --prebgcolor2: #1e1e1e;
   }
 }
 body {
@@ -49,6 +51,13 @@ p > code {
   background: var(--prebgcolor);
   padding: 2px;
 }
+
+code{
+  color: var(--precolor);
+  background: var(--prebgcolor2);
+  padding: 2px;
+}
+
 pre {
   color: var(--precolor);
   background: var(--prebgcolor);
