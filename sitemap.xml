@@ -2,42 +2,57 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/tags/cybersec/</loc>
-    <lastmod>2024-08-25T23:38:20+02:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/posts/</loc>
-    <lastmod>2024-08-25T23:38:20+02:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/tags/pyjail/</loc>
-    <lastmod>2024-08-25T23:38:20+02:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/posts/pysysmagic/</loc>
-    <lastmod>2024-08-25T23:38:20+02:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/</loc>
-    <lastmod>2024-08-25T23:38:20+02:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/tags/</loc>
-    <lastmod>2024-08-25T23:38:20+02:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/projects/</loc>
+    <loc>https://salvatore-abello.github.io/achievements/</loc>
     <lastmod>2024-08-25T23:33:36+02:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/projects/test/</loc>
+    <loc>https://salvatore-abello.github.io/</loc>
     <lastmod>2024-08-25T23:33:36+02:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/cve/test/</loc>
+    <loc>https://salvatore-abello.github.io/cve/cve-2024-xxxxx/</loc>
     <lastmod>2024-08-25T23:33:28+02:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/cve/</loc>
+    <loc>https://salvatore-abello.github.io/cve/</loc>
     <lastmod>2024-08-25T23:33:28+02:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/whoami/</loc>
+    <loc>https://salvatore-abello.github.io/whoami/</loc>
     <lastmod>2024-08-25T23:13:05+02:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/posts/test/</loc>
-    <lastmod>2024-08-25T22:29:02+02:00</lastmod>
+    <loc>https://salvatore-abello.github.io/tags/cybersec/</loc>
+    <lastmod>2024-07-26T20:38:20+02:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>https://salvatore-abello.github.io/posts/</loc>
+    <lastmod>2024-07-26T20:38:20+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/tags/pyjail/</loc>
+    <lastmod>2024-07-26T20:38:20+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/tags/</loc>
+    <lastmod>2024-07-26T20:38:20+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/tags/writeup/</loc>
+    <lastmod>2024-07-26T20:38:20+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/posts/pysysmagic/</loc>
+    <lastmod>2024-07-26T20:38:20+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/cve/cve-2024-25885/</loc>
+    <lastmod>2024-02-01T23:33:28+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/tags/client-side/</loc>
+    <lastmod>2023-12-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/tags/css-injection/</loc>
+    <lastmod>2023-12-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/posts/newdiary/</loc>
+    <lastmod>2023-12-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/tags/web/</loc>
+    <lastmod>2023-12-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/posts/ezclass/</loc>
+    <lastmod>2023-03-23T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/categories/</loc>
   </url>
 </urlset>

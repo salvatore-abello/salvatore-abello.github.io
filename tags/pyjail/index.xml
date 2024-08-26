@@ -2,18 +2,25 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Pyjail on Salvatore Abello&#39;s Blog</title>
-    <link>http://localhost:1313/tags/pyjail/</link>
+    <link>https://salvatore-abello.github.io/tags/pyjail/</link>
     <description>Recent content in Pyjail on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 25 Aug 2024 23:38:20 +0200</lastBuildDate>
-    <atom:link href="http://localhost:1313/tags/pyjail/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 26 Jul 2024 20:38:20 +0200</lastBuildDate>
+    <atom:link href="https://salvatore-abello.github.io/tags/pyjail/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>PySysMagic - L3ak CTF 2024</title>
-      <link>http://localhost:1313/posts/pysysmagic/</link>
-      <pubDate>Sun, 25 Aug 2024 23:38:20 +0200</pubDate>
-      <guid>http://localhost:1313/posts/pysysmagic/</guid>
+      <title>Yet Another PyJail - PySysMagic - L3ak CTF 2024</title>
+      <link>https://salvatore-abello.github.io/posts/pysysmagic/</link>
+      <pubDate>Fri, 26 Jul 2024 20:38:20 +0200</pubDate>
+      <guid>https://salvatore-abello.github.io/posts/pysysmagic/</guid>
       <description>I partecipated to the first edition of L3ak CTF with FoocHackz. I solved this challenge, it wasn&amp;rsquo;t hard but writing a working exploit took me at least one/two hours.&#xA;Index Index Overview Source A bit of Py-Magic Obligatory Pyjail Building payloads from docs Solve Flag Considerations Source Overview As the title of the challenge suggests, it&amp;rsquo;s a pyjail. To be more precise, two challenges from two different CTFs were merged together</description>
+    </item>
+    <item>
+      <title>My First Writeup - ez-class - B01lers CTF 2023</title>
+      <link>https://salvatore-abello.github.io/posts/ezclass/</link>
+      <pubDate>Thu, 23 Mar 2023 00:00:00 +0000</pubDate>
+      <guid>https://salvatore-abello.github.io/posts/ezclass/</guid>
+      <description>I liked this challenge a lot so I decided to create a writeup (my first, actually) about it. Thanks to the organizers for this wonderful CTF!&#xA;Overview This challenge is about a service that gives us the possibility to create and run classes. We can specify:&#xA;The class name The parent class The mumber of methods The method names The method params The method bodies There is no blacklist except for this little one here: ().</description>
     </item>
   </channel>
 </rss>
