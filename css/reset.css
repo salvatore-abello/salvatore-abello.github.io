@@ -9,7 +9,6 @@ html {
   --visitedcolor: #551a8b;
   --precolor: #fff;
   --prebgcolor: #000;
-  --prebgcolor2: #232323;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -20,7 +19,6 @@ html {
      --visitedcolor: #9400a7;
      --precolor: #fff;
      --prebgcolor: #383838;
-     --prebgcolor2: #1e1e1e;
   }
 }
 body {
@@ -46,15 +44,10 @@ a:active {
 h1,h2,h3 {
   line-height: 1.2;
 }
+
 p > code {
   color: var(--precolor);
   background: var(--prebgcolor);
-  padding: 2px;
-}
-
-code{
-  color: var(--precolor);
-  background: var(--prebgcolor2);
   padding: 2px;
 }
 
@@ -64,9 +57,11 @@ pre {
   padding: 24px;
   overflow-x: auto;
 }
+
 article {
   padding: 5px 0;
 }
+
 .center  {
   display: block;
   margin-left: auto;

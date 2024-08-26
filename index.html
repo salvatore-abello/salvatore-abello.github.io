@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-	<meta name="generator" content="Hugo 0.133.0"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta name="generator" content="Hugo 0.133.0">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta
@@ -30,14 +30,14 @@
     <div id="root">
       <header>
   <div id="brand">
-    <a class="icon-link" href="http://localhost:1313/">
+    <a class="icon-link" href="https://salvatore-abello.github.io/">
       <img
         class="icon"
         src="/images/brandIcon.svg"
       />
     </a>
     <div class="text">
-      <a href="http://localhost:1313/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <a href="https://salvatore-abello.github.io/"><h1>Salvatore Abello&#39;s Blog</h1></a>
       <h3>Hacking &amp; other stuff</h3>
     </div>
   </div>
@@ -49,6 +49,9 @@
       
          | 
         <a href="/whoami/"><b>Whoami</b></a>
+      
+         | 
+        <a href="/achievements/"><b>Achievements</b></a>
       
          | 
         <a href="/posts/"><b>Posts</b></a>
@@ -67,8 +70,8 @@
 		
 		
 			<article class="summary">
-  <a href="http://localhost:1313/posts/pysysmagic/">
-    <h1 class="title">PySysMagic - L3ak CTF 2024</h1>
+  <a href="https://salvatore-abello.github.io/posts/pysysmagic/">
+    <h1 class="title">Yet Another PyJail - PySysMagic - L3ak CTF 2024</h1>
     
   </a>
   
@@ -87,7 +90,7 @@
 <div class="post-meta">
   <strong>
     <span>Posted on</span>
-    <time>2024-08-25 23:38:20</time>
+    <time>2024-07-26 20:38:20</time>
     
     
   </strong>
@@ -98,6 +101,7 @@
       <span>Tags:</span>
       
         <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
         <a href="/tags/pyjail">pyjail</a>
     </div>
   
@@ -107,15 +111,15 @@
     <p>I partecipated to the first edition of L3ak CTF with FoocHackz. I solved this challenge, it wasn&rsquo;t hard but writing a working exploit took me at least one/two hours.
 Index Index Overview Source A bit of Py-Magic Obligatory Pyjail Building payloads from docs Solve Flag Considerations Source Overview As the title of the challenge suggests, it&rsquo;s a pyjail. To be more precise, two challenges from two different CTFs were merged together</p>
     
-      <a href="http://localhost:1313/posts/pysysmagic/">Read more...</a>
+      <a href="https://salvatore-abello.github.io/posts/pysysmagic/">Read more...</a>
     
   </div>
 </article>
 
 		
 			<article class="summary">
-  <a href="http://localhost:1313/posts/test/">
-    <h1 class="title">My Post</h1>
+  <a href="https://salvatore-abello.github.io/posts/newdiary/">
+    <h1 class="title">One-shot CSS Injection - newdiary - 0ctf 2023</h1>
     
   </a>
   
@@ -134,18 +138,79 @@ Index Index Overview Source A bit of Py-Magic Obligatory Pyjail Building payload
 <div class="post-meta">
   <strong>
     <span>Posted on</span>
-    <time>2024-08-25 22:29:02</time>
+    <time>2023-12-12 00:00:00</time>
     
     
   </strong>
- <span> • 8 words</span>
- <span> • 1 minute read</span>
+ <span> • 1900 words</span>
+ <span> • 9 minute read</span>
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/web">web</a>, 
+        <a href="/tags/client-side">client-side</a>, 
+        <a href="/tags/css-injection">css-injection</a>
+    </div>
   
 </div>
 
   <div class="content">
-    <p>Hello World! This is my first post!
-help(*open(&#34;/flag&#34;)) </p>
+    <p>This year, for the first time, I partecipated to 0ctf with mhackeroni. Me, @Ricy and @Alemmi solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.
+Index New Diary (14 solves) Index Overview Exploit idea Leaking the nonce Sources CSS exploit First note (ID 0) Second Note (ID 1) Third Note (ID 2) Final exploit Overview This is a whitebox web challenge and it&rsquo;s client-side, we need to steal the admin cookie with the flag inside, so we have to do XSS.</p>
+    
+      <a href="https://salvatore-abello.github.io/posts/newdiary/">Read more...</a>
+    
+  </div>
+</article>
+
+		
+			<article class="summary">
+  <a href="https://salvatore-abello.github.io/posts/ezclass/">
+    <h1 class="title">My First Writeup - ez-class - B01lers CTF 2023</h1>
+    
+  </a>
+  
+
+
+
+
+
+
+
+
+
+  
+
+
+<div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2023-03-23 00:00:00</time>
+    
+    
+  </strong>
+ <span> • 572 words</span>
+ <span> • 3 minute read</span>
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/pyjail">pyjail</a>
+    </div>
+  
+</div>
+
+  <div class="content">
+    <p>I liked this challenge a lot so I decided to create a writeup (my first, actually) about it. Thanks to the organizers for this wonderful CTF!
+Overview This challenge is about a service that gives us the possibility to create and run classes. We can specify:
+The class name The parent class The mumber of methods The method names The method params The method bodies There is no blacklist except for this little one here: ().</p>
+    
+      <a href="https://salvatore-abello.github.io/posts/ezclass/">Read more...</a>
     
   </div>
 </article>
