@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Web on Salvatore Abello&#39;s Blog</title>
-    <link>https://salvatore-abello.github.io/tags/web/</link>
+    <link>http://localhost:1313/tags/web/</link>
     <description>Recent content in Web on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 12 Dec 2023 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://salvatore-abello.github.io/tags/web/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/tags/web/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>One-shot CSS Injection - newdiary - 0ctf 2023</title>
-      <link>https://salvatore-abello.github.io/posts/newdiary/</link>
+      <link>http://localhost:1313/posts/newdiary/</link>
       <pubDate>Tue, 12 Dec 2023 00:00:00 +0000</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/newdiary/</guid>
+      <guid>http://localhost:1313/posts/newdiary/</guid>
       <description>This year, for the first time, I partecipated to 0ctf with mhackeroni. Me, @Ricy and @Alemmi solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.&#xA;Index New Diary (14 solves) Index Overview Exploit idea Leaking the nonce Sources CSS exploit First note (ID 0) Second Note (ID 1) Third Note (ID 2) Final exploit Overview This is a whitebox web challenge and it&amp;rsquo;s client-side, we need to steal the admin cookie with the flag inside, so we have to do XSS.</description>
     </item>
   </channel>
