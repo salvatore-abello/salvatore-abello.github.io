@@ -15,7 +15,7 @@ html {
      --bgcolor: #000000;
      --dimcolor: #333;
      --fontcolor: #ddd;
-     --linkcolor: rgb(255, 104, 255);
+     --linkcolor: #ff68ff;
      --visitedcolor: #9400a7;
      --precolor: #fff;
      --prebgcolor: #383838;
@@ -25,6 +25,8 @@ body {
   color: var(--fontcolor);
   background: var(--bgcolor);
   margin: 0;
+  background: radial-gradient(ellipse, #0c020c 10%, #000000 100%);
+  background-attachment: fixed;
 }
 a {
   text-decoration: none;
