@@ -76,7 +76,7 @@
     
     
   </strong>
-  <span> • 863 words</span>
+  <span> • 868 words</span>
   <span> • 5 minute read</span>
   
   
@@ -323,7 +323,7 @@ p *$&lt;               # Print the content of &#34;flag.txt&#34;
 </code></pre><p>Note that <code>ARGF</code> operates on the file names inside <code>ARGV</code>.
 Since we can&rsquo;t print the flag to stdout, we can leak it in this way:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span>open(open(<span style="color:#e6db74">&#34;flag.txt&#34;</span>)<span style="color:#f92672">.</span>read()) <span style="color:#75715e"># We need an equivalent payload in ruby</span>
-</span></span></code></pre></div><p>I noticed that <code>$:</code> (which is the equivalent of <code>$LOAD_PATH</code>). Although $: is read-only, you can replace its elements to store strings (or any value).</p>
+</span></span></code></pre></div><p>I noticed that <code>$:</code> (which is the equivalent of <code>$LOAD_PATH</code>) might be useful for us. Although $: is read-only, you can replace its elements to store strings (or any value).</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$: <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;test&#34;</span>         <span style="color:#75715e"># not allowed</span>
 </span></span><span style="display:flex;"><span>$:<span style="color:#f92672">[</span><span style="color:#ae81ff">0</span><span style="color:#f92672">]</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;test&#34;</span>      <span style="color:#75715e"># allowed</span>
 </span></span></code></pre></div><p>Now we have everything to write a working payload which will leak the content of <code>flag.txt.</code></p>
