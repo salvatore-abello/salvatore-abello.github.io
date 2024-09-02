@@ -25,7 +25,7 @@ body {
   color: var(--fontcolor);
   background: var(--bgcolor);
   margin: 0;
-  background: radial-gradient(ellipse, #0c020c 10%, #000000 100%);
+  background: radial-gradient(ellipse, #180707 5%, #000000 100%);
   background-attachment: fixed;
 }
 a {

@@ -2,10 +2,28 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://salvatore-abello.github.io/achievements/</loc>
-    <lastmod>2024-08-25T23:33:36+02:00</lastmod>
+    <loc>https://salvatore-abello.github.io/tags/cybersec/</loc>
+    <lastmod>2024-09-02T14:29:36+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/posts/</loc>
+    <lastmod>2024-09-02T14:29:36+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/posts/resruby/</loc>
+    <lastmod>2024-09-02T14:29:36+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/tags/ruby/</loc>
+    <lastmod>2024-09-02T14:29:36+02:00</lastmod>
   </url><url>
     <loc>https://salvatore-abello.github.io/</loc>
+    <lastmod>2024-09-02T14:29:36+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/tags/</loc>
+    <lastmod>2024-09-02T14:29:36+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/tags/writeup/</loc>
+    <lastmod>2024-09-02T14:29:36+02:00</lastmod>
+  </url><url>
+    <loc>https://salvatore-abello.github.io/achievements/</loc>
     <lastmod>2024-08-25T23:33:36+02:00</lastmod>
   </url><url>
     <loc>https://salvatore-abello.github.io/cve/cve-2024-xxxxx/</loc>
@@ -17,19 +35,7 @@
     <loc>https://salvatore-abello.github.io/whoami/</loc>
     <lastmod>2024-08-25T23:13:05+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/tags/cybersec/</loc>
-    <lastmod>2024-07-26T20:38:20+02:00</lastmod>
-  </url><url>
-    <loc>https://salvatore-abello.github.io/posts/</loc>
-    <lastmod>2024-07-26T20:38:20+02:00</lastmod>
-  </url><url>
     <loc>https://salvatore-abello.github.io/tags/pyjail/</loc>
-    <lastmod>2024-07-26T20:38:20+02:00</lastmod>
-  </url><url>
-    <loc>https://salvatore-abello.github.io/tags/</loc>
-    <lastmod>2024-07-26T20:38:20+02:00</lastmod>
-  </url><url>
-    <loc>https://salvatore-abello.github.io/tags/writeup/</loc>
     <lastmod>2024-07-26T20:38:20+02:00</lastmod>
   </url><url>
     <loc>https://salvatore-abello.github.io/posts/pysysmagic/</loc>
