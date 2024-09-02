@@ -2,25 +2,15 @@ html {
   overflow-y: scroll
 }
 :root {
-  --bgcolor: #f8f9fa;
-  --dimcolor: #eee;
-  --fontcolor: #000;
-  --linkcolor: #00e;
-  --visitedcolor: #551a8b;
+  --bgcolor: #000000;
+  --dimcolor: #333;
+  --fontcolor: #ddd;
+  --linkcolor: #ff68ff;
+  --visitedcolor: #9400a7;
   --precolor: #fff;
-  --prebgcolor: #000;
+  --prebgcolor: #383838;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-     --bgcolor: #000000;
-     --dimcolor: #333;
-     --fontcolor: #ddd;
-     --linkcolor: #ff68ff;
-     --visitedcolor: #9400a7;
-     --precolor: #fff;
-     --prebgcolor: #383838;
-  }
-}
+
 body {
   color: var(--fontcolor);
   background: var(--bgcolor);
