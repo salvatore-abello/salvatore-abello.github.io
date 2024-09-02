@@ -13,14 +13,14 @@
       <link>https://salvatore-abello.github.io/posts/pysysmagic/</link>
       <pubDate>Fri, 26 Jul 2024 20:38:20 +0200</pubDate>
       <guid>https://salvatore-abello.github.io/posts/pysysmagic/</guid>
-      <description>I partecipated to the first edition of L3ak CTF with FoocHackz. I solved this challenge, it wasn&amp;rsquo;t hard but writing a working exploit took me at least one/two hours.&#xA;Index Index Overview Source A bit of Py-Magic Obligatory Pyjail Building payloads from docs Solve Flag Considerations Source Overview As the title of the challenge suggests, it&amp;rsquo;s a pyjail. To be more precise, two challenges from two different CTFs were merged together</description>
+      <description>&lt;p&gt;I partecipated to the first edition of &lt;code&gt;L3ak CTF&lt;/code&gt; with &lt;code&gt;FoocHackz&lt;/code&gt;. I solved this challenge, it wasn&amp;rsquo;t hard but writing a working exploit took me at least one/two hours.&lt;/p&gt;</description>
     </item>
     <item>
       <title>My First Writeup - ez-class - B01lers CTF 2023</title>
       <link>https://salvatore-abello.github.io/posts/ezclass/</link>
       <pubDate>Thu, 23 Mar 2023 00:00:00 +0000</pubDate>
       <guid>https://salvatore-abello.github.io/posts/ezclass/</guid>
-      <description>I liked this challenge a lot so I decided to create a writeup (my first, actually) about it. Thanks to the organizers for this wonderful CTF!&#xA;Overview This challenge is about a service that gives us the possibility to create and run classes. We can specify:&#xA;The class name The parent class The mumber of methods The method names The method params The method bodies There is no blacklist except for this little one here: ().</description>
+      <description>&lt;p&gt;I liked this challenge a lot so I decided to create a writeup (my first, actually) about it. Thanks to the organizers for this wonderful CTF!&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>
