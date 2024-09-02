@@ -320,7 +320,7 @@ By default, ruby has some special global variables. A list of them can be found 
 In order to read files we can use <a href="https://ruby-doc.org/core-2.5.1/ARGF.html">ARGF</a> which is the same as <code>$&lt;</code>. Here&rsquo;s an example:</p>
 <pre tabindex="0"><code>$*&lt;&lt;&#34;flag.txt&#34;      # Put &#34;flag.txt&#34; inside ARGV
 p *$&lt;               # Print the content of &#34;flag.txt&#34;
-</code></pre><p>Note that <code>ARGF</code> operates on the file names inside <code>ARGV</code>
+</code></pre><p>Note that <code>ARGF</code> operates on the file names inside <code>ARGV</code>.
 Since we can&rsquo;t print the flag to stdout, we can leak it in this way:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span>open(open(<span style="color:#e6db74">&#34;flag.txt&#34;</span>)<span style="color:#f92672">.</span>read()) <span style="color:#75715e"># We need an equivalent payload in ruby</span>
 </span></span></code></pre></div><p>I noticed that <code>$:</code> (which is the equivalent of <code>$LOAD_PATH</code>). Although $: is read-only, you can replace its elements to store strings (or any value).</p>
