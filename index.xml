@@ -6,8 +6,15 @@
     <description>Recent content on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 02 Sep 2024 14:29:36 +0200</lastBuildDate>
+    <lastBuildDate>Mon, 14 Oct 2024 18:01:30 +0200</lastBuildDate>
     <atom:link href="https://salvatore-abello.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>CVEs</title>
+      <link>https://salvatore-abello.github.io/cves/</link>
+      <pubDate>Mon, 14 Oct 2024 18:01:30 +0200</pubDate>
+      <guid>https://salvatore-abello.github.io/cves/</guid>
+      <description>Here&amp;rsquo;s a list of my CVEs&#xA;[moderate] CVE-2024-25885 - xhtml2pdf </description>
+    </item>
     <item>
       <title>resruby - CyberSpace CTF 2024</title>
       <link>https://salvatore-abello.github.io/posts/resruby/</link>
@@ -20,14 +27,7 @@
       <link>https://salvatore-abello.github.io/achievements/</link>
       <pubDate>Sun, 25 Aug 2024 23:33:36 +0200</pubDate>
       <guid>https://salvatore-abello.github.io/achievements/</guid>
-      <description>[TeamItaly 2023 - now] I have been selected to be part of TeamItaly: the national cybersecurity team, where the most talented individuals will have the opportunity to represent the country in various international cybersec competitions. Here you can find our results.&#xA;[ECSC 2023] Every year, each country chooses 10 participants to compete in the European Cyber ​​​​Security Challenge (ECSC). In 2023, I was selected to compete in the ECSC which took place in Hamar, Norway.</description>
-    </item>
-    <item>
-      <title>CVE-2024-?????</title>
-      <link>https://salvatore-abello.github.io/cve/cve-2024-xxxxx/</link>
-      <pubDate>Sun, 25 Aug 2024 23:33:28 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/cve/cve-2024-xxxxx/</guid>
-      <description>:eyes:</description>
+      <description>[TeamItaly 2023 - now] I have been selected to be part of TeamItaly: the national cybersecurity team, where the most talented individuals will have the opportunity to represent the country in various international cybersec competitions. Here you can find our results.&#xA;[ECSC 2023 - 2024] Every year, each country chooses 10 participants to compete in the European Cyber ​​​​Security Challenge (ECSC).&#xA;[Internet Festival CTF Finals 2023] I partecipated the IFCTF 2023 finals with FoocHackz.</description>
     </item>
     <item>
       <title>Whoami</title>
@@ -45,10 +45,10 @@
     </item>
     <item>
       <title>CVE-2024-25885</title>
-      <link>https://salvatore-abello.github.io/cve/cve-2024-25885/</link>
+      <link>https://salvatore-abello.github.io/posts/cve-2024-25885/</link>
       <pubDate>Thu, 01 Feb 2024 23:33:28 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/cve/cve-2024-25885/</guid>
-      <description>Coming soon&amp;hellip;</description>
+      <guid>https://salvatore-abello.github.io/posts/cve-2024-25885/</guid>
+      <description>&lt;p&gt;This is my first CVE published by myself. A lot of times people write unsafe regular expressions that can lead to Denial Of Service and this is an example.&lt;/p&gt;</description>
     </item>
     <item>
       <title>One-shot CSS Injection - newdiary - 0ctf 2023</title>
