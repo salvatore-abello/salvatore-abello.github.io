@@ -5,8 +5,8 @@ html {
   --bgcolor: #000000;
   --dimcolor: #333;
   --fontcolor: #ddd;
-  --linkcolor: #ff68ff;
-  --visitedcolor: #9400a7;
+  --linkcolor: #ff00ff;
+  --visitedcolor: #ff00ff;
   --precolor: #fff;
   --prebgcolor: #383838;
 }

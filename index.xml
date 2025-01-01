@@ -13,7 +13,7 @@
       <link>https://salvatore-abello.github.io/cves/</link>
       <pubDate>Mon, 14 Oct 2024 18:01:30 +0200</pubDate>
       <guid>https://salvatore-abello.github.io/cves/</guid>
-      <description>Here&amp;rsquo;s a list of my CVEs&#xA;[moderate] CVE-2024-25885 - xhtml2pdf </description>
+      <description>&lt;p&gt;Here&amp;rsquo;s a list of my CVEs&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;[moderate] &lt;a href=&#34;https://salvatore-abello.github.io/posts/CVE-2024-25885&#34;&gt;CVE-2024-25885&lt;/a&gt; - &lt;a href=&#34;https://github.com/xhtml2pdf/xhtml2pdf&#34;&gt;xhtml2pdf&lt;/a&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
     </item>
     <item>
       <title>resruby - CyberSpace CTF 2024</title>
@@ -27,14 +27,14 @@
       <link>https://salvatore-abello.github.io/achievements/</link>
       <pubDate>Sun, 25 Aug 2024 23:33:36 +0200</pubDate>
       <guid>https://salvatore-abello.github.io/achievements/</guid>
-      <description>[TeamItaly 2023 - now] I have been selected to be part of TeamItaly: the national cybersecurity team, where the most talented individuals will have the opportunity to represent the country in various international cybersec competitions. Here you can find our results.&#xA;[ECSC 2023 - 2024] Every year, each country chooses 10 participants to compete in the European Cyber ​​​​Security Challenge (ECSC).&#xA;[Internet Festival CTF Finals 2023] I partecipated the IFCTF 2023 finals with FoocHackz.</description>
+      <description>&lt;h2 id=&#34;teamitaly-2023---now&#34;&gt;[TeamItaly 2023 - now]&lt;/h2&gt;&#xA;&lt;p&gt;I have been selected to be part of &lt;a href=&#34;https://teamitaly.eu/&#34;&gt;TeamItaly&lt;/a&gt;: the national cybersecurity team, where the most talented individuals will have the opportunity to represent the country in various international cybersec competitions. &lt;a href=&#34;https://ctftime.org/team/193832/&#34;&gt;Here&lt;/a&gt; you can find our results.&lt;/p&gt;&#xA;&lt;h2 id=&#34;ecsc-2023---2024&#34;&gt;[ECSC 2023 - 2024]&lt;/h2&gt;&#xA;&lt;p&gt;Every year, each country chooses 10 participants to compete in the European Cyber ​​​​Security Challenge (&lt;a href=&#34;https://ecsc.eu/&#34;&gt;ECSC&lt;/a&gt;).&lt;/p&gt;&#xA;&lt;h3 id=&#34;other-achievements&#34;&gt;Other achievements&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;Snake CTF Finals 2024&lt;/li&gt;&#xA;&lt;li&gt;Internet Festival CTF Finals 2023&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
     </item>
     <item>
       <title>Whoami</title>
       <link>https://salvatore-abello.github.io/whoami/</link>
       <pubDate>Sun, 25 Aug 2024 23:13:05 +0200</pubDate>
       <guid>https://salvatore-abello.github.io/whoami/</guid>
-      <description>Hi! I&amp;rsquo;m Salvatore Abello and I&amp;rsquo;m a computer science student and a cybersec enthusiast. I&amp;rsquo;m also a CTF player in various teams like @mhackeroni, @Pwnzer0tt1, @TRX and other smaller teams.&#xA;I&amp;rsquo;m intrested in Web Security, especially when it comes to finding and exploiting weird behavior in libraries or products.&#xA;I also love breaking Python Sandboxes (pyjails) 😀&#xA;Cybersecurity is not the only thing that interests me! You can find some of my projects here.</description>
+      <description>&lt;p&gt;Hi!&#xA;I&amp;rsquo;m Salvatore Abello and I&amp;rsquo;m a computer science student and a cybersec enthusiast. I&amp;rsquo;m also a CTF player in various teams like &lt;a href=&#34;https://mhackeroni.it/&#34;&gt;@mhackeroni&lt;/a&gt;, &lt;a href=&#34;https://theromanxpl0.it/&#34;&gt;@TRX&lt;/a&gt; and other smaller teams.&lt;/p&gt;&#xA;&lt;p&gt;I&amp;rsquo;m intrested in Web Security, especially when it comes to finding and exploiting weird behavior in libraries.&lt;br&gt;&#xA;I also love breaking Python Sandboxes (pyjails) 😀&lt;/p&gt;&#xA;&lt;p&gt;Cybersecurity is not the only thing that interests me! You can find some of my projects &lt;a href=&#34;https://github.com/salvatore-abello/&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;&#xA;&lt;p&gt;If you want to get in touch with me, you can send an e-mail to &lt;a href=&#34;mailto://salvatore.abello2005@gmail.com&#34;&gt;salvatore.abello2005@gmail.com&lt;/a&gt; or you can use one of the platforms below.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Yet Another PyJail - PySysMagic - L3ak CTF 2024</title>
