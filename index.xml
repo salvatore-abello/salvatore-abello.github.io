@@ -6,8 +6,15 @@
     <description>Recent content on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 14 Oct 2024 18:01:30 +0200</lastBuildDate>
+    <lastBuildDate>Wed, 01 Jan 2025 15:33:00 +0000</lastBuildDate>
     <atom:link href="https://salvatore-abello.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>fire-leak - ASIS CTF Finals 2024</title>
+      <link>https://salvatore-abello.github.io/posts/fire-leak/</link>
+      <pubDate>Wed, 01 Jan 2025 15:33:00 +0000</pubDate>
+      <guid>https://salvatore-abello.github.io/posts/fire-leak/</guid>
+      <description>&lt;p&gt;This year, I played in the ASIS CTF Finals with &lt;code&gt;@TheRomanXpl0it&lt;/code&gt;, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve never seen a similar challenge before. &lt;code&gt;@simonedimaria&lt;/code&gt; and I worked on this challenge and solved it after about 8 hours.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>CVEs</title>
       <link>https://salvatore-abello.github.io/cves/</link>
