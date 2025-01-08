@@ -6,8 +6,15 @@
     <description>Recent content on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 01 Jan 2025 15:33:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 07 Jan 2025 00:00:00 +0200</lastBuildDate>
     <atom:link href="https://salvatore-abello.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>CVE-2024-25885</title>
+      <link>https://salvatore-abello.github.io/posts/cve-2024-46242/</link>
+      <pubDate>Tue, 07 Jan 2025 00:00:00 +0200</pubDate>
+      <guid>https://salvatore-abello.github.io/posts/cve-2024-46242/</guid>
+      <description>&lt;p&gt;TODO&lt;/p&gt;</description>
+    </item>
     <item>
       <title>fire-leak - ASIS CTF Finals 2024</title>
       <link>https://salvatore-abello.github.io/posts/fire-leak/</link>
@@ -56,13 +63,6 @@
       <pubDate>Thu, 01 Feb 2024 23:33:28 +0200</pubDate>
       <guid>https://salvatore-abello.github.io/posts/cve-2024-25885/</guid>
       <description>&lt;p&gt;This is my first published CVE. A lot of times people write unsafe regular expressions that can lead to Denial Of Service and this is an example.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>CVE-2024-25885</title>
-      <link>https://salvatore-abello.github.io/posts/cve-2024-46242/</link>
-      <pubDate>Thu, 01 Feb 2024 23:33:28 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/cve-2024-46242/</guid>
-      <description>&lt;p&gt;TODO&lt;/p&gt;</description>
     </item>
     <item>
       <title>One-shot CSS Injection - newdiary - 0ctf 2023</title>
