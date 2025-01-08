@@ -20,7 +20,7 @@
       <link>https://salvatore-abello.github.io/cves/</link>
       <pubDate>Mon, 14 Oct 2024 18:01:30 +0200</pubDate>
       <guid>https://salvatore-abello.github.io/cves/</guid>
-      <description>&lt;p&gt;Here&amp;rsquo;s a list of my CVEs&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;[moderate] &lt;a href=&#34;https://salvatore-abello.github.io/posts/cve-2024-25885&#34;&gt;CVE-2024-25885&lt;/a&gt; - &lt;a href=&#34;https://github.com/xhtml2pdf/xhtml2pdf&#34;&gt;xhtml2pdf&lt;/a&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+      <description>&lt;p&gt;Here&amp;rsquo;s a list of my CVEs&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;[moderate] &lt;a href=&#34;https://salvatore-abello.github.io/posts/cve-2024-25885&#34;&gt;CVE-2024-25885&lt;/a&gt; - &lt;a href=&#34;https://github.com/xhtml2pdf/xhtml2pdf&#34;&gt;xhtml2pdf&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;[high] &lt;a href=&#34;https://salvatore-abello.github.io/posts/cve-2024-46242&#34;&gt;CVE-2024-46242&lt;/a&gt; - &lt;a href=&#34;https://ctfd.io/&#34;&gt;CTFd&lt;/a&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
     </item>
     <item>
       <title>resruby - CyberSpace CTF 2024</title>
@@ -56,6 +56,13 @@
       <pubDate>Thu, 01 Feb 2024 23:33:28 +0200</pubDate>
       <guid>https://salvatore-abello.github.io/posts/cve-2024-25885/</guid>
       <description>&lt;p&gt;This is my first published CVE. A lot of times people write unsafe regular expressions that can lead to Denial Of Service and this is an example.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>CVE-2024-25885</title>
+      <link>https://salvatore-abello.github.io/posts/cve-2024-46242/</link>
+      <pubDate>Thu, 01 Feb 2024 23:33:28 +0200</pubDate>
+      <guid>https://salvatore-abello.github.io/posts/cve-2024-46242/</guid>
+      <description>&lt;p&gt;TODO&lt;/p&gt;</description>
     </item>
     <item>
       <title>One-shot CSS Injection - newdiary - 0ctf 2023</title>
