@@ -27,7 +27,7 @@
       <link>https://salvatore-abello.github.io/cves/</link>
       <pubDate>Mon, 14 Oct 2024 18:01:30 +0200</pubDate>
       <guid>https://salvatore-abello.github.io/cves/</guid>
-      <description>&lt;p&gt;Here&amp;rsquo;s a list of my CVEs&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;[moderate] &lt;a href=&#34;https://salvatore-abello.github.io/posts/cve-2024-25885&#34;&gt;CVE-2024-25885&lt;/a&gt; - &lt;a href=&#34;https://github.com/xhtml2pdf/xhtml2pdf&#34;&gt;xhtml2pdf&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;[high] &lt;a href=&#34;https://salvatore-abello.github.io/posts/cve-2024-46242&#34;&gt;CVE-2024-46242&lt;/a&gt; - &lt;a href=&#34;https://ctfd.io/&#34;&gt;CTFd&lt;/a&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+      <description>&lt;p&gt;Here&amp;rsquo;s a list of my CVEs&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;[high] &lt;a href=&#34;https://salvatore-abello.github.io/posts/cve-2024-46242&#34;&gt;CVE-2024-46242&lt;/a&gt; - &lt;a href=&#34;https://ctfd.io/&#34;&gt;CTFd&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;[moderate] &lt;a href=&#34;https://salvatore-abello.github.io/posts/cve-2024-25885&#34;&gt;CVE-2024-25885&lt;/a&gt; - &lt;a href=&#34;https://github.com/xhtml2pdf/xhtml2pdf&#34;&gt;xhtml2pdf&lt;/a&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
     </item>
     <item>
       <title>resruby - CyberSpace CTF 2024</title>
