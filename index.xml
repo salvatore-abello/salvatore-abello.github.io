@@ -13,7 +13,7 @@
       <link>https://salvatore-abello.github.io/posts/keeper/</link>
       <pubDate>Thu, 27 Feb 2025 16:14:14 +0100</pubDate>
       <guid>https://salvatore-abello.github.io/posts/keeper/</guid>
-      <description>CSS Injections have always fascinated me. While reading this post, I asked myself &amp;ldquo;is it possible to do CSS Exfiltration if default-src &amp;lsquo;self&amp;rsquo; is specified in the CSP?&amp;rdquo;&#xA;Well, if you&amp;rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this technique for TRX CTF 2025: Keeper. This post will serve both as a writeup for the challenge and as an explanation of this new &amp;ldquo;technique&amp;rdquo;.</description>
+      <description>CSS Injections have always fascinated me. A few months ago, I asked myself: &amp;ldquo;is it possible to do CSS Exfiltration if default-src &amp;lsquo;self&amp;rsquo; is specified in the CSP?&amp;rdquo;&#xA;Well, if you&amp;rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this technique for TRX CTF 2025: Keeper. This post will serve both as a writeup for the challenge and as an explanation of this new &amp;ldquo;technique&amp;rdquo;.</description>
     </item>
     <item>
       <title>fire-leak - ASIS CTF Finals 2024</title>
@@ -21,6 +21,13 @@
       <pubDate>Wed, 01 Jan 2025 12:00:37 +0100</pubDate>
       <guid>https://salvatore-abello.github.io/posts/fire-leak/</guid>
       <description>This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve never seen a similar challenge before. @simonedimaria and I worked on this challenge and solved it after about 8 hours.&#xA;Overview As the name suggests, this is an XS-Leak challenge. We&amp;rsquo;re given the source code and there are three endpoints.</description>
+    </item>
+    <item>
+      <title>CVE-2024-46242</title>
+      <link>https://salvatore-abello.github.io/posts/cve-2024-46242/</link>
+      <pubDate>Tue, 31 Dec 2024 00:33:28 +0200</pubDate>
+      <guid>https://salvatore-abello.github.io/posts/cve-2024-46242/</guid>
+      <description>TODO</description>
     </item>
     <item>
       <title>CVEs</title>
