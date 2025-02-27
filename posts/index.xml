@@ -6,21 +6,14 @@
     <description>Recent content in Posts on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 07 Jan 2025 00:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Thu, 27 Feb 2025 16:14:14 +0100</lastBuildDate>
     <atom:link href="https://salvatore-abello.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>CVE-2024-46242</title>
-      <link>https://salvatore-abello.github.io/posts/cve-2024-46242/</link>
-      <pubDate>Tue, 07 Jan 2025 00:00:00 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/cve-2024-46242/</guid>
-      <description>&lt;p&gt;TODO&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>fire-leak - ASIS CTF Finals 2024</title>
-      <link>https://salvatore-abello.github.io/posts/fire-leak/</link>
-      <pubDate>Wed, 01 Jan 2025 15:33:00 +0000</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/fire-leak/</guid>
-      <description>&lt;p&gt;This year, I played in the ASIS CTF Finals with &lt;code&gt;@TheRomanXpl0it&lt;/code&gt;, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve never seen a similar challenge before. &lt;code&gt;@simonedimaria&lt;/code&gt; and I worked on this challenge and solved it after about 8 hours.&lt;/p&gt;</description>
+      <title>CSS Exfiltration Under default-src &#39;self&#39;</title>
+      <link>https://salvatore-abello.github.io/posts/keeper/</link>
+      <pubDate>Thu, 27 Feb 2025 16:14:14 +0100</pubDate>
+      <guid>https://salvatore-abello.github.io/posts/keeper/</guid>
+      <description>CSS Injection has always fascinated me. While reading this post, I asked myself &amp;ldquo;is it possible to do CSS Exfiltration if default-src &amp;lsquo;self&amp;rsquo; is specified in the CSP?&amp;rdquo;&#xA;Well, if you&amp;rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this technique for TRX CTF 2025: Keeper. This post will serve both as a writeup for the challenge and as an explanation of this new &amp;ldquo;technique&amp;rdquo;.</description>
     </item>
     <item>
       <title>resruby - CyberSpace CTF 2024</title>
@@ -41,7 +34,7 @@
       <link>https://salvatore-abello.github.io/posts/cve-2024-25885/</link>
       <pubDate>Thu, 01 Feb 2024 23:33:28 +0200</pubDate>
       <guid>https://salvatore-abello.github.io/posts/cve-2024-25885/</guid>
-      <description>&lt;p&gt;This is my first published CVE. A lot of times people write unsafe regular expressions that can lead to Denial Of Service and this is an example.&lt;/p&gt;</description>
+      <description>&lt;p&gt;This is my first CVE published by myself. A lot of times people write unsafe regular expressions that can lead to Denial Of Service and this is an example.&lt;/p&gt;</description>
     </item>
     <item>
       <title>One-shot CSS Injection - newdiary - 0ctf 2023</title>
