@@ -9,7 +9,7 @@
     <lastBuildDate>Thu, 27 Feb 2025 16:14:14 +0100</lastBuildDate>
     <atom:link href="https://salvatore-abello.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>CSS Exfiltration Under default-src &#39;self&#39;</title>
+      <title>CSS Exfiltration under default-src &#39;self&#39;</title>
       <link>https://salvatore-abello.github.io/posts/keeper/</link>
       <pubDate>Thu, 27 Feb 2025 16:14:14 +0100</pubDate>
       <guid>https://salvatore-abello.github.io/posts/keeper/</guid>
