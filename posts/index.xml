@@ -10,9 +10,9 @@
     <atom:link href="https://salvatore-abello.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>CSS Exfiltration under default-src &#39;self&#39;</title>
-      <link>https://salvatore-abello.github.io/posts/keeper/</link>
+      <link>https://salvatore-abello.github.io/posts/css-exfil-under-default-src/</link>
       <pubDate>Thu, 27 Feb 2025 16:14:14 +0100</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/keeper/</guid>
+      <guid>https://salvatore-abello.github.io/posts/css-exfil-under-default-src/</guid>
       <description>CSS Injections have always fascinated me. A few months ago, I asked myself: &amp;ldquo;is it possible to do CSS Exfiltration if default-src &amp;lsquo;self&amp;rsquo; is specified in the CSP?&amp;rdquo;&#xA;Well, if you&amp;rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this for TRX CTF 2025: Keeper. This post will serve both as a writeup for the challenge and as an explanation of this new &amp;ldquo;technique&amp;rdquo;.</description>
     </item>
     <item>
