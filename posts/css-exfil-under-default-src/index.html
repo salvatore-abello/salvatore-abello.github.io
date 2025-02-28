@@ -76,7 +76,7 @@
     
     
   </strong>
-  <span> • 2232 words</span>
+  <span> • 2251 words</span>
   <span> • 11 minute read</span>
   
   
@@ -84,8 +84,29 @@
 
       <div class="content"><p>CSS Injections have always fascinated me. A few months ago, I asked myself: <em>&ldquo;is it possible to do CSS Exfiltration if default-src &lsquo;self&rsquo; is specified in the CSP?&rdquo;</em></p>
 <p>Well, if you&rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this for TRX CTF 2025: <a href="https://github.com/TheRomanXpl0it/TRX-CTF-2025/tree/main/web/keeper">Keeper</a>. This post will serve both as a writeup for the challenge and as an explanation of this new &ldquo;technique&rdquo;.</p>
+<h2 id="index">Index</h2>
+<ul>
+<li><a href="#index">Index</a></li>
+<li><a href="#keeper">Keeper</a>
+<ul>
+<li><a href="#overview">Overview</a></li>
+</ul>
+</li>
+<li><a href="#solution">Solution</a>
+<ul>
+<li><a href="#swimming-in-the-connection-pool-">Swimming in the Connection Pool 🏊</a></li>
+</ul>
+</li>
+<li><a href="#putting-it-all-together">Putting it all together</a>
+<ul>
+<li><a href="#poc">PoC</a></li>
+<li><a href="#final-payload">Final payload</a></li>
+</ul>
+</li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
 <!-- raw HTML omitted -->
-<h1 id="keeper">Keeper</h1>
+<h2 id="keeper">Keeper</h2>
 <blockquote>
 <p>Author: @salvatore-abello</p>
 <p>Solves: 3</p>
