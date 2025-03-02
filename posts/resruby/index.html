@@ -91,7 +91,11 @@
 </div>
 
       <div class="content"><p>I partecipated to the first edition of <code>CyberSpace CTF</code> with <a href="https://theromanxpl0.it/">@TheRomanXpl0it</a>. It&rsquo;s always nice to see some jail challenges so, I decided to write a writeup for the challenge I liked the most: resruby.</p>
-<h1 id="index">Index</h1>
+<h1 id="index">
+  <a class="full-clickable-heading" href="#index">
+    Index
+  </a>
+</h1>
 <ul>
 <li><a href="#overview">Overview</a>
 <ul>
@@ -105,10 +109,20 @@
 <li><a href="#considerations">Considerations</a></li>
 <li><a href="#resources">Resources</a></li>
 </ul>
-<h1 id="overview">Overview</h1>
+
+<h1 id="overview">
+  <a class="full-clickable-heading" href="#overview">
+    Overview
+  </a>
+</h1>
 <p>Since this challenge was in the <code>jail</code> category, it can be deduced that it requires executing arbitrary code while bypassing some checks/restrictions.</p>
 <p>With that in mind, let&rsquo;s take a look at the source code</p>
-<h2 id="source">Source</h2>
+
+<h2 id="source">
+  <a class="full-clickable-heading" href="#source">
+    Source
+  </a>
+</h2>
 <p>We&rsquo;re given a single file called <code>chall.rb</code></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span><span style="color:#66d9ef">STDOUT</span><span style="color:#f92672">.</span>sync <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">STDOUT</span><span style="color:#f92672">.</span>class<span style="color:#f92672">.</span>send(<span style="color:#e6db74">:remove_method</span>, <span style="color:#e6db74">:&lt;&lt;</span>)
@@ -281,7 +295,12 @@ Also, the <code>&lt;&lt;</code> method of <code>STDOUT</code> is disabled so it&
 
         </span>Note</p><p>The flag is inside flag.txt</p></div>
 
-<h2 id="building-strings-from-scratch">Building strings from scratch</h2>
+
+<h2 id="building-strings-from-scratch">
+  <a class="full-clickable-heading" href="#building-strings-from-scratch">
+    Building strings from scratch
+  </a>
+</h2>
 <p>From the previous ruby jail I learned that it&rsquo;s not required to use quotes to create strings by using this payload</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>A<span style="color:#f92672">=</span><span style="color:#e6db74">%&lt;&gt;</span>       <span style="color:#75715e"># creates an empty string</span>
 </span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#e6db74">?f</span>
@@ -337,7 +356,12 @@ By default, ruby has some special global variables. A list of them can be found 
 
         </span>Note</p><p>In our case it&rsquo;s also possible to use the variable <code>$$</code> since the pid of our process will always be 2.</p></div>
 
-<h2 id="reading-and-leaking-the-flag">Reading and leaking the flag</h2>
+
+<h2 id="reading-and-leaking-the-flag">
+  <a class="full-clickable-heading" href="#reading-and-leaking-the-flag">
+    Reading and leaking the flag
+  </a>
+</h2>
 <p>Now comes the trickiest part.
 In order to read files we can use <a href="https://ruby-doc.org/core-2.5.1/ARGF.html">ARGF</a> which is the same as <code>$&lt;</code>. Here&rsquo;s an example:</p>
 <pre tabindex="0"><code>$*&lt;&lt;&#34;flag.txt&#34;      # Put &#34;flag.txt&#34; inside ARGV
@@ -349,7 +373,12 @@ Since we can&rsquo;t print the flag to stdout, we can leak it in this way:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$: <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;test&#34;</span>         <span style="color:#75715e"># not allowed</span>
 </span></span><span style="display:flex;"><span>$:<span style="color:#f92672">[</span><span style="color:#ae81ff">0</span><span style="color:#f92672">]</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;test&#34;</span>      <span style="color:#75715e"># allowed</span>
 </span></span></code></pre></div><p>Now we have everything to write a working payload which will leak the content of <code>flag.txt.</code></p>
-<h1 id="solve">Solve</h1>
+
+<h1 id="solve">
+  <a class="full-clickable-heading" href="#solve">
+    Solve
+  </a>
+</h1>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$,<span style="color:#f92672">=</span><span style="color:#e6db74">%&lt;&gt;</span>                  
 </span></span><span style="display:flex;"><span>$,<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">102</span>                 <span style="color:#75715e"># f</span>
 </span></span><span style="display:flex;"><span>$,<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">108</span>                 <span style="color:#75715e"># l</span>
@@ -373,9 +402,19 @@ Since we can&rsquo;t print the flag to stdout, we can leak it in this way:</p>
 <li><code>$,=*$&lt;</code> Finally, read the content of the file whose name is inside ARGV. In our case the name is the content of <code>flag.txt</code>. This will obviously raise an error (<code>Errno::ENOENT</code>), printing to stderr the flag.</li>
 </ul>
 <p>You can find the final payload <a href="https://gist.github.com/salvatore-abello/260c5380d55dc281c959d087718ee5ef">here</a></p>
-<h1 id="flag">Flag</h1>
+
+<h1 id="flag">
+  <a class="full-clickable-heading" href="#flag">
+    Flag
+  </a>
+</h1>
 <pre tabindex="0"><code>CSCTF{what_was_harder?_leaking_flag_or_getting_strings}
-</code></pre><h1 id="considerations">Considerations</h1>
+</code></pre>
+<h1 id="considerations">
+  <a class="full-clickable-heading" href="#considerations">
+    Considerations
+  </a>
+</h1>
 <p>A revenge challenge has also been released where there&rsquo;s a limit of 35 characters to our input. A shorter payload could be made by reading from STDIN the flag path.
 By doing so, the payload becomes (32 characters):</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$*<span style="color:#f92672">.</span>&lt;&lt;(<span style="color:#f92672">*</span>$&lt;) <span style="color:#75715e"># read from stdin</span>
@@ -396,7 +435,12 @@ Since you can&rsquo;t directly send <code>CTRL+D</code> to the remote server, yo
 I didn&rsquo;t know that <code>remote.shutdown</code> existed so I was unable to solve the revenge version.</p>
 <p>But at the end, it was a fun challenge to solve ❤️</p>
 <p>Thanks to the authors for the challenge and for the CTF in general.</p>
-<h1 id="resources">Resources</h1>
+
+<h1 id="resources">
+  <a class="full-clickable-heading" href="#resources">
+    Resources
+  </a>
+</h1>
 <p>Ruby Docs - <a href="https://ruby-doc.org/">Click here</a><br>
 Ruby Global Variables - <a href="https://rubyreferences.github.io/rubyref/language/globals.html">Click here</a><br>
 Ruby Golf Cheatsheet - <a href="https://medium.com/ruby-golf/ruby-golf-cheatsheet-eb27ec2cdf60#Special%20variables">Click here</a><br>

