@@ -76,7 +76,7 @@
     
     
   </strong>
-  <span> • 3580 words</span>
+  <span> • 3581 words</span>
   <span> • 17 minute read</span>
   
   
@@ -367,7 +367,7 @@ However, the following technique involves counting the number of requests made. 
 </h4>
 <p><!-- raw HTML omitted -->A request is considered &ldquo;stalled&rdquo; when both of these conditions are met<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup><!-- raw HTML omitted -->:</p>
 <ul>
-<li>The socket pool has already handed out (or is in the process of connecting) as many sockets as allowed—that is, the total number of sockets in use is at least the global maximum.</li>
+<li>The socket pool has already handed out (or is in the process of connecting) as many sockets as allowed, that is, the total number of sockets in use is at least the global maximum.</li>
 <li>Despite the global limit being reached, there is at least one group with pending requests that has not yet hit its per-group socket limit. In other words, if a group could accept another socket (because it hasn’t reached its group limit), but the pool overall is full, then a request waiting in that group is stalled due to the global socket exhaustion.</li>
 </ul>
 <p>It&rsquo;s known that when a socket is freed, the request with the highest priority is processed first. However, if two stalled requests have the same priority, it&rsquo;s unclear which one gets served next.</p>
