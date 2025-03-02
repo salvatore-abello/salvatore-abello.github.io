@@ -551,6 +551,7 @@ However, the following technique involves counting the number of requests made. 
 <li>After the loop ends, the last fetch request from <code>6</code> is processed. At this point, since only two requests remain, the fetch request from step <code>6</code> gets priority, allowing the fetch from step <code>3</code> to complete!</li>
 <li>Finally, count the number of fetch requests from step <code>6</code> that were processed. This count corresponds to the number of font requests made via CSS, which corresponds to the letter assigned to that number of requests! For example, if 4 fetch requests are processed, the leaked letter is <code>B</code></li>
 </ol>
+<p><img src="/images/sockets-res.gif" alt="alt text"></p>
 <p>Now the last thing to do is putting everything together!</p>
 
 <h2 id="putting-it-all-together">
