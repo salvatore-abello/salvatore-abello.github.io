@@ -80,6 +80,11 @@ a {
   white-space: normal;
 }
 
+code{
+  word-wrap: break-word;
+  overflow-wrap: break-word; 
+}
+
 /* other */
 
 /* Make sure headings are positioned relative */
