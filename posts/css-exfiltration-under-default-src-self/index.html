@@ -76,7 +76,7 @@
     
     
   </strong>
-  <span> • 3581 words</span>
+  <span> • 3580 words</span>
   <span> • 17 minute read</span>
   
   
@@ -489,7 +489,7 @@ However, the following technique involves counting the number of requests made. 
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>...
-</span></span></code></pre></div><p>Since <code>std::map</code> <!-- raw HTML omitted -->uses the &lt; operator to order its keys<sup id="fnref:7"><a href="#fn:7" class="footnote-ref" role="doc-noteref">7</a></sup><!-- raw HTML omitted -->, <code>group_map_</code> ends up being sorted according to that tuple. In effect, the keys are arranged sequentially by <code>{port, scheme, host}</code> (among other factors, which I&rsquo;m ignoring here).</p>
+</span></span></code></pre></div><p>Since <code>std::map</code> <!-- raw HTML omitted -->uses the &lt; operator to order its keys<sup id="fnref:7"><a href="#fn:7" class="footnote-ref" role="doc-noteref">7</a></sup><!-- raw HTML omitted -->, <code>group_map_</code> ends up being sorted according to that tuple. So, the keys are arranged sequentially by <code>{port, scheme, host}</code> (among other factors, which I&rsquo;m ignoring here).</p>
 <p>Consider two examples illustrating the ordering:</p>
 <p><strong>Example 1</strong>:</p>
 <ul>
