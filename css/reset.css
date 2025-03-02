@@ -79,3 +79,69 @@ a {
   overflow-wrap: break-word;
   white-space: normal;
 }
+
+/* other */
+
+/* Make sure headings are positioned relative */
+h1, h2, h3, h4, h5, h6 {
+  position: relative;
+}
+
+.header-anchor {
+  position: absolute;
+  left: -1.5rem;  /* Adjust this value as needed */
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;   /* Hidden by default */
+  transition: opacity 0.3s ease-in-out;
+  text-decoration: none;
+}
+
+
+h1:hover .header-anchor,
+h2:hover .header-anchor,
+h3:hover .header-anchor,
+h4:hover .header-anchor,
+h5:hover .header-anchor,
+h6:hover .header-anchor {
+  opacity: 1;
+}
+
+/* Optional keyframes animation for a one-time effect */
+.animated-anchor {
+  animation: fadeSlideIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+.full-clickable-heading {
+  display: block;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Use a pseudo-element to add the hash symbol without affecting layout */
+.full-clickable-heading::before {
+  content: "#";
+  position: absolute;
+  left: -1.5rem; /* Adjust as needed */
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Show the hash when hovering over the heading */
+.full-clickable-heading:hover::before {
+  opacity: 1;
+}

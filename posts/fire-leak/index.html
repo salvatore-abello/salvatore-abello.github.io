@@ -84,7 +84,12 @@
 
       <div class="content"><p>This year, I played in the ASIS CTF Finals with <code>@TheRomanXpl0it</code>, and we secured 7th place at the end of the CTF. I decided to write this up because I&rsquo;ve never seen a similar challenge before. <code>@simonedimaria</code> and I worked on this challenge and solved it after about 8 hours.</p>
 <!-- raw HTML omitted -->
-<h2 id="overview">Overview</h2>
+
+<h2 id="overview">
+  <a class="full-clickable-heading" href="#overview">
+    Overview
+  </a>
+</h2>
 <p>As the name suggests, this is an <a href="https://xsleaks.dev/">XS-Leak</a> challenge. We&rsquo;re given the source code and there are three endpoints.</p>
 <p><code>/save-flag</code></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// For the admin bot
@@ -302,7 +307,12 @@
 
         </span>Note</p><p>The bot uses Firefox!</p></div>
 
-<h2 id="solution">Solution</h2>
+
+<h2 id="solution">
+  <a class="full-clickable-heading" href="#solution">
+    Solution
+  </a>
+</h2>
 <p>The first thing that came to our mind was searching for weird behaviors in Firefox, hoping to find something useful. And we did:</p>
 <p><img src="/images/image-fireleak.png" alt="alt text"></p>
 <p><strong>Note:</strong> If you don&rsquo;t know what a ReDoS is, check out <a href="https://blog.huli.tw/2023/06/12/en/redos-regular-expression-denial-of-service/">this article!</a>.</p>
@@ -362,7 +372,12 @@ Unfortunately, no. Timing attacks using ReDoS are inherently unstable, as they d
 <p><img src="/images/image-fireleak2.png" alt="alt text"></p>
 <p>We were the only team that managed to solve this challenge.</p>
 <p><img src="/images/image-fireleak3.png" alt="alt text"></p>
-<h2 id="conclusions">Conclusions</h2>
+
+<h2 id="conclusions">
+  <a class="full-clickable-heading" href="#conclusions">
+    Conclusions
+  </a>
+</h2>
 <p>After reading the <a href="https://blog.arkark.dev/2024/12/30/asisctf-finals/">author&rsquo;s writeup</a>, we saw that he used a slightly different approach by doing frame counting, and his exploit leaks the token in about 30 seconds!</p>
 <p>Anyway, thanks for the great CTF, we had a lot of fun!</p>
 </div>
