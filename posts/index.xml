@@ -6,8 +6,15 @@
     <description>Recent content in Posts on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 27 Feb 2025 16:14:14 +0100</lastBuildDate>
+    <lastBuildDate>Tue, 01 Apr 2025 21:07:39 +0200</lastBuildDate>
     <atom:link href="https://salvatore-abello.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Intigriti Challenge 0325 - Leaky Flagment - Writeup</title>
+      <link>https://salvatore-abello.github.io/posts/intigriti-challenge-0325/</link>
+      <pubDate>Tue, 01 Apr 2025 21:07:39 +0200</pubDate>
+      <guid>https://salvatore-abello.github.io/posts/intigriti-challenge-0325/</guid>
+      <description>&lt;p&gt;This month, I decided to try to solve my first Intigriti challenge. There were many pieces to put together in order to solve this one, but in the end, I managed to succeed and learned a lot of stuff.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>CSS Exfiltration under default-src &#39;self&#39;</title>
       <link>https://salvatore-abello.github.io/posts/css-exfiltration-under-default-src-self/</link>

