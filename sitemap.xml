@@ -2,72 +2,87 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://salvatore-abello.github.io/posts/intigriti-challenge-0325/</loc>
+    <loc>https://blog.babelo.xyz/tags/client-side/</loc>
     <lastmod>2025-04-02T02:41:39+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/posts/</loc>
+    <loc>https://blog.babelo.xyz/tags/cybersec/</loc>
     <lastmod>2025-04-02T02:41:39+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/</loc>
+    <loc>https://blog.babelo.xyz/tags/intigriti/</loc>
     <lastmod>2025-04-02T02:41:39+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/posts/css-exfiltration-under-default-src-self/</loc>
+    <loc>https://blog.babelo.xyz/posts/intigriti-challenge-0325/</loc>
+    <lastmod>2025-04-02T02:41:39+02:00</lastmod>
+  </url><url>
+    <loc>https://blog.babelo.xyz/posts/</loc>
+    <lastmod>2025-04-02T02:41:39+02:00</lastmod>
+  </url><url>
+    <loc>https://blog.babelo.xyz/</loc>
+    <lastmod>2025-04-02T02:41:39+02:00</lastmod>
+  </url><url>
+    <loc>https://blog.babelo.xyz/tags/</loc>
+    <lastmod>2025-04-02T02:41:39+02:00</lastmod>
+  </url><url>
+    <loc>https://blog.babelo.xyz/tags/writeup/</loc>
+    <lastmod>2025-04-02T02:41:39+02:00</lastmod>
+  </url><url>
+    <loc>https://blog.babelo.xyz/tags/csp/</loc>
     <lastmod>2025-02-27T16:14:14+01:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/posts/fire-leak/</loc>
+    <loc>https://blog.babelo.xyz/tags/css/</loc>
+    <lastmod>2025-02-27T16:14:14+01:00</lastmod>
+  </url><url>
+    <loc>https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/</loc>
+    <lastmod>2025-02-27T16:14:14+01:00</lastmod>
+  </url><url>
+    <loc>https://blog.babelo.xyz/tags/research/</loc>
+    <lastmod>2025-02-27T16:14:14+01:00</lastmod>
+  </url><url>
+    <loc>https://blog.babelo.xyz/posts/fire-leak/</loc>
     <lastmod>2025-01-01T12:00:37+01:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/posts/cve-2024-46242/</loc>
+    <loc>https://blog.babelo.xyz/tags/redos/</loc>
+    <lastmod>2025-01-01T12:00:37+01:00</lastmod>
+  </url><url>
+    <loc>https://blog.babelo.xyz/posts/cve-2024-46242/</loc>
     <lastmod>2024-12-31T00:33:28+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/cves/</loc>
+    <loc>https://blog.babelo.xyz/cves/</loc>
     <lastmod>2024-10-14T18:01:30+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/tags/cybersec/</loc>
+    <loc>https://blog.babelo.xyz/posts/resruby/</loc>
     <lastmod>2024-09-02T14:29:36+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/posts/resruby/</loc>
+    <loc>https://blog.babelo.xyz/tags/ruby/</loc>
     <lastmod>2024-09-02T14:29:36+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/tags/ruby/</loc>
-    <lastmod>2024-09-02T14:29:36+02:00</lastmod>
-  </url><url>
-    <loc>https://salvatore-abello.github.io/tags/</loc>
-    <lastmod>2024-09-02T14:29:36+02:00</lastmod>
-  </url><url>
-    <loc>https://salvatore-abello.github.io/tags/writeup/</loc>
-    <lastmod>2024-09-02T14:29:36+02:00</lastmod>
-  </url><url>
-    <loc>https://salvatore-abello.github.io/achievements/</loc>
+    <loc>https://blog.babelo.xyz/achievements/</loc>
     <lastmod>2024-08-25T23:33:36+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/whoami/</loc>
+    <loc>https://blog.babelo.xyz/whoami/</loc>
     <lastmod>2024-08-25T23:13:05+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/tags/pyjail/</loc>
+    <loc>https://blog.babelo.xyz/tags/pyjail/</loc>
     <lastmod>2024-07-26T20:38:20+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/posts/pysysmagic/</loc>
+    <loc>https://blog.babelo.xyz/posts/pysysmagic/</loc>
     <lastmod>2024-07-26T20:38:20+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/posts/cve-2024-25885/</loc>
+    <loc>https://blog.babelo.xyz/posts/cve-2024-25885/</loc>
     <lastmod>2024-02-01T23:33:28+02:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/tags/client-side/</loc>
+    <loc>https://blog.babelo.xyz/tags/css-injection/</loc>
     <lastmod>2023-12-12T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/tags/css-injection/</loc>
+    <loc>https://blog.babelo.xyz/posts/newdiary/</loc>
     <lastmod>2023-12-12T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/posts/newdiary/</loc>
+    <loc>https://blog.babelo.xyz/tags/web/</loc>
     <lastmod>2023-12-12T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/tags/web/</loc>
-    <lastmod>2023-12-12T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://salvatore-abello.github.io/posts/ezclass/</loc>
+    <loc>https://blog.babelo.xyz/posts/ezclass/</loc>
     <lastmod>2023-03-23T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://salvatore-abello.github.io/categories/</loc>
+    <loc>https://blog.babelo.xyz/categories/</loc>
   </url>
 </urlset>

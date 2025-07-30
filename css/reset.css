@@ -15,8 +15,6 @@ body {
   color: var(--fontcolor);
   background: var(--bgcolor);
   margin: 0;
-  background: radial-gradient(ellipse, #180707 5%, #000000 100%);
-  background-attachment: fixed;
 }
 a {
   text-decoration: none;
@@ -133,17 +131,6 @@ h6:hover .header-anchor {
   position: relative;
   text-decoration: none;
   color: inherit;
-}
-
-/* Use a pseudo-element to add the hash symbol without affecting layout */
-.full-clickable-heading::before {
-  content: "#";
-  position: absolute;
-  left: -1.5rem; /* Adjust as needed */
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
 }
 
 /* Show the hash when hovering over the heading */

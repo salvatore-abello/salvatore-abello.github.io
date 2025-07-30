@@ -2,73 +2,73 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on Salvatore Abello&#39;s Blog</title>
-    <link>https://salvatore-abello.github.io/posts/</link>
+    <link>https://blog.babelo.xyz/posts/</link>
     <description>Recent content in Posts on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <lastBuildDate>Wed, 02 Apr 2025 02:41:39 +0200</lastBuildDate>
-    <atom:link href="https://salvatore-abello.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://blog.babelo.xyz/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Intigriti Challenge 0325 - Leaky Flagment - Writeup</title>
-      <link>https://salvatore-abello.github.io/posts/intigriti-challenge-0325/</link>
+      <link>https://blog.babelo.xyz/posts/intigriti-challenge-0325/</link>
       <pubDate>Wed, 02 Apr 2025 02:41:39 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/intigriti-challenge-0325/</guid>
+      <guid>https://blog.babelo.xyz/posts/intigriti-challenge-0325/</guid>
       <description>&lt;p&gt;This month, I decided to try to solve my first Intigriti challenge. There were many pieces to put together in order to solve this one, but in the end, I managed to succeed and learned a lot of stuff.&lt;/p&gt;</description>
     </item>
     <item>
       <title>CSS Exfiltration under default-src &#39;self&#39;</title>
-      <link>https://salvatore-abello.github.io/posts/css-exfiltration-under-default-src-self/</link>
+      <link>https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/</link>
       <pubDate>Thu, 27 Feb 2025 16:14:14 +0100</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/css-exfiltration-under-default-src-self/</guid>
+      <guid>https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/</guid>
       <description>CSS Injections have always fascinated me. A few months ago, I asked myself: &amp;ldquo;is it possible to do CSS Exfiltration if default-src &amp;lsquo;self&amp;rsquo; is specified in the CSP?&amp;rdquo;&#xA;Well, if you&amp;rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this for TRX CTF 2025: Keeper. This post will serve both as a writeup for the challenge and as an explanation of this new &amp;ldquo;technique&amp;rdquo;.</description>
     </item>
     <item>
       <title>fire-leak - ASIS CTF Finals 2024</title>
-      <link>https://salvatore-abello.github.io/posts/fire-leak/</link>
+      <link>https://blog.babelo.xyz/posts/fire-leak/</link>
       <pubDate>Wed, 01 Jan 2025 12:00:37 +0100</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/fire-leak/</guid>
+      <guid>https://blog.babelo.xyz/posts/fire-leak/</guid>
       <description>This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve never seen a similar challenge before. @simonedimaria and I worked on this challenge and solved it after about 8 hours.&#xA;Overview As the name suggests, this is an XS-Leak challenge. We&amp;rsquo;re given the source code and there are three endpoints.</description>
     </item>
     <item>
       <title>CVE-2024-46242</title>
-      <link>https://salvatore-abello.github.io/posts/cve-2024-46242/</link>
+      <link>https://blog.babelo.xyz/posts/cve-2024-46242/</link>
       <pubDate>Tue, 31 Dec 2024 00:33:28 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/cve-2024-46242/</guid>
+      <guid>https://blog.babelo.xyz/posts/cve-2024-46242/</guid>
       <description>TODO</description>
     </item>
     <item>
       <title>resruby - CyberSpace CTF 2024</title>
-      <link>https://salvatore-abello.github.io/posts/resruby/</link>
+      <link>https://blog.babelo.xyz/posts/resruby/</link>
       <pubDate>Mon, 02 Sep 2024 14:29:36 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/resruby/</guid>
+      <guid>https://blog.babelo.xyz/posts/resruby/</guid>
       <description>&lt;p&gt;I partecipated to the first edition of &lt;code&gt;CyberSpace CTF&lt;/code&gt; with &lt;a href=&#34;https://theromanxpl0.it/&#34;&gt;@TheRomanXpl0it&lt;/a&gt;. It&amp;rsquo;s always nice to see some jail challenges so, I decided to write a writeup for the challenge I liked the most: resruby.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Yet Another PyJail - PySysMagic - L3ak CTF 2024</title>
-      <link>https://salvatore-abello.github.io/posts/pysysmagic/</link>
+      <link>https://blog.babelo.xyz/posts/pysysmagic/</link>
       <pubDate>Fri, 26 Jul 2024 20:38:20 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/pysysmagic/</guid>
+      <guid>https://blog.babelo.xyz/posts/pysysmagic/</guid>
       <description>&lt;p&gt;I partecipated to the first edition of &lt;code&gt;L3ak CTF&lt;/code&gt; with &lt;code&gt;FoocHackz&lt;/code&gt;. I solved this challenge, it wasn&amp;rsquo;t hard but writing a working exploit took me at least one/two hours.&lt;/p&gt;</description>
     </item>
     <item>
       <title>CVE-2024-25885</title>
-      <link>https://salvatore-abello.github.io/posts/cve-2024-25885/</link>
+      <link>https://blog.babelo.xyz/posts/cve-2024-25885/</link>
       <pubDate>Thu, 01 Feb 2024 23:33:28 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/cve-2024-25885/</guid>
+      <guid>https://blog.babelo.xyz/posts/cve-2024-25885/</guid>
       <description>&lt;p&gt;This is my first CVE published by myself. A lot of times people write unsafe regular expressions that can lead to Denial Of Service and this is an example.&lt;/p&gt;</description>
     </item>
     <item>
       <title>One-shot CSS Injection - newdiary - 0ctf 2023</title>
-      <link>https://salvatore-abello.github.io/posts/newdiary/</link>
+      <link>https://blog.babelo.xyz/posts/newdiary/</link>
       <pubDate>Tue, 12 Dec 2023 00:00:00 +0000</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/newdiary/</guid>
+      <guid>https://blog.babelo.xyz/posts/newdiary/</guid>
       <description>&lt;p&gt;This year, for the first time, I partecipated to &lt;strong&gt;0ctf&lt;/strong&gt; with &lt;code&gt;mhackeroni&lt;/code&gt;.&#xA;Me, &lt;code&gt;@Ricy&lt;/code&gt; and &lt;code&gt;@Alemmi&lt;/code&gt; solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.&lt;/p&gt;</description>
     </item>
     <item>
       <title>My First Writeup - ez-class - B01lers CTF 2023</title>
-      <link>https://salvatore-abello.github.io/posts/ezclass/</link>
+      <link>https://blog.babelo.xyz/posts/ezclass/</link>
       <pubDate>Thu, 23 Mar 2023 00:00:00 +0000</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/ezclass/</guid>
+      <guid>https://blog.babelo.xyz/posts/ezclass/</guid>
       <description>&lt;p&gt;I liked this challenge a lot so I decided to create a writeup (my first, actually) about it. Thanks to the organizers for this wonderful CTF!&lt;/p&gt;</description>
     </item>
   </channel>
