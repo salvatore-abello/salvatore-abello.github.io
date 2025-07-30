@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Ruby on Salvatore Abello&#39;s Blog</title>
-    <link>https://salvatore-abello.github.io/tags/ruby/</link>
+    <link>https://blog.babelo.xyz/tags/ruby/</link>
     <description>Recent content in Ruby on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <lastBuildDate>Mon, 02 Sep 2024 14:29:36 +0200</lastBuildDate>
-    <atom:link href="https://salvatore-abello.github.io/tags/ruby/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://blog.babelo.xyz/tags/ruby/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>resruby - CyberSpace CTF 2024</title>
-      <link>https://salvatore-abello.github.io/posts/resruby/</link>
+      <link>https://blog.babelo.xyz/posts/resruby/</link>
       <pubDate>Mon, 02 Sep 2024 14:29:36 +0200</pubDate>
-      <guid>https://salvatore-abello.github.io/posts/resruby/</guid>
+      <guid>https://blog.babelo.xyz/posts/resruby/</guid>
       <description>&lt;p&gt;I partecipated to the first edition of &lt;code&gt;CyberSpace CTF&lt;/code&gt; with &lt;a href=&#34;https://theromanxpl0.it/&#34;&gt;@TheRomanXpl0it&lt;/a&gt;. It&amp;rsquo;s always nice to see some jail challenges so, I decided to write a writeup for the challenge I liked the most: resruby.&lt;/p&gt;</description>
     </item>
   </channel>

