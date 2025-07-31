@@ -1,19 +1,2 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Css-Injection on Salvatore Abello&#39;s Blog</title>
-    <link>https://blog.babelo.xyz/tags/css-injection/</link>
-    <description>Recent content in Css-Injection on Salvatore Abello&#39;s Blog</description>
-    <generator>Hugo</generator>
-    <language>en-us</language>
-    <lastBuildDate>Tue, 12 Dec 2023 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://blog.babelo.xyz/tags/css-injection/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>One-shot CSS Injection - newdiary - 0ctf 2023</title>
-      <link>https://blog.babelo.xyz/posts/newdiary/</link>
-      <pubDate>Tue, 12 Dec 2023 00:00:00 +0000</pubDate>
-      <guid>https://blog.babelo.xyz/posts/newdiary/</guid>
-      <description>&lt;p&gt;This year, for the first time, I partecipated to &lt;strong&gt;0ctf&lt;/strong&gt; with &lt;code&gt;mhackeroni&lt;/code&gt;.&#xA;Me, &lt;code&gt;@Ricy&lt;/code&gt; and &lt;code&gt;@Alemmi&lt;/code&gt; solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.&lt;/p&gt;</description>
-    </item>
-  </channel>
-</rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Css-Injection | Salvatore Abello's Blog</title><link>https://salvatore-abello.github.io/tags/css-injection/</link><description/><link rel="self" type="application/rss+xml" href="https://github.com/salvatore-abello"/><link rel="self" type="application/rss+xml" href="https://www.linkedin.com/in/salvatore-abello-411b64252/"/><link rel="self" type="application/rss+xml" href="https://x.com/salvatoreabello"/><language>en-us</language><lastBuildDate>Tue, 12 Dec 2023 00:00:00 +0000</lastBuildDate><item><title>One-shot CSS Injection - newdiary - 0ctf 2023</title><link>https://salvatore-abello.github.io/posts/newdiary/</link><pubDate>Tue, 12 Dec 2023 00:00:00 +0000</pubDate><author>Salvatore Abello</author><guid>https://salvatore-abello.github.io/posts/newdiary/</guid><description>&lt;p>This year, for the first time, I partecipated to &lt;strong>0ctf&lt;/strong> with &lt;code>mhackeroni&lt;/code>.
+Me, &lt;code>@Ricy&lt;/code> and &lt;code>@Alemmi&lt;/code> solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.&lt;/p></description><category>Cybersec, Writeup, web, client-side, css-injection</category></item></channel></rss>

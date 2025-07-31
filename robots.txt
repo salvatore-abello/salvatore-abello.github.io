@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://salvatore-abello.github.io/sitemap.xml
+
+# Disallow admin areas (if any)
+Disallow: /admin/
+Disallow: /private/
+
+# Allow all content
+Allow: /posts/
+Allow: /whoami/
+Allow: /achievements/
+Allow: /cves/ 

