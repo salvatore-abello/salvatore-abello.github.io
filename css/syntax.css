@@ -109,9 +109,10 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 .vm { color: #00ffff; font-weight: bold } /* Name.Variable.Magic */
 .il { color: #ff00ff } /* Literal.Number.Integer.Long */
 article:not(.summary) {
-    padding: 1em 1em;
-    border: 2px solid #5c5cff;
-    margin: 2em 0;
+  padding: 1em 1em;
+  border: 2px solid transparent;
+  margin: 2em 0;
+  border-image: linear-gradient(to bottom, #b65cff, #712bab) 1;
 }
 
 .copy-btn {
