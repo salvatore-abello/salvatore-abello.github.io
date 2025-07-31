@@ -136,10 +136,10 @@ article:not(.summary) {
 
 
 .notice {
-    --title-color: #fff;
-    --title-background-color: #bd31bd;
-    --content-color: #ddd;
-    --content-background-color: #5d0269;
+    --title-color: #fff !important;
+    --title-background-color: #bd31bd !important;
+    --content-color: #ddd !important;
+    --content-background-color: #5d0269 !important;
 }
 
 .notice.info {
@@ -155,4 +155,24 @@ article:not(.summary) {
 .notice.warning {
     --title-background-color: #800;
     --content-background-color: #400;
+}
+
+.border-box-achievements {
+  border: 2px solid transparent;
+  border-image: linear-gradient(to bottom, #b65cff, #712bab) 1;
+  padding: 1.5em 1em 1em; 
+  position: relative;
+}
+
+.boxed-label {
+  display: inline-block;
+  margin: 0 0;
+  padding: 0 0.6em;
+  background: #000;
+  color: #0ff;
+  border: 2px solid #b65cff;
+  border-radius: 0.2em;
+  font-family: Iosevka, monospace;
+  font-size: 1.2em;
+  line-height: 1.2;
 }
