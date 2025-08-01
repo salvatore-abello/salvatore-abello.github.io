@@ -1,15 +1,153 @@
-<!doctype html><html lang=en><head lang=it><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Personal blog about Cybersec & other things."><title>Css-Injection | Salvatore Abello's Blog</title>
-<meta property="og:title" content="Salvatore Abello's Blog"><meta property="og:description" content="Personal blog about Cybersec & other things."><meta property="og:type" content="website"><meta property="og:url" content="https://blog.babelo.xyz/tags/css-injection/"><meta property="og:site_name" content="Salvatore Abello's Blog"><meta property="og:image" content="https://blog.babelo.xyz/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><meta name=twitter:card content="summary"><meta name=twitter:title content="Salvatore Abello's Blog"><meta name=twitter:description content="Personal blog about Cybersec & other things."><meta name=twitter:image content="https://blog.babelo.xyz/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><link rel=canonical href=https://blog.babelo.xyz/tags/css-injection/><link rel=stylesheet href=/css/reset.css><link rel=stylesheet href=/css/font.css><link rel=stylesheet href=/css/smigle.css><link rel=stylesheet href=/css/syntax.css><link rel=preload href=/fonts/iosevka-regular.woff2 as=font type=font/woff2 crossorigin><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><meta name=msapplication-TileColor content="#da532c"><meta name=theme-color content="#ffffff"></head><body><div id=root><header><div id=brand><a class=icon-link href=https://blog.babelo.xyz/><img class=icon src=/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png></a><div class=text><a href=https://blog.babelo.xyz/><h1>Salvatore Abello's Blog</h1></a><h3>Hacking & other stuff</h3></div></div><nav><a href=/><b>Home</b></a>
-|
-<a href=/whoami/><b>Whoami</b></a>
-|
-<a href=/achievements/><b>Achievements</b></a>
-|
-<a href=/posts/><b>Posts</b></a>
-|
-<a href=/cves/><b>CVEs</b></a></nav><hr></header><div id=content><main id=tags><h1>Tag: Css-Injection</h1><h3>2023</h3><ul id=postsByDate><li><div class=date>Dec 12</div><div class=title><a href=/posts/newdiary/>One-shot CSS Injection - newdiary - 0ctf 2023</a></div></li></ul></main></div><footer><hr><p id=social>Find me around the web:<br><a href=https://github.com/salvatore-abello>Github</a>
-|
-<a href=https://www.linkedin.com/in/salvatore-abello-411b64252/>Linkedin</a>
-|
-<a href=https://x.com/salvatoreabello>X</a></p><p class=copyright>Copyright © 2025. All rights deserved.
-<a href=https://blog.babelo.xyz/><strong>Salvatore Abello</strong></a>.</p><hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href=/index.xml><b>RSS</b></a></footer></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+  
+
+<head lang="it"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <meta name="description" content="Personal blog about Cybersec &amp; other things."/>
+  <title>Css-Injection | Salvatore Abello&#39;s Blog</title>
+
+  
+  <meta property="og:title"       content="Salvatore Abello&#39;s Blog"/>
+  <meta property="og:description" content="Personal blog about Cybersec &amp; other things."/>
+  <meta property="og:type"        content="website"/>
+  <meta property="og:url"         content="http://localhost:1313/tags/css-injection/"/>
+  <meta property="og:site_name"   content="Salvatore Abello&#39;s Blog"/>
+  
+    <meta property="og:image" content="http://localhost:1313/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"/>
+  
+
+  
+  <meta name="twitter:card"        content="summary"/>
+  <meta name="twitter:title"       content="Salvatore Abello&#39;s Blog"/>
+  <meta name="twitter:description" content="Personal blog about Cybersec &amp; other things."/>
+  
+    <meta name="twitter:image" content="http://localhost:1313/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"/>
+  
+
+  
+
+  <link rel="canonical" href="http://localhost:1313/tags/css-injection/"/>
+
+  
+  
+  
+  
+  
+  
+  
+    <link rel="stylesheet" href="/css/reset.css"/>
+    <link rel="stylesheet" href="/css/font.css"/>
+    <link rel="stylesheet" href="/css/smigle.css">
+  
+  <link rel="stylesheet" href="/css/syntax.css">
+
+  
+  
+
+  <link rel="preload" href="/fonts/iosevka-regular.woff2" as="font" type="font/woff2" crossorigin/>
+
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color"           content="#ffffff">
+
+  
+  
+</head>
+
+  <body>
+    <div id="root">
+      <header>
+  <div id="brand">
+    <a class="icon-link" href="http://localhost:1313/">
+      <img
+        class="icon"
+        src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"
+      />
+    </a>
+    <div class="text">
+      <a href="http://localhost:1313/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <h3>Hacking &amp; other stuff</h3>
+    </div>
+  </div>
+  <nav>
+    
+      
+        
+        <a href="/"><b>Home</b></a>
+      
+         | 
+        <a href="/whoami/"><b>Whoami</b></a>
+      
+         | 
+        <a href="/achievements/"><b>Achievements</b></a>
+      
+         | 
+        <a href="/posts/"><b>Posts</b></a>
+      
+         | 
+        <a href="/cves/"><b>CVEs</b></a>
+      
+    
+  </nav>
+  <hr />
+</header>
+
+      <div id="content">
+        
+  <main id="tags">
+    <h1>Tag: Css-Injection</h1>
+    
+  <h3>2023</h3>
+  <ul id="postsByDate">
+    
+      <li>
+        <div class="date">
+          Dec 12
+        </div>
+        <div class="title">
+          <a href="/posts/newdiary/">One-shot CSS Injection - newdiary - 0ctf 2023</a>
+        </div>
+      </li>
+    
+  </ul>
+
+
+  </main>
+
+      </div>
+      <footer>
+  <hr />
+  
+    <p id="social">
+      Find me around the web:
+      <br />
+      
+        
+        <a href="https://github.com/salvatore-abello">Github</a>
+      
+         | 
+        <a href="https://www.linkedin.com/in/salvatore-abello-411b64252/">Linkedin</a>
+      
+         | 
+        <a href="https://x.com/salvatoreabello">X</a>
+      
+    </p>
+  
+  <p class="copyright">
+    Copyright © 2025. All rights deserved.
+    <a href="http://localhost:1313/"><strong>Salvatore Abello</strong></a>.
+  </p>
+  <hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href="/index.xml"><b>RSS</b></a>
+</footer>
+
+    </div>
+  </body>
+</html>
