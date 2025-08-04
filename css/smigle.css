@@ -19,13 +19,13 @@ h1 {
   color: var(--fontcolor);
   text-decoration: none;
 }
-#brand h1, #brand h3 {
+#brand h1, #brand h2 {
   margin: 0;
 }
 #brand h1 {
   font-size: 30px;
 }
-#brand h3 {
+#brand h2 {
   font-size: 20px;
   font-weight: normal;
 }
@@ -64,7 +64,7 @@ div.post-meta {
   #brand h1 {
     font-size: 45px;
   }
-  #brand h3 {
+  #brand h2 {
     font-size: 25px;
   }
 }
