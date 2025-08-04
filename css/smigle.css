@@ -55,14 +55,14 @@ body {
 
 /* Accessible link styling - distinguishable without relying only on color */
 a {
-  text-decoration: none;
+  text-decoration: none !important;
   word-wrap: break-word;
   overflow-wrap: break-word;
   white-space: normal;
 }
 
 a:hover, a:focus {
-  text-decoration: underline;
+  text-decoration: underline !important;
   outline: 2px solid var(--linkcolor);
   outline-offset: 2px;
 }
