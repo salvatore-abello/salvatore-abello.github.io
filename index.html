@@ -1,72 +1,500 @@
-<!doctype html><html lang=en><head lang=it><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Personal blog about Cybersec & other things."><title>Salvatore Abello's Blog</title>
-<meta property="og:title" content="Salvatore Abello's Blog"><meta property="og:description" content="Personal blog about Cybersec & other things."><meta property="og:type" content="website"><meta property="og:url" content="https://blog.babelo.xyz/"><meta property="og:site_name" content="Salvatore Abello's Blog"><meta property="og:image" content="https://blog.babelo.xyz/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><meta name=twitter:card content="summary"><meta name=twitter:title content="Salvatore Abello's Blog"><meta name=twitter:description content="Personal blog about Cybersec & other things."><meta name=twitter:image content="https://blog.babelo.xyz/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><link rel=canonical href=https://blog.babelo.xyz/><link rel=stylesheet href=/css/reset.css><link rel=stylesheet href=/css/font.css><link rel=stylesheet href=/css/smigle.css><link rel=stylesheet href=/css/syntax.css><link rel=preload href=/fonts/iosevka-regular.woff2 as=font type=font/woff2 crossorigin><link rel=preload href=/fonts/iosevka-bold.woff2 as=font type=font/woff2 crossorigin><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><meta name=msapplication-TileColor content="#da532c"><meta name=theme-color content="#ffffff"></head><body><div id=root><header><div id=brand><a class=icon-link href=https://blog.babelo.xyz/ aria-label="Go to homepage"><img class=icon src=/images/65adf8e914bdc50b5f5f2e8b91b68cb1_hu1eab986c664bc33c2f0e30119c16a5fa_176123_128x0_resize_q85_h2_lanczos_3.webp alt="Salvatore Abello's Blog logo"></a><div class=text><a href=https://blog.babelo.xyz/><h1>Salvatore Abello's Blog</h1></a><h2>Hacking & other stuff</h2></div></div><nav><a class=nav-link href=/><b>Home</b></a>
-|
-<a class=nav-link href=/whoami/><b>Whoami</b></a>
-|
-<a class=nav-link href=/achievements/><b>Achievements</b></a>
-|
-<a class=nav-link href=/posts/><b>Posts</b></a>
-|
-<a class=nav-link href=/cves/><b>CVEs</b></a></nav><hr></header><div id=content><main><article class=summary><a href=https://blog.babelo.xyz/posts/intigriti-challenge-0325/><h1 class=title>Intigriti Challenge 0325 - Leaky Flagment - Writeup</h1></a><div class=post-meta><strong><span>Posted on</span>
-<time>2025-04-02 02:41:39</time>
-</strong><span>• 2277 words</span>
-<span>• 11 minute read</span><div><span>Tags:</span>
-<a href=/tags/cybersec>Cybersec</a>,
-<a href=/tags/writeup>Writeup</a>,
-<a href=/tags/client-side>client-side</a>,
-<a href=/tags/intigriti>Intigriti</a></div></div><div class=content><p><p>This month, I decided to try to solve my first Intigriti challenge. There were many pieces to put together in order to solve this one, but in the end, I managed to succeed and learned a lot of stuff.</p></p><a href=https://blog.babelo.xyz/posts/intigriti-challenge-0325/>Read more...</a></div></article><article class=summary><a href=https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/><h1 class=title>CSS Exfiltration under default-src 'self'</h1></a><div class=post-meta><strong><span>Posted on</span>
-<time>2025-02-27 16:14:14</time>
-</strong><span>• 3591 words</span>
-<span>• 17 minute read</span><div><span>Tags:</span>
-<a href=/tags/cybersec>Cybersec</a>,
-<a href=/tags/research>Research</a>,
-<a href=/tags/css>CSS</a>,
-<a href=/tags/client-side>client-side</a>,
-<a href=/tags/csp>csp</a>,
-<a href=/tags/writeup>Writeup</a></div></div><div class=content><p>CSS Injections have always fascinated me. A few months ago, I asked myself: &ldquo;is it possible to do CSS Exfiltration if default-src &lsquo;self&rsquo; is specified in the CSP?&rdquo;
-Well, if you&rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this for TRX CTF 2025: Keeper . This post will serve both as a writeup for the challenge and as an explanation of this new &ldquo;technique&rdquo;.</p><a href=https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/>Read more...</a></div></article><article class=summary><a href=https://blog.babelo.xyz/posts/fire-leak/><h1 class=title>fire-leak - ASIS CTF Finals 2024</h1></a><div class=post-meta><strong><span>Posted on</span>
-<time>2025-01-01 12:00:37</time>
-</strong><span>• 828 words</span>
-<span>• 4 minute read</span><div><span>Tags:</span>
-<a href=/tags/cybersec>Cybersec</a>,
-<a href=/tags/writeup>Writeup</a>,
-<a href=/tags/redos>ReDoS</a>,
-<a href=/tags/client-side>client-side</a>,
-<a href=/tags/csp>csp</a></div></div><div class=content><p>This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&rsquo;ve never seen a similar challenge before. @simonedimaria and I worked on this challenge and solved it after about 8 hours.
-Overview As the name suggests, this is an XS-Leak challenge. We&rsquo;re given the source code and there are three endpoints.</p><a href=https://blog.babelo.xyz/posts/fire-leak/>Read more...</a></div></article><article class=summary><a href=https://blog.babelo.xyz/posts/resruby/><h1 class=title>resruby - CyberSpace CTF 2024</h1></a><div class=post-meta><strong><span>Posted on</span>
-<time>2024-09-02 14:29:36</time>
-</strong><span>• 1063 words</span>
-<span>• 5 minute read</span><div><span>Tags:</span>
-<a href=/tags/cybersec>Cybersec</a>,
-<a href=/tags/writeup>Writeup</a>,
-<a href=/tags/ruby>ruby</a></div></div><div class=content><p><p>I partecipated to the first edition of <code>CyberSpace CTF</code> with
-<a href=https://theromanxpl0.it/ rel=noopener>@TheRomanXpl0it</a>
-. It&rsquo;s always nice to see some jail challenges so, I decided to write a writeup for the challenge I liked the most: resruby.</p></p><a href=https://blog.babelo.xyz/posts/resruby/>Read more...</a></div></article><article class=summary><a href=https://blog.babelo.xyz/posts/pysysmagic/><h1 class=title>Yet Another PyJail - PySysMagic - L3ak CTF 2024</h1></a><div class=post-meta><strong><span>Posted on</span>
-<time>2024-07-26 20:38:20</time>
-</strong><span>• 924 words</span>
-<span>• 5 minute read</span><div><span>Tags:</span>
-<a href=/tags/cybersec>Cybersec</a>,
-<a href=/tags/writeup>Writeup</a>,
-<a href=/tags/pyjail>pyjail</a></div></div><div class=content><p><p>I partecipated to the first edition of <code>L3ak CTF</code> with <code>FoocHackz</code>. I solved this challenge, it wasn&rsquo;t hard but writing a working exploit took me at least one/two hours.</p></p><a href=https://blog.babelo.xyz/posts/pysysmagic/>Read more...</a></div></article><article class=summary><a href=https://blog.babelo.xyz/posts/cve-2024-25885/><h1 class=title>CVE-2024-25885</h1></a><div class=post-meta><strong><span>Posted on</span>
-<time>2024-02-01 23:33:28</time>
-</strong><span>• 88 words</span>
-<span>• 1 minute read</span></div><div class=content><p><p>This is my first CVE published by myself. A lot of times people write unsafe regular expressions that can lead to Denial Of Service and this is an example.</p></p><a href=https://blog.babelo.xyz/posts/cve-2024-25885/>Read more...</a></div></article><article class=summary><a href=https://blog.babelo.xyz/posts/newdiary/><h1 class=title>One-shot CSS Injection - newdiary - 0ctf 2023</h1></a><div class=post-meta><strong><span>Posted on</span>
-<time>2023-12-12 00:00:00</time>
-</strong><span>• 1900 words</span>
-<span>• 9 minute read</span><div><span>Tags:</span>
-<a href=/tags/cybersec>Cybersec</a>,
-<a href=/tags/writeup>Writeup</a>,
-<a href=/tags/web>web</a>,
-<a href=/tags/client-side>client-side</a>,
-<a href=/tags/css-injection>css-injection</a></div></div><div class=content><p><p>This year, for the first time, I partecipated to <strong>0ctf</strong> with <code>mhackeroni</code>.
-Me, <code>@Ricy</code> and <code>@Alemmi</code> solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.</p></p><a href=https://blog.babelo.xyz/posts/newdiary/>Read more...</a></div></article><article class=summary><a href=https://blog.babelo.xyz/posts/ezclass/><h1 class=title>My First Writeup - ez-class - B01lers CTF 2023</h1></a><div class=post-meta><strong><span>Posted on</span>
-<time>2023-03-23 00:00:00</time>
-</strong><span>• 574 words</span>
-<span>• 3 minute read</span><div><span>Tags:</span>
-<a href=/tags/cybersec>Cybersec</a>,
-<a href=/tags/writeup>Writeup</a>,
-<a href=/tags/pyjail>pyjail</a></div></div><div class=content><p><p>I liked this challenge a lot so I decided to create a writeup (my first, actually) about it. Thanks to the organizers for this wonderful CTF!</p></p><a href=https://blog.babelo.xyz/posts/ezclass/>Read more...</a></div></article><div>1 of 1</div></main></div><footer><hr><p id=social>Find me around the web:<br><a href=https://github.com/salvatore-abello>Github</a>
-|
-<a href=https://www.linkedin.com/in/salvatore-abello/>Linkedin</a>
-|
-<a href=https://x.com/salvatoreabello>X</a></p><p class=copyright>Copyright © 2025. All rights deserved.</p><hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href=/index.xml><b>RSS</b></a></footer></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+  <head lang="it"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="description" content="Personal blog about Cybersec &amp; other things."/><title>Salvatore Abello&#39;s Blog</title>
+
+  <meta property="og:title"       content="Salvatore Abello&#39;s Blog"/>
+  <meta property="og:description" content="Personal blog about Cybersec &amp; other things."/>
+  <meta property="og:type"        content="website"/>
+  <meta property="og:url"         content="http://localhost:1313/"/>
+  <meta property="og:site_name"   content="Salvatore Abello&#39;s Blog"/>
+  <meta property="og:image" content="http://localhost:1313/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"/>
+
+  <meta name="twitter:card"        content="summary"/>
+  <meta name="twitter:title"       content="Salvatore Abello&#39;s Blog"/>
+  <meta name="twitter:description" content="Personal blog about Cybersec &amp; other things."/>
+  <meta name="twitter:image" content="http://localhost:1313/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"/>
+
+  <link rel="canonical" href="http://localhost:1313/"/>
+
+  <link rel="stylesheet" href="/css/reset.css"/>
+  <link rel="stylesheet" href="/css/font.css"/>
+  <link rel="stylesheet" href="/css/smigle.css"/>
+  <link rel="stylesheet" href="/css/syntax.css"/>
+
+  
+
+  <link rel="preload" href="/fonts/iosevka-regular.woff2" as="font" type="font/woff2" crossorigin/>
+  <link rel="preload" href="/fonts/iosevka-bold.woff2" as="font" type="font/woff2" crossorigin/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color"           content="#ffffff">
+
+  
+</head>
+
+  <body>
+    <div id="root">
+      <header>
+  <div id="brand">
+    <a class="icon-link" href="http://localhost:1313/" aria-label="Go to homepage">
+      <img class="icon" src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1_hu1eab986c664bc33c2f0e30119c16a5fa_176123_128x0_resize_q85_h2_lanczos_3.webp" alt="Salvatore Abello&#39;s Blog logo" />
+    </a>
+    <div class="text">
+      <a href="http://localhost:1313/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <h2>Hacking &amp; other stuff</h2>
+    </div>
+  </div>
+  <nav>
+    
+      
+        
+        <a class="nav-link" href="/"><b>Home</b></a>
+      
+         | 
+        <a class="nav-link" href="/whoami/"><b>Whoami</b></a>
+      
+         | 
+        <a class="nav-link" href="/achievements/"><b>Achievements</b></a>
+      
+         | 
+        <a class="nav-link" href="/posts/"><b>Posts</b></a>
+      
+         | 
+        <a class="nav-link" href="/cves/"><b>CVEs</b></a>
+      
+    
+  </nav>
+  <hr>
+</header>
+
+      <div id="content">
+        
+	<main>
+		
+		
+			<article class="summary">
+  <a href="http://localhost:1313/posts/intigriti-challenge-0325/">
+    <h1 class="title">Intigriti Challenge 0325 - Leaky Flagment - Writeup</h1>
+    
+  </a>
+  
+
+
+
+
+
+
+
+
+
+  
+
+
+<div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2025-04-02 02:41:39</time>
+    
+    
+  </strong>
+ <span> • 2277 words</span>
+ <span> • 11 minute read</span>
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/client-side">client-side</a>, 
+        <a href="/tags/intigriti">Intigriti</a>
+    </div>
+  
+</div>
+
+  <div class="content">
+    <p><p>This month, I decided to try to solve my first Intigriti challenge. There were many pieces to put together in order to solve this one, but in the end, I managed to succeed and learned a lot of stuff.</p></p>
+    
+      <a href="http://localhost:1313/posts/intigriti-challenge-0325/">Read more...</a>
+    
+  </div>
+</article>
+
+		
+			<article class="summary">
+  <a href="http://localhost:1313/posts/css-exfiltration-under-default-src-self/">
+    <h1 class="title">CSS Exfiltration under default-src &#39;self&#39;</h1>
+    
+  </a>
+  
+
+
+
+
+
+
+
+
+
+  
+
+
+<div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2025-02-27 16:14:14</time>
+    
+    
+  </strong>
+ <span> • 3591 words</span>
+ <span> • 17 minute read</span>
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/research">Research</a>, 
+        <a href="/tags/css">CSS</a>, 
+        <a href="/tags/client-side">client-side</a>, 
+        <a href="/tags/csp">csp</a>, 
+        <a href="/tags/writeup">Writeup</a>
+    </div>
+  
+</div>
+
+  <div class="content">
+    <p>CSS Injections have always fascinated me. A few months ago, I asked myself: &ldquo;is it possible to do CSS Exfiltration if default-src &lsquo;self&rsquo; is specified in the CSP?&rdquo;
+Well, if you&rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this for TRX CTF 2025: Keeper . This post will serve both as a writeup for the challenge and as an explanation of this new &ldquo;technique&rdquo;.</p>
+    
+      <a href="http://localhost:1313/posts/css-exfiltration-under-default-src-self/">Read more...</a>
+    
+  </div>
+</article>
+
+		
+			<article class="summary">
+  <a href="http://localhost:1313/posts/fire-leak/">
+    <h1 class="title">fire-leak - ASIS CTF Finals 2024</h1>
+    
+  </a>
+  
+
+
+
+
+
+
+
+
+
+  
+
+
+<div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2025-01-01 12:00:37</time>
+    
+    
+  </strong>
+ <span> • 828 words</span>
+ <span> • 4 minute read</span>
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/redos">ReDoS</a>, 
+        <a href="/tags/client-side">client-side</a>, 
+        <a href="/tags/csp">csp</a>
+    </div>
+  
+</div>
+
+  <div class="content">
+    <p>This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&rsquo;ve never seen a similar challenge before. @simonedimaria and I worked on this challenge and solved it after about 8 hours.
+Overview As the name suggests, this is an XS-Leak challenge. We&rsquo;re given the source code and there are three endpoints.</p>
+    
+      <a href="http://localhost:1313/posts/fire-leak/">Read more...</a>
+    
+  </div>
+</article>
+
+		
+			<article class="summary">
+  <a href="http://localhost:1313/posts/resruby/">
+    <h1 class="title">resruby - CyberSpace CTF 2024</h1>
+    
+  </a>
+  
+
+
+
+
+
+
+
+
+
+  
+
+
+<div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2024-09-02 14:29:36</time>
+    
+    
+  </strong>
+ <span> • 1063 words</span>
+ <span> • 5 minute read</span>
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/ruby">ruby</a>
+    </div>
+  
+</div>
+
+  <div class="content">
+    <p><p>I partecipated to the first edition of <code>CyberSpace CTF</code> with 
+
+  <a href="https://theromanxpl0.it/" rel="noopener">@TheRomanXpl0it</a>
+
+. It&rsquo;s always nice to see some jail challenges so, I decided to write a writeup for the challenge I liked the most: resruby.</p></p>
+    
+      <a href="http://localhost:1313/posts/resruby/">Read more...</a>
+    
+  </div>
+</article>
+
+		
+			<article class="summary">
+  <a href="http://localhost:1313/posts/pysysmagic/">
+    <h1 class="title">Yet Another PyJail - PySysMagic - L3ak CTF 2024</h1>
+    
+  </a>
+  
+
+
+
+
+
+
+
+
+
+  
+
+
+<div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2024-07-26 20:38:20</time>
+    
+    
+  </strong>
+ <span> • 924 words</span>
+ <span> • 5 minute read</span>
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/pyjail">pyjail</a>
+    </div>
+  
+</div>
+
+  <div class="content">
+    <p><p>I partecipated to the first edition of <code>L3ak CTF</code> with <code>FoocHackz</code>. I solved this challenge, it wasn&rsquo;t hard but writing a working exploit took me at least one/two hours.</p></p>
+    
+      <a href="http://localhost:1313/posts/pysysmagic/">Read more...</a>
+    
+  </div>
+</article>
+
+		
+			<article class="summary">
+  <a href="http://localhost:1313/posts/cve-2024-25885/">
+    <h1 class="title">CVE-2024-25885</h1>
+    
+  </a>
+  
+
+
+
+
+
+
+
+
+
+  
+
+
+<div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2024-02-01 23:33:28</time>
+    
+    
+  </strong>
+ <span> • 88 words</span>
+ <span> • 1 minute read</span>
+  
+</div>
+
+  <div class="content">
+    <p><p>This is my first CVE published by myself. A lot of times people write unsafe regular expressions that can lead to Denial Of Service and this is an example.</p></p>
+    
+      <a href="http://localhost:1313/posts/cve-2024-25885/">Read more...</a>
+    
+  </div>
+</article>
+
+		
+			<article class="summary">
+  <a href="http://localhost:1313/posts/newdiary/">
+    <h1 class="title">One-shot CSS Injection - newdiary - 0ctf 2023</h1>
+    
+  </a>
+  
+
+
+
+
+
+
+
+
+
+  
+
+
+<div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2023-12-12 00:00:00</time>
+    
+    
+  </strong>
+ <span> • 1900 words</span>
+ <span> • 9 minute read</span>
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/web">web</a>, 
+        <a href="/tags/client-side">client-side</a>, 
+        <a href="/tags/css-injection">css-injection</a>
+    </div>
+  
+</div>
+
+  <div class="content">
+    <p><p>This year, for the first time, I partecipated to <strong>0ctf</strong> with <code>mhackeroni</code>.
+Me, <code>@Ricy</code> and <code>@Alemmi</code> solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.</p></p>
+    
+      <a href="http://localhost:1313/posts/newdiary/">Read more...</a>
+    
+  </div>
+</article>
+
+		
+			<article class="summary">
+  <a href="http://localhost:1313/posts/ezclass/">
+    <h1 class="title">My First Writeup - ez-class - B01lers CTF 2023</h1>
+    
+  </a>
+  
+
+
+
+
+
+
+
+
+
+  
+
+
+<div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2023-03-23 00:00:00</time>
+    
+    
+  </strong>
+ <span> • 574 words</span>
+ <span> • 3 minute read</span>
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/pyjail">pyjail</a>
+    </div>
+  
+</div>
+
+  <div class="content">
+    <p><p>I liked this challenge a lot so I decided to create a writeup (my first, actually) about it. Thanks to the organizers for this wonderful CTF!</p></p>
+    
+      <a href="http://localhost:1313/posts/ezclass/">Read more...</a>
+    
+  </div>
+</article>
+
+		
+		<div>
+  
+  1 of 1
+  
+</div>
+
+	</main>
+
+      </div>
+      <footer>
+  <hr />
+  
+    <p id="social">
+      Find me around the web:
+      <br />
+      
+        
+        <a href="https://github.com/salvatore-abello">Github</a>
+      
+         | 
+        <a href="https://www.linkedin.com/in/salvatore-abello/">Linkedin</a>
+      
+         | 
+        <a href="https://x.com/salvatoreabello">X</a>
+      
+    </p>
+  
+  <p class="copyright">
+    Copyright © 2025. All rights deserved.
+  </p>
+  <hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href="/index.xml"><b>RSS</b></a>
+</footer>
+
+    </div>
+  </body>
+</html>
