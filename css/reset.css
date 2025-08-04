@@ -18,6 +18,9 @@ body {
 }
 a {
   text-decoration: none;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 a:hover {
   text-decoration: underline;
@@ -70,12 +73,6 @@ figcaption {
 }
 figure {
   margin: auto;
-}
-
-a {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: normal;
 }
 
 code{
