@@ -1,6 +1,82 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Salvatore Abello's Blog</title><link>https://blog.babelo.xyz/</link><description>Personal blog about Cybersec &amp; other things.</description><language>en-us</language><atom:link href="https://blog.babelo.xyz/tags/intigriti/" rel="self" type="application/rss+xml"/><item><title>Intigriti Challenge 0325 - Leaky Flagment - Writeup</title><link>https://blog.babelo.xyz/posts/intigriti-challenge-0325/</link><guid>https://blog.babelo.xyz/posts/intigriti-challenge-0325/</guid><pubDate>Wed, 02 Apr 2025 02:41:39 CEST</pubDate><description>&amp;lt;p&amp;gt;This month, I decided to try to solve my first Intigriti challenge. There were many pieces to put together in order to solve this one, but in the end, I managed to succeed and learned a lot of stuff.&amp;lt;/p&amp;gt;</description></item><item><title>CSS Exfiltration under default-src 'self'</title><link>https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/</link><guid>https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/</guid><pubDate>Thu, 27 Feb 2025 16:14:14 CET</pubDate><description>CSS Injections have always fascinated me. A few months ago, I asked myself: &amp;amp;ldquo;is it possible to do CSS Exfiltration if default-src &amp;amp;lsquo;self&amp;amp;rsquo; is specified in the CSP?&amp;amp;rdquo;
-Well, if you&amp;amp;rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this for TRX CTF 2025: Keeper . This post will serve both as a writeup for the challenge and as an explanation of this new &amp;amp;ldquo;technique&amp;amp;rdquo;.</description></item><item><title>fire-leak - ASIS CTF Finals 2024</title><link>https://blog.babelo.xyz/posts/fire-leak/</link><guid>https://blog.babelo.xyz/posts/fire-leak/</guid><pubDate>Wed, 01 Jan 2025 12:00:37 CET</pubDate><description>This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;amp;rsquo;ve never seen a similar challenge before. @simonedimaria and I worked on this challenge and solved it after about 8 hours.
-Overview As the name suggests, this is an XS-Leak challenge. We&amp;amp;rsquo;re given the source code and there are three endpoints.</description></item><item><title>resruby - CyberSpace CTF 2024</title><link>https://blog.babelo.xyz/posts/resruby/</link><guid>https://blog.babelo.xyz/posts/resruby/</guid><pubDate>Mon, 02 Sep 2024 14:29:36 CEST</pubDate><description>&amp;lt;p&amp;gt;I partecipated to the first edition of &amp;lt;code&amp;gt;CyberSpace CTF&amp;lt;/code&amp;gt; with
-&amp;lt;a href=&amp;#34;https://theromanxpl0.it/&amp;#34; rel=&amp;#34;noopener&amp;#34;&amp;gt;@TheRomanXpl0it&amp;lt;/a&amp;gt;
-. It&amp;amp;rsquo;s always nice to see some jail challenges so, I decided to write a writeup for the challenge I liked the most: resruby.&amp;lt;/p&amp;gt;</description></item><item><title>Yet Another PyJail - PySysMagic - L3ak CTF 2024</title><link>https://blog.babelo.xyz/posts/pysysmagic/</link><guid>https://blog.babelo.xyz/posts/pysysmagic/</guid><pubDate>Fri, 26 Jul 2024 20:38:20 CEST</pubDate><description>&amp;lt;p&amp;gt;I partecipated to the first edition of &amp;lt;code&amp;gt;L3ak CTF&amp;lt;/code&amp;gt; with &amp;lt;code&amp;gt;FoocHackz&amp;lt;/code&amp;gt;. I solved this challenge, it wasn&amp;amp;rsquo;t hard but writing a working exploit took me at least one/two hours.&amp;lt;/p&amp;gt;</description></item><item><title>CVE-2024-25885</title><link>https://blog.babelo.xyz/posts/cve-2024-25885/</link><guid>https://blog.babelo.xyz/posts/cve-2024-25885/</guid><pubDate>Thu, 01 Feb 2024 23:33:28 +0200</pubDate><description>&amp;lt;p&amp;gt;This is my first CVE published by myself. A lot of times people write unsafe regular expressions that can lead to Denial Of Service and this is an example.&amp;lt;/p&amp;gt;</description></item><item><title>One-shot CSS Injection - newdiary - 0ctf 2023</title><link>https://blog.babelo.xyz/posts/newdiary/</link><guid>https://blog.babelo.xyz/posts/newdiary/</guid><pubDate>Tue, 12 Dec 2023 00:00:00 UTC</pubDate><description>&amp;lt;p&amp;gt;This year, for the first time, I partecipated to &amp;lt;strong&amp;gt;0ctf&amp;lt;/strong&amp;gt; with &amp;lt;code&amp;gt;mhackeroni&amp;lt;/code&amp;gt;.
-Me, &amp;lt;code&amp;gt;@Ricy&amp;lt;/code&amp;gt; and &amp;lt;code&amp;gt;@Alemmi&amp;lt;/code&amp;gt; solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.&amp;lt;/p&amp;gt;</description></item><item><title>My First Writeup - ez-class - B01lers CTF 2023</title><link>https://blog.babelo.xyz/posts/ezclass/</link><guid>https://blog.babelo.xyz/posts/ezclass/</guid><pubDate>Thu, 23 Mar 2023 00:00:00 UTC</pubDate><description>&amp;lt;p&amp;gt;I liked this challenge a lot so I decided to create a writeup (my first, actually) about it. Thanks to the organizers for this wonderful CTF!&amp;lt;/p&amp;gt;</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Salvatore Abello&#39;s Blog</title>
+    <link>http://localhost:1313/</link>
+    <description>Personal blog about Cybersec &amp; other things.</description>
+    <language>en-us</language>
+    <atom:link href="http://localhost:1313/tags/intigriti/" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>Intigriti Challenge 0325 - Leaky Flagment - Writeup</title>
+        <link>http://localhost:1313/posts/intigriti-challenge-0325/</link>
+        <guid>http://localhost:1313/posts/intigriti-challenge-0325/</guid>
+        <pubDate>Wed, 02 Apr 2025 02:41:39 CEST</pubDate>
+        <description>&amp;lt;p&amp;gt;This month, I decided to try to solve my first Intigriti challenge. There were many pieces to put together in order to solve this one, but in the end, I managed to succeed and learned a lot of stuff.&amp;lt;/p&amp;gt;</description>
+      </item>
+    
+      <item>
+        <title>CSS Exfiltration under default-src &#39;self&#39;</title>
+        <link>http://localhost:1313/posts/css-exfiltration-under-default-src-self/</link>
+        <guid>http://localhost:1313/posts/css-exfiltration-under-default-src-self/</guid>
+        <pubDate>Thu, 27 Feb 2025 16:14:14 CET</pubDate>
+        <description>CSS Injections have always fascinated me. A few months ago, I asked myself: &amp;amp;ldquo;is it possible to do CSS Exfiltration if default-src &amp;amp;lsquo;self&amp;amp;rsquo; is specified in the CSP?&amp;amp;rdquo;
+Well, if you&amp;amp;rsquo;re reading this you already know the answer is yes. Also, I wrote a challenge about this for TRX CTF 2025: Keeper . This post will serve both as a writeup for the challenge and as an explanation of this new &amp;amp;ldquo;technique&amp;amp;rdquo;.</description>
+      </item>
+    
+      <item>
+        <title>fire-leak - ASIS CTF Finals 2024</title>
+        <link>http://localhost:1313/posts/fire-leak/</link>
+        <guid>http://localhost:1313/posts/fire-leak/</guid>
+        <pubDate>Wed, 01 Jan 2025 12:00:37 CET</pubDate>
+        <description>This year, I played in the ASIS CTF Finals with @TheRomanXpl0it, and we secured 7th place at the end of the CTF. I decided to write this up because I&amp;amp;rsquo;ve never seen a similar challenge before. @simonedimaria and I worked on this challenge and solved it after about 8 hours.
+Overview As the name suggests, this is an XS-Leak challenge. We&amp;amp;rsquo;re given the source code and there are three endpoints.</description>
+      </item>
+    
+      <item>
+        <title>resruby - CyberSpace CTF 2024</title>
+        <link>http://localhost:1313/posts/resruby/</link>
+        <guid>http://localhost:1313/posts/resruby/</guid>
+        <pubDate>Mon, 02 Sep 2024 14:29:36 CEST</pubDate>
+        <description>&amp;lt;p&amp;gt;I partecipated to the first edition of &amp;lt;code&amp;gt;CyberSpace CTF&amp;lt;/code&amp;gt; with 
+
+  &amp;lt;a href=&amp;#34;https://theromanxpl0.it/&amp;#34; rel=&amp;#34;noopener&amp;#34;&amp;gt;@TheRomanXpl0it&amp;lt;/a&amp;gt;
+
+. It&amp;amp;rsquo;s always nice to see some jail challenges so, I decided to write a writeup for the challenge I liked the most: resruby.&amp;lt;/p&amp;gt;</description>
+      </item>
+    
+      <item>
+        <title>Yet Another PyJail - PySysMagic - L3ak CTF 2024</title>
+        <link>http://localhost:1313/posts/pysysmagic/</link>
+        <guid>http://localhost:1313/posts/pysysmagic/</guid>
+        <pubDate>Fri, 26 Jul 2024 20:38:20 CEST</pubDate>
+        <description>&amp;lt;p&amp;gt;I partecipated to the first edition of &amp;lt;code&amp;gt;L3ak CTF&amp;lt;/code&amp;gt; with &amp;lt;code&amp;gt;FoocHackz&amp;lt;/code&amp;gt;. I solved this challenge, it wasn&amp;amp;rsquo;t hard but writing a working exploit took me at least one/two hours.&amp;lt;/p&amp;gt;</description>
+      </item>
+    
+      <item>
+        <title>CVE-2024-25885</title>
+        <link>http://localhost:1313/posts/cve-2024-25885/</link>
+        <guid>http://localhost:1313/posts/cve-2024-25885/</guid>
+        <pubDate>Thu, 01 Feb 2024 23:33:28 &#43;0200</pubDate>
+        <description>&amp;lt;p&amp;gt;This is my first CVE published by myself. A lot of times people write unsafe regular expressions that can lead to Denial Of Service and this is an example.&amp;lt;/p&amp;gt;</description>
+      </item>
+    
+      <item>
+        <title>One-shot CSS Injection - newdiary - 0ctf 2023</title>
+        <link>http://localhost:1313/posts/newdiary/</link>
+        <guid>http://localhost:1313/posts/newdiary/</guid>
+        <pubDate>Tue, 12 Dec 2023 00:00:00 UTC</pubDate>
+        <description>&amp;lt;p&amp;gt;This year, for the first time, I partecipated to &amp;lt;strong&amp;gt;0ctf&amp;lt;/strong&amp;gt; with &amp;lt;code&amp;gt;mhackeroni&amp;lt;/code&amp;gt;.
+Me, &amp;lt;code&amp;gt;@Ricy&amp;lt;/code&amp;gt; and &amp;lt;code&amp;gt;@Alemmi&amp;lt;/code&amp;gt; solved this challenge, we spent many hours in order to find a working exploit, but it was worth it.&amp;lt;/p&amp;gt;</description>
+      </item>
+    
+      <item>
+        <title>My First Writeup - ez-class - B01lers CTF 2023</title>
+        <link>http://localhost:1313/posts/ezclass/</link>
+        <guid>http://localhost:1313/posts/ezclass/</guid>
+        <pubDate>Thu, 23 Mar 2023 00:00:00 UTC</pubDate>
+        <description>&amp;lt;p&amp;gt;I liked this challenge a lot so I decided to create a writeup (my first, actually) about it. Thanks to the organizers for this wonderful CTF!&amp;lt;/p&amp;gt;</description>
+      </item>
+    
+  </channel>
+</rss>
