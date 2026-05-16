@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head lang="it"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  
+  
+  <link rel="preconnect" href="http://localhost:1313/"/>
+  <link rel="dns-prefetch" href="http://localhost:1313/"/><meta name="description" content="In this post, I will talk about how to build Shared Object/Image polyglots that lets you bypass image checks in python. I&rsquo;ll start by introducing one of …"/><title>ELF in the Pixels: Building Shared Object/Image Polyglots | Salvatore Abello&#39;s Blog</title>
+
+  <meta property="og:title"       content="ELF in the Pixels: Building Shared Object/Image Polyglots"/>
+  <meta property="og:description" content="In this post, I will talk about how to build Shared Object/Image polyglots that lets you bypass image checks in python. I&rsquo;ll start by introducing one of …"/>
+  <meta property="og:type"        content="article"/>
+  <meta property="og:url"         content="http://localhost:1313/posts/photocd-polyglot/"/>
+  <meta property="og:site_name"   content="Salvatore Abello&#39;s Blog"/><meta property="og:image" content="http://localhost:1313/images/photocd-cover.jpg"/>
+    <meta name="twitter:image" content="http://localhost:1313/images/photocd-cover.jpg"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title"       content="ELF in the Pixels: Building Shared Object/Image Polyglots"/>
+  <meta name="twitter:description" content="In this post, I will talk about how to build Shared Object/Image polyglots that lets you bypass image checks in python. I&rsquo;ll start by introducing one of …"/><meta name="keywords" content="Cybersec, Research, server-side, Writeup, Python, Polyglot"/>
+    <meta property="article:published_time" content="2026-04-27T14:40:32&#43;02:00"/>
+    <meta property="article:modified_time"  content="2026-04-27T14:40:32&#43;02:00"/>
+    <meta property="article:author" content="Salvatore Abello"/>
+
+  <link rel="canonical" href="http://localhost:1313/posts/photocd-polyglot/"/>
+
+  
+  <style>
+     
+    :root {
+      --bgcolor: #000000;
+      --dimcolor: #333;
+      --fontcolor: #ddd;
+      --linkcolor: #ff00ff;
+      --visitedcolor: #ff00ff;
+      --precolor: #fff;
+      --prebgcolor: #383838;
+    }
+    
+    body {
+      color: var(--fontcolor);
+      background: var(--bgcolor);
+      margin: 0;
+      font-family: Iosevka, monospace;
+    }
+    
+    #root {
+      font-family: Iosevka, monospace;
+      max-width: 750px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+    
+     
+    #brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    
+    #brand a {
+      color: var(--fontcolor);
+      text-decoration: none;
+    }
+    
+    #brand h1, #brand h2 {
+      margin: 0;
+    }
+    
+     
+    h1 {
+      font-size: 1.5rem;
+    }
+    
+    #brand h1 {
+      font-size: 30px;
+      line-height: 1.1;
+      min-height: 33px;
+    }
+    
+    #brand h2 {
+      font-size: 20px;
+      font-weight: normal;
+      line-height: 1.2;
+      min-height: 24px;
+    }
+    
+    #brand .icon {
+      width: 75px;
+      height: 75px;
+      object-fit: contain;
+      aspect-ratio: 1 / 1;
+    }
+    
+     
+    .icon-link {
+      display: block;
+      width: 75px;
+      height: 75px;
+      flex-shrink: 0;
+    }
+    
+     
+    a {
+      text-decoration: none;
+      color: var(--linkcolor);
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+    }
+    
+    a:hover {
+      text-decoration: underline;
+    }
+    
+    a:visited {
+      color: var(--visitedcolor);
+    }
+    
+     
+    .full-clickable-heading,
+    .full-clickable-heading a {
+      color: var(--linkcolor) !important;
+    }
+
+     
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+    
+     
+    header nav {
+      margin: 15px 0;
+    }
+    
+    nav a {
+      font-weight: bold;
+      padding: 2px 4px;
+      border: none;
+    }
+    
+    nav a:hover, nav a:focus {
+      text-decoration: underline;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+     
+    #content {
+      min-height: 50vh;
+    }
+    
+     
+    article {
+      padding: 5px 0;
+    }
+  </style>
+
+  
+  
+  
+  
+  
+  
+  
+    <link rel="preload" href="/css/reset.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/font.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/smigle.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/syntax.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+      <link rel="stylesheet" href="/css/reset.css"/>
+      <link rel="stylesheet" href="/css/font.css"/>
+      <link rel="stylesheet" href="/css/smigle.css"/>
+      <link rel="stylesheet" href="/css/syntax.css"/>
+    </noscript>
+  
+
+  
+
+  
+  <link rel="preload" href="/fonts/iosevka-regular.woff2" as="font" type="font/woff2" crossorigin/>
+  
+  
+  <link rel="preload" href="/fonts/iosevka-bold.woff2" as="font" type="font/woff2" crossorigin/>
+  <link rel="preload" href="/fonts/iosevka-oblique.woff2" as="font" type="font/woff2" crossorigin/>
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color"           content="#ffffff">
+
+  
+</head>
+
+  <body>
+    <div id="root">
+      <header>
+  <div id="brand">
+    <a class="icon-link" href="http://localhost:1313/" aria-label="Go to homepage">
+      <img class="icon" src="/images/65adf8e914bdc50b5f5f2e8b91b68cb1_hu_7b9be87489d5b961.webp" alt="Salvatore Abello&#39;s Blog logo" width="75" height="75" loading="eager" fetchpriority="high" />
+    </a>
+    <div class="text">
+      <a href="http://localhost:1313/"><h1>Salvatore Abello&#39;s Blog</h1></a>
+      <h2>Hacking &amp; other stuff</h2>
+    </div>
+  </div>
+  <nav>
+    
+      
+        
+        <a class="nav-link" href="/"><b>Home</b></a>
+      
+         | 
+        <a class="nav-link" href="/whoami/"><b>Whoami</b></a>
+      
+         | 
+        <a class="nav-link" href="/achievements/"><b>Achievements</b></a>
+      
+         | 
+        <a class="nav-link" href="/posts/"><b>Posts</b></a>
+      
+         | 
+        <a class="nav-link" href="/cves/"><b>CVEs</b></a>
+      
+    
+  </nav>
+  <hr>
+</header>
+
+      <div id="content">
+        
+  <main>
+    <article>
+      <h1 class="title">ELF in the Pixels: Building Shared Object/Image Polyglots</h1>
+      
+      <div class="post-meta">
+  <strong>
+    <span>Posted on</span>
+    <time>2026-04-27 14:40:32</time>
+    
+    
+  </strong>
+  <span> • 488 words</span>
+  <span> • 3 minute read</span>
+  
+  
+    <div>
+      <span>Tags:</span>
+      
+        <a href="/tags/cybersec">Cybersec</a>, 
+        <a href="/tags/research">Research</a>, 
+        <a href="/tags/server-side">server-side</a>, 
+        <a href="/tags/writeup">Writeup</a>, 
+        <a href="/tags/python">Python</a>, 
+        <a href="/tags/polyglot">Polyglot</a>
+    </div>
+  
+</div>
+
+      
+      
+        <img src="http://localhost:1313/images/photocd-cover.jpg" alt="ELF in the Pixels: Building Shared Object/Image Polyglots" style="width: 100%; height: auto; border-radius: 4px; margin: 20px 0;">
+      
+
+      <div class="content"><p>In this post, I will talk about how to build Shared Object/Image polyglots that lets you bypass image checks in python. I&rsquo;ll start by introducing one of the challenges I wrote for TRX CTF 2026 that uses this trick to achieve RCE on a python web application.</p>
+
+<h2 id="index">
+  <a class="full-clickable-heading" href="#index">
+    Index
+  </a>
+</h2>
+
+<h2 id="why-this-post-exists">
+  <a class="full-clickable-heading" href="#why-this-post-exists">
+    Why this post exists?
+  </a>
+</h2>
+<p>I was inspired by a challenge I solved a while back, 
+
+  <a href="https://github.com/salvatore-abello/web-challenges/tree/main/HITCON%20CTF%202025/IMGC0NV." rel="noopener">IMGC0NV</a>
+
+ from HITCON CTF 2025, which involved creating a pickle/image polyglot. In that challenge, a BMP polyglot was used so that PIL would process the file as an image, while the same bytes could later be interpreted as a malicious pickle stream and deserialized through Python&rsquo;s multiprocessing IPC to achieve RCE.</p>
+<p>As far as I know, this specific .so/image polyglot technique has not been used elsewhere before, and it could come in handy in scenarios where you need to bypass image validation to &ldquo;smuggle&rdquo; shared object files.</p>
+
+<h2 id="challenge-overview">
+  <a class="full-clickable-heading" href="#challenge-overview">
+    Challenge Overview
+  </a>
+</h2>
+<p>We&rsquo;re given an image-hosting service written with python and FastAPI. We&rsquo;re allowed to upload custom images, which are validated by the <code>processing.is_valid_image</code> function:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span><span class="p">,</span> <span class="n">ExifTags</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># ...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">is_valid_image</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">im</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">im</span><span class="o">.</span><span class="n">verify</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">False</span>
+</span></span></code></pre></div><p>So <code>is_valid_image</code> tries to identify the image format and parse its header and checks that the file is structurally valid.</p>
+
+<h1 id="fix-da-slop">
+  <a class="full-clickable-heading" href="#fix-da-slop">
+    FIX DA SLOP
+  </a>
+</h1>
+
+<h2 id="index-1">
+  <a class="full-clickable-heading" href="#index-1">
+    Index
+  </a>
+</h2>
+
+<h2 id="challenge-overview-1">
+  <a class="full-clickable-heading" href="#challenge-overview-1">
+    Challenge Overview
+  </a>
+</h2>
+
+<h3 id="pixel-vault">
+  <a class="full-clickable-heading" href="#pixel-vault">
+    Pixel Vault
+  </a>
+</h3>
+
+<h3 id="uploading-images">
+  <a class="full-clickable-heading" href="#uploading-images">
+    Uploading Images
+  </a>
+</h3>
+
+<h3 id="image-validation">
+  <a class="full-clickable-heading" href="#image-validation">
+    Image Validation
+  </a>
+</h3>
+
+<h3 id="the-unexpected-load-primitive">
+  <a class="full-clickable-heading" href="#the-unexpected-load-primitive">
+    The Unexpected Load Primitive
+  </a>
+</h3>
+
+<h3 id="why-this-became-a-polyglot-problem">
+  <a class="full-clickable-heading" href="#why-this-became-a-polyglot-problem">
+    Why This Became a Polyglot Problem
+  </a>
+</h3>
+
+<h2 id="what-are-we-trying-to-build">
+  <a class="full-clickable-heading" href="#what-are-we-trying-to-build">
+    What Are We Trying To Build?
+  </a>
+</h2>
+
+<h3 id="one-file-two-parsers">
+  <a class="full-clickable-heading" href="#one-file-two-parsers">
+    One File, Two Parsers
+  </a>
+</h3>
+
+<h3 id="the-shared-object-side">
+  <a class="full-clickable-heading" href="#the-shared-object-side">
+    The Shared Object Side
+  </a>
+</h3>
+
+<h3 id="the-image-side">
+  <a class="full-clickable-heading" href="#the-image-side">
+    The Image Side
+  </a>
+</h3>
+
+<h3 id="the-rules-of-the-game">
+  <a class="full-clickable-heading" href="#the-rules-of-the-game">
+    The Rules of the Game
+  </a>
+</h3>
+
+<h2 id="hunting-for-compatible-image-formats">
+  <a class="full-clickable-heading" href="#hunting-for-compatible-image-formats">
+    Hunting for Compatible Image Formats
+  </a>
+</h2>
+
+<h3 id="the-byte-zero-problem">
+  <a class="full-clickable-heading" href="#the-byte-zero-problem">
+    The Byte-Zero Problem
+  </a>
+</h3>
+
+<h3 id="formats-that-immediately-lose">
+  <a class="full-clickable-heading" href="#formats-that-immediately-lose">
+    Formats That Immediately Lose
+  </a>
+</h3>
+
+<h3 id="formats-with-delayed-magic-bytes">
+  <a class="full-clickable-heading" href="#formats-with-delayed-magic-bytes">
+    Formats With Delayed Magic Bytes
+  </a>
+</h3>
+
+<h3 id="formats-with-flexible-headers">
+  <a class="full-clickable-heading" href="#formats-with-flexible-headers">
+    Formats With Flexible Headers
+  </a>
+</h3>
+
+<h3 id="source-level-polyglots">
+  <a class="full-clickable-heading" href="#source-level-polyglots">
+    Source-Level Polyglots
+  </a>
+</h3>
+
+<h3 id="picking-a-target">
+  <a class="full-clickable-heading" href="#picking-a-target">
+    Picking a Target
+  </a>
+</h3>
+
+<h2 id="the-winner-kodak-photocd">
+  <a class="full-clickable-heading" href="#the-winner-kodak-photocd">
+    The Winner: Kodak PhotoCD
+  </a>
+</h2>
+
+<h3 id="why-pcd-is-interesting">
+  <a class="full-clickable-heading" href="#why-pcd-is-interesting">
+    Why PCD Is Interesting
+  </a>
+</h3>
+
+<h3 id="reading-pillows-pcd-parser">
+  <a class="full-clickable-heading" href="#reading-pillows-pcd-parser">
+    Reading Pillow&rsquo;s PCD Parser
+  </a>
+</h3>
+
+<h3 id="the-pcd_-marker-at-0x800">
+  <a class="full-clickable-heading" href="#the-pcd_-marker-at-0x800">
+    The <code>PCD_</code> Marker at <code>0x800</code>
+  </a>
+</h3>
+
+<h3 id="keeping-the-elf-header-untouched">
+  <a class="full-clickable-heading" href="#keeping-the-elf-header-untouched">
+    Keeping the ELF Header Untouched
+  </a>
+</h3>
+
+<h3 id="the-minimum-bytes-pillow-wants">
+  <a class="full-clickable-heading" href="#the-minimum-bytes-pillow-wants">
+    The Minimum Bytes Pillow Wants
+  </a>
+</h3>
+
+<h3 id="making-verify-happy">
+  <a class="full-clickable-heading" href="#making-verify-happy">
+    Making <code>verify()</code> Happy
+  </a>
+</h3>
+
+<h2 id="building-the-pcdelf-polyglot">
+  <a class="full-clickable-heading" href="#building-the-pcdelf-polyglot">
+    Building the PCD/ELF Polyglot
+  </a>
+</h2>
+
+<h3 id="step-1---start-with-a-normal-shared-object">
+  <a class="full-clickable-heading" href="#step-1---start-with-a-normal-shared-object">
+    Step 1 - Start With a Normal Shared Object
+  </a>
+</h3>
+
+<h3 id="step-2---preserve-the-elf-layout">
+  <a class="full-clickable-heading" href="#step-2---preserve-the-elf-layout">
+    Step 2 - Preserve the ELF Layout
+  </a>
+</h3>
+
+<h3 id="step-3---pad-until-the-pcd-header">
+  <a class="full-clickable-heading" href="#step-3---pad-until-the-pcd-header">
+    Step 3 - Pad Until the PCD Header
+  </a>
+</h3>
+
+<h3 id="step-4---write-the-photocd-marker">
+  <a class="full-clickable-heading" href="#step-4---write-the-photocd-marker">
+    Step 4 - Write the PhotoCD Marker
+  </a>
+</h3>
+
+<h3 id="step-5---add-the-bytes-the-decoder-will-read">
+  <a class="full-clickable-heading" href="#step-5---add-the-bytes-the-decoder-will-read">
+    Step 5 - Add the Bytes the Decoder Will Read
+  </a>
+</h3>
+
+<h3 id="step-6---test-it-as-an-image">
+  <a class="full-clickable-heading" href="#step-6---test-it-as-an-image">
+    Step 6 - Test It as an Image
+  </a>
+</h3>
+
+<h3 id="step-7---test-it-as-a-library">
+  <a class="full-clickable-heading" href="#step-7---test-it-as-a-library">
+    Step 7 - Test It as a Library
+  </a>
+</h3>
+
+<h2 id="pixel-vault-using-the-primitive">
+  <a class="full-clickable-heading" href="#pixel-vault-using-the-primitive">
+    Pixel Vault: Using the Primitive
+  </a>
+</h2>
+
+<h3 id="uploading-the-polyglot">
+  <a class="full-clickable-heading" href="#uploading-the-polyglot">
+    Uploading the Polyglot
+  </a>
+</h3>
+
+<h3 id="recovering-the-stored-path">
+  <a class="full-clickable-heading" href="#recovering-the-stored-path">
+    Recovering the Stored Path
+  </a>
+</h3>
+
+<h3 id="reaching-the-load-primitive">
+  <a class="full-clickable-heading" href="#reaching-the-load-primitive">
+    Reaching the Load Primitive
+  </a>
+</h3>
+
+<h3 id="triggering-the-constructor">
+  <a class="full-clickable-heading" href="#triggering-the-constructor">
+    Triggering the Constructor
+  </a>
+</h3>
+
+<h3 id="reading-the-result-back">
+  <a class="full-clickable-heading" href="#reading-the-result-back">
+    Reading the Result Back
+  </a>
+</h3>
+
+<h2 id="other-image-polyglots">
+  <a class="full-clickable-heading" href="#other-image-polyglots">
+    Other Image Polyglots
+  </a>
+</h2>
+
+<h3 id="xbm-when-an-image-is-also-c-source">
+  <a class="full-clickable-heading" href="#xbm-when-an-image-is-also-c-source">
+    XBM: When an Image Is Also C Source
+  </a>
+</h3>
+
+<h3 id="pbm-pgm-and-ppm-simple-headers-annoying-first-bytes">
+  <a class="full-clickable-heading" href="#pbm-pgm-and-ppm-simple-headers-annoying-first-bytes">
+    PBM, PGM and PPM: Simple Headers, Annoying First Bytes
+  </a>
+</h3>
+
+<h3 id="bmp--bm-a-useful-dead-end">
+  <a class="full-clickable-heading" href="#bmp--bm-a-useful-dead-end">
+    BMP / <code>BM</code>: A Useful Dead End
+  </a>
+</h3>
+
+<h3 id="tga-flexible-but-parser-dependent">
+  <a class="full-clickable-heading" href="#tga-flexible-but-parser-dependent">
+    TGA: Flexible, but Parser-Dependent
+  </a>
+</h3>
+
+<h3 id="gif-png-and-jpeg-strict-magic-at-offset-zero">
+  <a class="full-clickable-heading" href="#gif-png-and-jpeg-strict-magic-at-offset-zero">
+    GIF, PNG and JPEG: Strict Magic at Offset Zero
+  </a>
+</h3>
+
+<h3 id="svg-text-polyglots-different-threat-model">
+  <a class="full-clickable-heading" href="#svg-text-polyglots-different-threat-model">
+    SVG: Text Polyglots, Different Threat Model
+  </a>
+</h3>
+
+<h3 id="ico-tiff-and-webp-container-formats">
+  <a class="full-clickable-heading" href="#ico-tiff-and-webp-container-formats">
+    ICO, TIFF and WEBP: Container Formats
+  </a>
+</h3>
+
+<h2 id="format-comparison">
+  <a class="full-clickable-heading" href="#format-comparison">
+    Format Comparison
+  </a>
+</h2>
+
+<h3 id="required-magic-bytes">
+  <a class="full-clickable-heading" href="#required-magic-bytes">
+    Required Magic Bytes
+  </a>
+</h3>
+
+<h3 id="magic-offset">
+  <a class="full-clickable-heading" href="#magic-offset">
+    Magic Offset
+  </a>
+</h3>
+
+<h3 id="parser-strictness">
+  <a class="full-clickable-heading" href="#parser-strictness">
+    Parser Strictness
+  </a>
+</h3>
+
+<h3 id="can-it-preserve-x7felf">
+  <a class="full-clickable-heading" href="#can-it-preserve-x7felf">
+    Can It Preserve <code>\x7fELF</code>?
+  </a>
+</h3>
+
+<h3 id="can-it-survive-real-decoding">
+  <a class="full-clickable-heading" href="#can-it-survive-real-decoding">
+    Can It Survive Real Decoding?
+  </a>
+</h3>
+
+<h3 id="can-it-be-loaded-with-dlopen">
+  <a class="full-clickable-heading" href="#can-it-be-loaded-with-dlopen">
+    Can It Be Loaded With <code>dlopen()</code>?
+  </a>
+</h3>
+
+<h2 id="pocs">
+  <a class="full-clickable-heading" href="#pocs">
+    PoCs
+  </a>
+</h2>
+
+<h3 id="minimal-pcdelf-polyglot">
+  <a class="full-clickable-heading" href="#minimal-pcdelf-polyglot">
+    Minimal PCD/ELF Polyglot
+  </a>
+</h3>
+
+<h3 id="challenge-exploit">
+  <a class="full-clickable-heading" href="#challenge-exploit">
+    Challenge Exploit
+  </a>
+</h3>
+
+<h2 id="use-cases">
+  <a class="full-clickable-heading" href="#use-cases">
+    Use Cases
+  </a>
+</h2>
+
+<h2 id="limitations">
+  <a class="full-clickable-heading" href="#limitations">
+    Limitations
+  </a>
+</h2>
+
+<h2 id="hardening">
+  <a class="full-clickable-heading" href="#hardening">
+    Hardening
+  </a>
+</h2>
+
+<h2 id="conclusion">
+  <a class="full-clickable-heading" href="#conclusion">
+    Conclusion
+  </a>
+</h2></div>
+    </article>
+  </main>
+
+      </div>
+      <footer>
+  <hr />
+  
+    <p id="social">
+      Find me around the web:
+      <br />
+      
+        
+        <a href="https://github.com/salvatore-abello">Github</a>
+      
+         | 
+        <a href="https://www.linkedin.com/in/salvatore-abello/">Linkedin</a>
+      
+         | 
+        <a href="https://x.com/salvatoreabello">X</a>
+      
+    </p>
+  
+  <p class="copyright">
+    Copyright © 2026. All rights deserved.
+  </p>
+  <hr><code>Made with ❤️ by <strong>Salvatore Abello</strong></code> | <a href="/index.xml"><b>RSS</b></a>
+</footer>
+
+    </div>
+  </body>
+</html>
